@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Action -->
+    <record id="action_college_erp" model="ir.actions.act_window">
+        <field name="name">College ERP</field>
+        <field name="res_model">college.student</field>
+        <field name="view_mode">kanban,list,form</field>
+        <field name="help" type="html"> <!-- help field belongs to ir.actions.act_window [Purpose: Empty-state. Opens a list (tree) view AND the if record count is 0] -->
+            <p class="o_view_nocontent_smiling_face">
+                Create your first student
+            </p>
+        </field>
+    </record>
+
+    <record id="view_college_student_kanban" model="ir.ui.view">
+        <field name="name">college.student.kanban</field>
+        <field name="model">college.student</field>
+        <field name="arch" type="xml">
+            <kanban>
+                <field name="name"/>
+                <field name="roll_no"/>
+                <field name="department"/>
+                <templates>
+                    <t t-name="card"> <!-- keep close watch on this when you vibe -->
+                        <div class="oe_kanban_card">
+                            <strong>
+                                <field name="name"/>
+                            </strong>
+                            <div>Roll No: <field name="roll_no"/></div>
+                            <div>Department: <field name="department"/></div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <!-- Tree (List) View written as list eventhoug it is a tree-->
+    <record id="view_college_student_list" model="ir.ui.view">
+        <field name="name">college.student.list</field>
+        <field name="model">college.student</field>
+        <field name="type">list</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+                <field name="roll_no"/>
+                <field name="department"/>
+            </list>
+        </field>
+    </record>
+
+     <!-- <record id="crm_lost_reason_view_tree" model="ir.ui.view">
+        <field name="name">crm.lost.reason.list</field>
+        <field name="model">crm.lost.reason</field>
+        <field name="arch" type="xml">
+            <list string="Channel" editable="bottom">
+                <field name="name"/>
+            </list>
+        </field>
+    </record> -->
+
+    <!-- Form View -->
+    <record id="view_college_student_form" model="ir.ui.view">
+        <field name="name">college.student.form</field>
+        <field name="model">college.student</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="image_1920" class="oe_avatar" widget="image" options="{'preview_image': 'image_1920'}"/> <!-- oe_avatar moves it to the top right and then widget="image" makes it presentable -->
+                            <field name="name"/>
+                            <field name="department"/>
+                            <field name="email"/>
+                            <field name="roll_no"/>
+                        </group>
+                        <group>
+                            <field name="date_of_joining"/>
+                            <field name="date_of_birth"/>
+                            <field name="fees"/>
+                            <field name="free" widget="boolean_toggle"/>
+                            <span class="o_form_label o_td_label o_address_type fw-bold" invisible="free">Permanent Address:</span>
+                            <div class="o_address_format" invisible="free"> <!-- invisible when free is true -->
+                                <field name="address" placeholder="Address" class="o_address_street"/>
+                                <field name="city" placeholder="City" class="o_address_city"/>
+                                <field name="code" placeholder="Code" class="o_address_zip"/>
+                            </div>
+                        </group>
+                    </group>
+
+                    <notebook>
+                        <page string="Student Details" name="student_details_page">
+                            <group name="name">
+                                <div class="o_address_format">
+                                    <field name="address" placeholder="Address" class="o_address_street"/>
+                                    <field name="city" placeholder="City" class="o_address_city"/>
+                                    <field name="code" placeholder="Code" class="o_address_zip"/>
+                                </div>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+</odoo>
+
+

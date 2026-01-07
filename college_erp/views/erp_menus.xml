@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8" ?>
+
+ <odoo>
+    <menuitem id="menu_college_erp_root" name="College ERP" sequence="1"/>
+       <menuitem id="menu_college_erp_student" name="Student" parent="menu_college_erp_root" sequence="1"/>
+<menuitem id="menu_college_erp_student_student" action="action_college_erp" name="Student List" parent="menu_college_erp_student" sequence="2"/>
+  <menuitem id="menu_college_erp_student_admission" action="action_college_erp" name="Admission" parent="menu_college_erp_student" sequence="3"/>
+</odoo> 
+<!-- <odoo>
+  <menuitem id="menu_college_erp_root" name="College ERP" sequence="1" web_icon="college_erp,static/description/icon.png"<- add this for the icon to appear in the main menu of odoo action="action_college_erp"/>
+  <menuitem id="menu_college_erp_student" name="Student" parent="menu_college_erp_root" sequence="1"/>
+  <menuitem id="menu_college_erp_student_student" action="action_college_erp" name="Student List" parent="menu_college_erp_student" sequence="2"/>
+  <menuitem id="menu_college_erp_student_admission" action="action_college_erp" name="Admission" parent="menu_college_erp_student" sequence="3"/>
+</odoo> -->
+
