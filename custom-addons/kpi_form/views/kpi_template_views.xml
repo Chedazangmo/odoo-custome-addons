@@ -13,25 +13,17 @@
                                 <field name="name"/>
                                 <field name="evaluation_group"/>
                             </group>
-                            <group>
-                                <field name="total_marks"/>
-                                <field name="computed_total" readonly="1"/>
-                            </group>
                         </group>
 
                         <!-- KPI Lines (One2many) -->
                         <field name="line_ids">
-                        <list string="KPI Lines" editable="bottom">
-                            <field name="sequence" widget="handle"/>
-                            <field name="kpi_name"/>  <!-- From model -->
-                            <field name="definition" widget="textarea"/>  <!-- From model -->
-                            <field name="score"/>
-                            <field name="weight"/>  <!-- Now exists in model -->
-                            <field name="max_score"/>  <!-- Now exists in model -->
-                            <field name="target_type"/>
-                            <field name="evaluation_criteria" widget="textarea"/>  <!-- From model -->
-                            <field name="measurement_unit"/>  <!-- Now exists in model -->
-                          </list>
+                            <list string="KPI Lines" editable="bottom">
+                                <!-- REMOVE sequence field -->
+                                <field name="kpi_name"/>
+                                <field name="definition" widget="textarea"/>
+                                <field name="score"/>
+                                <field name="evaluation_criteria" widget="textarea"/>
+                            </list>
                         </field>
 
                     </sheet>
@@ -47,8 +39,6 @@
                 <list string="KPI Templates">
                     <field name="name"/>
                     <field name="evaluation_group"/>
-                    <field name="total_marks"/>
-                    <field name="computed_total"/>
                 </list>
             </field>
         </record>
@@ -64,8 +54,8 @@
                 </p>
             </field>
         </record>
-        <menuitem id="menu_performance_root" name="Performance Management" sequence="10"/>
 
+        <menuitem id="menu_performance_root" name="Performance Management" sequence="10"/>
         <menuitem id="menu_kpi_template"
                   name="KPI Templates"
                   parent="menu_performance_root"
