@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <data>
+        <!-- Form View for KPI Template -->
+        <record id="view_kpi_template_form" model="ir.ui.view">
+            <field name="name">kpi.template.form</field>
+            <field name="model">kpi.template</field>
+            <field name="arch" type="xml">
+                <form string="KPI Template">
+                    <sheet>
+                        <group>
+                            <group>
+                                <field name="name"/>
+                                <field name="evaluation_group"/>
+                            </group>
+                            <group>
+                                <field name="total_marks"/>
+                                <field name="computed_total" readonly="1"/>
+                            </group>
+                        </group>
+
+                        <!-- KPI Lines (One2many) -->
+                        <field name="line_ids">
+                        <list string="KPI Lines" editable="bottom">
+                            <field name="sequence" widget="handle"/>
+                            <field name="kpi_name"/>  <!-- From model -->
+                            <field name="definition" widget="textarea"/>  <!-- From model -->
+                            <field name="score"/>
+                            <field name="weight"/>  <!-- Now exists in model -->
+                            <field name="max_score"/>  <!-- Now exists in model -->
+                            <field name="target_type"/>
+                            <field name="evaluation_criteria" widget="textarea"/>  <!-- From model -->
+                            <field name="measurement_unit"/>  <!-- Now exists in model -->
+                          </list>
+                        </field>
+
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <!-- List View for KPI Template -->
+        <record id="view_kpi_template_list" model="ir.ui.view">
+            <field name="name">kpi.template.list</field>
+            <field name="model">kpi.template</field>
+            <field name="arch" type="xml">
+                <list string="KPI Templates">
+                    <field name="name"/>
+                    <field name="evaluation_group"/>
+                    <field name="total_marks"/>
+                    <field name="computed_total"/>
+                </list>
+            </field>
+        </record>
+
+        <!-- Action & Menu -->
+        <record id="action_kpi_template" model="ir.actions.act_window">
+            <field name="name">KPI Templates</field>
+            <field name="res_model">kpi.template</field>
+            <field name="view_mode">list,form</field>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                    Create your first KPI Template
+                </p>
+            </field>
+        </record>
+        <menuitem id="menu_performance_root" name="Performance Management" sequence="10"/>
+
+        <menuitem id="menu_kpi_template"
+                  name="KPI Templates"
+                  parent="menu_performance_root"
+                  action="action_kpi_template"
+                  sequence="20"/>
+    </data>
+</odoo>
