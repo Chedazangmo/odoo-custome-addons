@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <menuitem id="menu_appraisal_root"
+              name="Employee Evaluation"
+              sequence="85"
+              web_icon="hr_employee_evaluation,static\description\icon.png"/>
+
+    <menuitem id="menu_appraisal_configuration"
+              name="Configuration"
+              parent="menu_appraisal_root"
+              sequence="100"/>
+
+    <menuitem id="menu_appraisal_templates"
+              name="Templates"
+              parent="menu_appraisal_configuration"
+              action="action_appraisal_template"
+              sequence="1"/>
+
+    <!-- <menuitem
+        id="menu_competency_templates"
+        name="Competency"
+        parent="menu_appraisal_configuration"
+        action="action_competency_template"
+        sequence="2"/> -->
+
+</odoo>

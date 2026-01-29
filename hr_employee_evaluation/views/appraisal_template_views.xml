@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    
+    <record id="view_appraisal_template_list" model="ir.ui.view"> <!-- List View for viewing the list of templates already created or to create a new template-->
+        <field name="name">appraisal.template.list</field>
+        <field name="model">appraisal.template</field>
+        <field name="arch" type="xml">
+            <list string="Appraisal Templates">
+                <field name="name"/>
+                <field name="evaluation_group_id"/>
+                <field name="total_score"/>
+                <field name="active" widget="boolean_toggle"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_appraisal_template_form" model="ir.ui.view"> <!-- Form View for creating/editing the appraisal template -->
+        <field name="name">appraisal.template.form</field>
+        <field name="model">appraisal.template</field>
+        <field name="arch" type="xml">
+            <form string="Appraisal Template">
+                <header>
+                    <button name="action_add_kra" 
+                            string="Add KRA" 
+                            type="object" 
+                            class="btn-primary"
+                            groups="hr.group_hr_user"
+                            invisible="active == False"/>
+                    <button name="action_delete_kra" 
+                            string="Delete Current KRA" 
+                            type="object" 
+                            class="btn-danger"
+                            groups="hr.group_hr_user"
+                            invisible="kra_ids == [] or active == False"
+                            confirm="Are you sure you want to delete the currently selected KRA and all its KPIs?"/>
+
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="toggle_active" type="object" class="oe_stat_button" icon="fa-archive">
+                            <field name="active" widget="boolean_button" options="{'terminology': 'archive'}"/>
+                        </button>
+                    </div>
+                    
+                    <group>
+                        <group>
+                            <field name="name" placeholder="e.g., Annual Performance Template 2024" readonly="active == False"/> 
+                            <field name="evaluation_group_id" options="{'no_create': True}" readonly="active == False"/>
+                        </group>
+                        <group>
+                            <field name="total_score" readonly="active == False"/>
+                            <field name="competency_group" placeholder="Link to competency template (future)" readonly="active == False"/>
+                        </group>
+                    </group>
+
+                    <group>
+                        <group>
+                            <field name="total_kpi_score" readonly="1" 
+                                   decoration-danger="total_kpi_score &gt; total_score"
+                                   decoration-success="total_kpi_score &lt;= total_score"/>
+                        </group>
+                    </group>
+
+                    <!-- Hidden intentionally. Is used for tracking active KRA tab -->
+                    <field name="id" invisible="1"/>
+                    <field name="active_kra_id" invisible="1"/>
+                    
+                    <!-- KRA Tabs  -->
+                    <field name="kra_ids" widget="kra_tabs_widget" readonly="active == False"/>
+
+
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- KRA Form View (will be opened from template) -->
+    <record id="view_appraisal_kra_form" model="ir.ui.view">
+        <field name="name">appraisal.kra.form</field>
+        <field name="model">appraisal.kra</field>
+        <field name="arch" type="xml">
+            <form string="Key Result Area">
+                <sheet>
+                    <group>
+                        <field name="name"/>
+                        <field name="template_id" readonly="1"/>
+                        <field name="sequence"/>
+                    </group>
+                    
+                    <group string="Key Performance Indicators">
+                        <field name="kpi_ids" nolabel="1">
+                            <list editable="bottom">
+                                <field name="name"/>
+                                <field name="description"/>
+                                <field name="score"/>
+                                <field name="criteria"/>
+                            </list>
+                        </field>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_appraisal_template" model="ir.actions.act_window">
+        <field name="name">Templates</field>
+        <field name="res_model">appraisal.template</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create your first appraisal template
+            </p>
+        </field>
+    </record>
+
+    <!-- For deleting KRA -->
+    <record id="view_delete_kra_list" model="ir.ui.view">
+        <field name="name">appraisal.kra.delete.list</field>
+        <field name="model">appraisal.kra</field>
+        <field name="arch" type="xml">
+            <list string="Select KRA to Delete" delete="1">
+                <field name="name"/>
+                <field name="kpi_count"/>
+                <field name="total_score"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Action to Delete KRA from Template -->
+    <record id="action_delete_kra_from_template" model="ir.actions.act_window">
+        <field name="name">Delete KRA</field>
+        <field name="res_model">appraisal.kra</field>
+        <field name="view_mode">list</field>
+        <field name="view_id" ref="view_delete_kra_list"/>
+        <field name="domain">[('template_id', '=', active_id)]</field>
+        <field name="target">new</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No KRAs to delete
+            </p>
+        </field>
+    </record>
+
+</odoo>

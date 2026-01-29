@@ -1,0 +1,136 @@
+.o_form_sheet .o_kra_tabs_container {
+    margin-top: 16px;
+    
+    .o_kra_tabs_header {
+        border-bottom: 1px solid #dee2e6;
+        margin-bottom: 20px;
+        
+        .o_kra_tabs_nav {
+            display: flex;
+            gap: 2px;
+            overflow-x: auto;
+            
+            .o_kra_tab {
+                padding: 6px 12px;
+                cursor: pointer;
+                border-bottom: 3px solid transparent;
+                transition: all 0.2s;
+                white-space: nowrap;
+                color: #6c757d;
+                font-weight: 600;
+                font-size: 0.875rem;
+                user-select: none;
+                
+                .o_kra_tab_name {
+                    margin-right: 4px;
+                }
+                
+                &:hover {
+                    color: #495057;
+                    background-color: #f8f9fa;
+                }
+                
+                &.active {
+                    color: #017e84;
+                    border-bottom-color: #017e84;
+                    
+                    .o_kra_tab_count {
+                        color: #017e84;
+                    }
+                }
+            }
+        }
+    }    
+    .o_kra_no_content {
+        padding: 40px 20px;
+        text-align: center;
+        background-color: #f8f9fa;
+        border: 2px dashed #dee2e6;
+        border-radius: 8px;
+        margin: 20px 0;
+        
+        p {
+            margin: 0;
+            font-size: .875rem;
+        }
+    }
+    
+    .o_kra_content {
+        .o_kra_kpi_section {
+            background-color: #fff;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 8px;
+            overflow: auto;
+            
+            .o_kra_kpi_header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 20px;
+                
+                h5 {
+                    margin: 0;
+                    color: #212529;
+                    font-weight: 600;
+                    
+                    .badge {
+                        font-size: 0.75em;
+                        vertical-align: middle;
+                    }
+                }
+            }
+            
+            .o_kra_kpi_table {
+                margin-bottom: 0;
+                
+                thead {
+                    background-color: #f8f9fa;
+                    
+                    th {
+                        border-top: none;
+                        font-weight: 600;
+                        color: #495057;
+                        padding: 8px 6px;
+                    }
+                }
+                
+                tbody {
+                    tr {
+                        &:hover {
+                            background-color: #f8f9fa;
+                        }
+                        
+                        td {
+                            vertical-align: middle;
+                            padding: 6px;
+                            
+                            input, textarea {
+                                border: 1px solid #ced4da;
+                                
+                                &:focus {
+                                    border-color: #017e84;
+                                    box-shadow: 0 0 0 0.2rem rgba(1, 126, 132, 0.15);
+                                }
+                                
+                                &[readonly] {
+                                    background-color: #e9ecef;
+                                    cursor: not-allowed;
+                                }
+                            }
+                            
+                            textarea {
+                                resize: vertical;
+                                min-height: 60px;
+                            }
+                        }
+                    }
+                }
+            }
+            
+            .alert {
+                margin: 0;
+            }
+        }
+    }
+}

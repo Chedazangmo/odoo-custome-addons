@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+    <t t-name="hr_employee_evaluation.KraTabs">
+        <div class="o_kra_tabs_container">
+            
+            <!-- KRA Tabs Header. Displays the list of KRA as tabs (like navbar) -->
+            <div class="o_kra_tabs_header" t-if="hasKras()">
+                <div class="o_kra_tabs_nav">
+                    <t t-foreach="state.kras" t-as="kra" t-key="kra.id">
+                        <div 
+                            class="o_kra_tab"
+                            t-att-class="{ 'active': isActiveKra(kra.id) }"
+                            t-on-click="() => this.setActiveKra(kra.id)">
+                            <span class="o_kra_tab_name" t-esc="kra.name"/>
+                        </div>
+                    </t>
+                </div>
+            </div>
+
+            <div class="o_kra_no_content" t-if="!hasKras()"> <!-- If no KRAs, then display the Message -->
+                <p class="text-muted">No KRAs defined yet. Use "Add KRA" button to create one.</p>
+            </div>
+
+            <!-- KPI Table for Active KRA. Shows list of KPIs for a particular KRA -->
+            <div class="o_kra_content" t-if="state.activeKraId">
+                <div class="o_kra_kpi_section">
+                    <div class="o_kra_kpi_header">
+                        <h5>
+                            <t t-esc="getActiveKra()?.name"/> - Key Performance Indicators
+                            <span class="badge bg-secondary ms-2">
+                                Total Score: <t t-esc="getActiveKra()?.total_score"/>
+                            </span>
+                        </h5>
+                        <div class="o_save_kpi_add_buttons">
+                            <button 
+                                class="btn btn-primary btn-sm"
+                                t-if="!props.readonly"
+                                t-on-click="() => this.addKpi()">
+                                <i class="fa fa-plus"/> Add KPI
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- KPI Table -->
+                    <table class="table table-sm o_kra_kpi_table" t-if="state.activeKraKpis.length > 0">
+                        <thead>
+                            <tr>
+                                <th style="width: 20%">KPI</th>
+                                <th style="width: 30%">Description</th>
+                                <th style="width: 10%">Score</th>
+                                <th style="width: 30%">Criteria</th>
+                                <th style="width: 10%" t-if="!props.readonly">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <t t-foreach="state.activeKraKpis" t-as="kpi" t-key="kpi.id">
+                                <tr>
+                                    <td>
+                                        <input 
+                                            type="text" 
+                                            class="form-control form-control-sm"
+                                            t-att-value="kpi.name"
+                                            t-att-readonly="props.readonly"
+                                            t-on-change="(e) => this.onKpiChange(kpi.id, 'name', e.target.value)"/>
+                                    </td>
+                                    <td>
+                                        <textarea 
+                                            class="form-control form-control-sm"
+                                            rows="2"
+                                            t-att-readonly="props.readonly"
+                                            t-on-change="(e) => this.onKpiChange(kpi.id, 'description', e.target.value)"
+                                            t-esc="kpi.description"/>
+                                    </td>
+                                    <td>
+
+                                        <input
+                                            type="number"
+                                            class="form-control form-control-sm"
+                                            step="0.01"
+                                            t-att-value="kpi.score"
+                                            t-att-readonly="props.readonly"
+                                            t-on-input="(e) => this.onKpiChange(kpi.id, 'score', e.target.value)"
+                                        />
+                                    </td>
+                                    <td>
+                                        <textarea 
+                                            class="form-control form-control-sm"
+                                            rows="2"
+                                            t-att-readonly="props.readonly"
+                                            t-on-change="(e) => this.onKpiChange(kpi.id, 'criteria', e.target.value)"
+                                            t-esc="kpi.criteria"/>
+                                    </td>
+                                    <td t-if="!props.readonly">
+                                        <button 
+                                            class="btn btn-sm btn-danger"
+                                            t-on-click="() => this.deleteKpi(kpi.id)">
+                                            <i class="fa fa-trash"/>
+                                        </button>
+                                    </td>
+                                </tr>
+                            </t>
+                        </tbody>
+                    </table>
+
+                    <!-- No KPIs Message -->
+                    <div class="alert alert-info" t-if="state.activeKraKpis.length === 0">
+                        <i class="fa fa-info-circle"/> No KPIs defined for this KRA. Click "Add KPI" to create one.
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </t>
+
+</templates>

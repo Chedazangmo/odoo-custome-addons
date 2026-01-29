@@ -1,0 +1,8 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_appraisal_template_user,appraisal.template.user,model_appraisal_template,base.group_user,1,0,0,0
+access_appraisal_template_hr,appraisal.template.hr,model_appraisal_template,hr.group_hr_user,1,1,1,1
+access_appraisal_kra_user,appraisal.kra.user,model_appraisal_kra,base.group_user,1,0,0,0
+access_appraisal_kra_hr,appraisal.kra.hr,model_appraisal_kra,hr.group_hr_user,1,1,1,1
+access_appraisal_kpi_user,appraisal.kpi.user,model_appraisal_kpi,base.group_user,1,0,0,0
+access_appraisal_kpi_hr,appraisal.kpi.hr,model_appraisal_kpi,hr.group_hr_user,1,1,1,1
+access_add_kra_wizard_hr,add.kra.wizard.hr,model_add_kra_wizard,hr.group_hr_user,1,1,1,1

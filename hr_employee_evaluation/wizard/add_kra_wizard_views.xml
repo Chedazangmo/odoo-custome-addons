@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_add_kra_wizard_form" model="ir.ui.view">
+        <field name="name">add.kra.wizard.form</field>
+        <field name="model">add.kra.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Add Key Result Area">
+                <group>
+                    <field name="template_id" invisible="1"/>
+                    <field name="kra_name" placeholder="e.g., Strategic Planning, Customer Service, etc."/>
+                    <field name="sequence"/>
+                </group>
+                <footer>
+                    <button string="Add KRA" name="action_add_kra" type="object" class="btn-primary"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+</odoo>
