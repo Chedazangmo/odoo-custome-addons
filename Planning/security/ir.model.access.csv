@@ -1,0 +1,9 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_evaluation_planning_manager,evaluation.planning.hr.manager,model_evaluation_planning,hr.group_hr_manager,1,1,1,1
+access_evaluation_planning_user,evaluation.planning.hr.user,model_evaluation_planning,hr.group_hr_user,1,1,0,0
+access_performance_plan_manager,performance.plan.hr.manager,model_performance_plan,hr.group_hr_manager,1,1,1,1
+access_performance_plan_user,performance.plan.hr.user,model_performance_plan,hr.group_hr_user,1,1,0,0
+access_kpi_line_manager,kpi.line.hr.manager,model_performance_plan_kpi_line,hr.group_hr_manager,1,1,1,1
+access_kpi_line_user,kpi.line.hr.user,model_performance_plan_kpi_line,hr.group_hr_user,1,1,0,0
+access_competency_line_manager,competency.line.hr.manager,model_performance_plan_competency_line,hr.group_hr_manager,1,1,1,1
+access_competency_line_user,competency.line.hr.user,model_performance_plan_competency_line,hr.group_hr_user,1,1,0,0

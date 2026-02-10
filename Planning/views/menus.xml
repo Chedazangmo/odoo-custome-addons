@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <data>
+        <!-- Main Planning Menu (Root level) -->
+        <menuitem id="planning_menu_root"
+                  name="Planning"
+                  sequence="200"
+                  groups="base.group_user"/>
+
+        <!-- Evaluation Planning (under Planning) -->
+        <menuitem id="planning_menu_evaluation_planning"
+                  name="Evaluation Plans"
+                  parent="planning_menu_root"
+                  action="Planning.action_evaluation_planning"
+                  sequence="10"/>
+
+        <!-- Performance Plans (under Planning) -->
+        <menuitem id="planning_menu_performance_plan"
+                  name="Performance Plans"
+                  parent="planning_menu_root"
+                  action="Planning.action_performance_plan"
+                  sequence="20"/>
+    </data>
+</odoo>

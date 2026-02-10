@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <data>
+        <!-- Form View -->
+        <record id="view_evaluation_planning_form" model="ir.ui.view">
+            <field name="name">evaluation.planning.form</field>
+            <field name="model">evaluation.planning</field>
+            <field name="arch" type="xml">
+                <form string="Evaluation Planning">
+                    <header>
+                        <!-- Single toggle button (shows different text) -->
+                        <button name="action_toggle_activation"
+                                type="object"
+                                class="oe_highlight"
+                                icon="fa-play"
+                                string="Activate"
+                                invisible="state != 'draft'"/>
+
+                        <button name="action_toggle_activation"
+                                type="object"
+                                class="btn-warning"
+                                icon="fa-pause"
+                                string="Deactivate"
+                                invisible="state != 'active'"/>
+
+                        <!-- Complete button -->
+                        <button name="action_complete"
+                                type="object"
+                                string="Mark as Completed"
+                                class="btn-success"
+                                icon="fa-check"
+                                invisible="state != 'active'"/>
+
+                        <!-- Reset to draft button -->
+                        <button name="action_set_to_draft"
+                                type="object"
+                                string="Reset to Draft"
+                                class="btn-warning"
+                                icon="fa-undo"
+                                invisible="state != 'completed'"/>
+
+                        <!-- Copy button -->
+                        <button name="action_create_copy"
+                                type="object"
+                                string="Duplicate"
+                                class="btn-default"
+                                icon="fa-copy"/>
+
+                        <!-- STATUS BAR -->
+                        <field name="state"
+                               widget="statusbar"
+                               statusbar_visible="draft,active,completed"
+                               options="{'clickable': '0'}"/>
+                    </header>
+
+                    <sheet>
+                        <!-- Warning for completed evaluations -->
+                        <div class="alert alert-info" role="alert" invisible="state != 'completed'">
+                            <strong>📋 Evaluation Completed</strong><br/>
+                            This evaluation has been completed and is now read-only.
+                        </div>
+
+                        <div class="oe_title">
+                            <h1><field name="plan_name" placeholder="Enter plan name"/></h1>
+                        </div>
+
+                        <!-- Plan Configuration -->
+                        <group string="Plan Configuration">
+                            <group>
+                                <field name="plan_name" string="Plan Name" required="1"/>
+                                <field name="plan_type" string="Plan Type" required="1"/>
+                                <field name="calculation_method" string="Calculation Method" required="1"/>
+                                <field name="fixed_days" string="Fixed Days"
+                                       invisible="calculation_method != 'days'"/>
+                            </group>
+                            <group>
+                                <field name="state" string="Status" readonly="1"/>
+                                <field name="is_active" string="Currently Active" widget="boolean" readonly="1"/>
+                                <field name="is_completed" string="Is Completed" widget="boolean" readonly="1"/>
+                            </group>
+                        </group>
+
+                        <!-- Dates -->
+                        <group string="Dates">
+                            <group>
+                                <field name="start_date" string="Start Date" required="1"/>
+                                <field name="end_date" string="End Date" required="1"/>
+                            </group>
+                            <group>
+                                <field name="duration_days" string="Duration (Days)" readonly="1"/>
+                            </group>
+                        </group>
+
+                        <!-- Description -->
+                        <notebook>
+                            <page string="Description">
+                                <group>
+                                    <field name="description" widget="textarea" nolabel="1"/>
+                                </group>
+                            </page>
+                        </notebook>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <!-- List View -->
+        <record id="view_evaluation_planning_list" model="ir.ui.view">
+            <field name="name">evaluation.planning.list</field>
+            <field name="model">evaluation.planning</field>
+            <field name="arch" type="xml">
+                <list string="Evaluation Plans">
+                    <field name="plan_name"/>
+                    <field name="plan_type"/>
+                    <field name="calculation_method"/>
+                    <field name="start_date"/>
+                    <field name="end_date"/>
+                    <field name="duration_days"/>
+                    <field name="state" widget="badge"
+                           options="{'warning': 'draft', 'success': 'active', 'info': 'completed'}"/>
+                    <field name="is_active" widget="boolean"/>
+                </list>
+            </field>
+        </record>
+
+        <!-- Search View -->
+        <record id="view_evaluation_planning_search" model="ir.ui.view">
+            <field name="name">evaluation.planning.search</field>
+            <field name="model">evaluation.planning</field>
+            <field name="arch" type="xml">
+                <search>
+                    <field name="plan_name"/>
+                    <field name="plan_type"/>
+                    <field name="calculation_method"/>
+                    <filter name="active_plans" string="Active" domain="[('state', '=', 'active')]"/>
+                    <filter name="draft_plans" string="Draft" domain="[('state', '=', 'draft')]"/>
+                    <filter name="completed_plans" string="Completed" domain="[('state', '=', 'completed')]"/>
+                </search>
+            </field>
+        </record>
+
+        <!-- Action & Menu -->
+        <record id="action_evaluation_planning" model="ir.actions.act_window">
+            <field name="name">Evaluation Planning</field>
+            <field name="res_model">evaluation.planning</field>
+            <field name="view_mode">list,form</field>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                    Create your first Evaluation Plan
+                </p>
+                <p>
+                    Evaluation plans define the timeline for performance reviews.
+                    Create plans for yearly, quarterly, or custom evaluation periods.
+                </p>
+            </field>
+        </record>
+
+        <!-- Menu Items -->
+        <menuitem id="menu_performance_planning" name="Performance Planning" sequence="10"/>
+        <menuitem id="menu_evaluation_planning" name="Evaluation Planning"
+                  parent="menu_performance_planning"
+                  action="action_evaluation_planning"
+                  sequence="40"/>
+    </data>
+</odoo>

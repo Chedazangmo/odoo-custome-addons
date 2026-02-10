@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <data>
+        <!-- Cancellation Wizard Form -->
+        <record id="view_evaluation_planning_cancel_wizard_form" model="ir.ui.view">
+            <field name="name">evaluation.planning.cancel.wizard.form</field>
+            <field name="model">evaluation.planning.cancel.wizard</field>
+            <field name="arch" type="xml">
+                <form string="Cancel Evaluation Plan">
+                    <sheet>
+                        <div class="oe_title">
+                            <h1>Cancel Evaluation Plan</h1>
+                        </div>
+
+                        <group>
+                            <group>
+                                <field name="evaluation_planning_id" invisible="1"/>
+
+                                <div class="alert alert-warning mt-3" role="alert">
+                                    <strong>⚠️ Warning: You are about to cancel an active evaluation plan!</strong>
+                                    <br/><br/>
+                                    <strong>Plan:</strong> <field name="evaluation_planning_id" readonly="1" string="Plan Name" widget="translation"/><br/>
+                                    <strong>Period:</strong> <field name="evaluation_planning_id" readonly="1" string="Period" attrs="{'invisible': [('evaluation_planning_id', '=', False)]}">
+                                        <div>
+                                            <field name="evaluation_planning_id.start_date" readonly="1"/>
+                                            to
+                                            <field name="evaluation_planning_id.end_date" readonly="1"/>
+                                        </div>
+                                    </field>
+                                    <br/><br/>
+                                    <strong>This action will:</strong>
+                                    <ul class="mb-2">
+                                        <li>Cancel all associated performance plans</li>
+                                        <li>Send notifications to affected employees</li>
+                                        <li>Mark this plan as cancelled in the system</li>
+                                    </ul>
+                                    <strong>Please provide a reason for cancellation:</strong>
+                                </div>
+
+                                <field name="cancellation_reason" widget="textarea" nolabel="1" placeholder="Enter cancellation reason here..." required="1"/>
+                            </group>
+                        </group>
+                    </sheet>
+
+                    <footer>
+                        <button name="action_confirm_cancellation"
+                                string="Confirm Cancellation"
+                                type="object"
+                                class="btn-danger"
+                                icon="fa-times"/>
+                        <button name="action_cancel"
+                                string="Keep Plan Active"
+                                type="object"
+                                class="btn-secondary"
+                                icon="fa-arrow-left"
+                                special="cancel"/>
+                    </footer>
+                </form>
+            </field>
+        </record>
+
+        <!-- Wizard Action Window -->
+        <record id="action_evaluation_planning_cancel_wizard" model="ir.actions.act_window">
+            <field name="name">Cancel Evaluation Plan</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">evaluation.planning.cancel.wizard</field>
+            <field name="view_mode">form</field>
+            <field name="target">new</field>
+            <field name="context">{'default_evaluation_planning_id': active_id}</field>
+        </record>
+    </data>
+</odoo>

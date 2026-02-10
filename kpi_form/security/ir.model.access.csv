@@ -1,0 +1,5 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_kpi_template_user,access_kpi_template_user,model_kpi_template,base.group_user,1,1,1,1
+access_kpi_template_line_user,access_kpi_template_line_user,model_kpi_template_line,base.group_user,1,1,1,1
+access_competency_template_user,access_competency_template_user,model_competency_template,base.group_user,1,1,1,1
+access_competency_template_line_user,access_competency_template_line_user,model_competency_template_line,base.group_user,1,1,1,1

@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <data>
+        <!-- Form View -->
+        <record id="view_evaluation_planning_form" model="ir.ui.view">
+            <field name="name">evaluation.planning.form</field>
+            <field name="model">evaluation.planning</field>
+            <field name="arch" type="xml">
+                <form string="Planning">
+                    <header>
+                        <button
+                            name="action_cancel"
+                            string="Cancel"
+                            type="object"
+                            class="btn-danger"
+                            invisible="state != 'active'"
+                            confirm="Are you sure you want to cancel this plan?"
+                        />
+                        <button
+                            name="action_activate"
+                            string="Activate"
+                            type="object"
+                            class="btn-primary"
+                            invisible="state != 'draft'"
+                            confirm="Activate this planning? This will create performance plans for all employees."
+                        />
+                        <!-- Complete button -->
+                        <button name="action_complete"
+                                type="object"
+                                string="Mark as Completed"
+                                class="btn-success"
+                                icon="fa-check"
+                                invisible="state != 'active'"
+                                confirm="Are you sure you want to mark this plan as completed?"/>
+
+                        <!-- Reset to draft button -->
+                        <button name="action_set_to_draft"
+                                type="object"
+                                string="Reset to Draft"
+                                class="btn-warning"
+                                icon="fa-undo"
+                                invisible="state != 'completed'"
+                                confirm="Are you sure you want to reset this completed plan to draft?"/>
+
+                        <!-- Copy button -->
+                        <button name="action_create_copy"
+                                type="object"
+                                string="Duplicate"
+                                class="btn-default"
+                                icon="fa-copy"/>
+
+                        <!-- STATUS BAR -->
+                        <field name="state"
+                               widget="statusbar"
+                               statusbar_visible="draft,active,completed"
+                               options="{'clickable': '0'}"/>
+                    </header>
+
+                    <sheet>
+                        <!-- Warning for completed plans -->
+                        <div class="alert alert-info" role="alert" invisible="state != 'completed'">
+                            <strong>📋 Planning Completed</strong><br/>
+                            This planning has been completed and is now read-only.
+                        </div>
+
+                        <div class="oe_title">
+                            <h1><field name="plan_name" placeholder="Enter plan name"/></h1>
+                        </div>
+
+                        <!-- Plan Configuration -->
+                        <group string="Plan Details">
+                            <group>
+                                <field name="plan_name" string="Plan Name" required="1"/>
+                                <field name="start_date" string="Planning Start Date" required="1" on_change="1"/>
+                                <field name="end_date" string="Planning End Date" required="1" on_change="1"/>
+                            </group>
+                            <group>
+                                <field name="duration_days" string="Duration (Days)" readonly="1"/>
+                                <field name="state" string="Status" readonly="1"/>
+                                <field name="is_active" string="Currently Active" widget="boolean" readonly="1"/>
+                            </group>
+                        </group>
+
+                        <!-- Description -->
+                        <notebook>
+                            <page string="Description">
+                                <group>
+                                    <field name="description" widget="textarea" nolabel="1" placeholder="Add description for this planning cycle..."/>
+                                </group>
+                            </page>
+
+                            <!-- Performance Plans Page -->
+                            <page string="Performance Plans">
+                                <group>
+                                    <group>
+                                        <field name="plans_created" string="Plans Created" readonly="1"/>
+                                        <field name="plans_in_progress" string="Plans In Progress" readonly="1"/>
+                                        <field name="plans_completed" string="Plans Completed" readonly="1"/>
+                                    </group>
+                                    <group>
+                                        <!-- Button to view all performance plans for this planning -->
+                                        <button name="action_view_performance_plans"
+                                                type="object"
+                                                string="View All Performance Plans"
+                                                class="btn-default"
+                                                icon="fa-list"/>
+
+                                        <!-- Template check button -->
+                                        <button name="action_check_templates"
+                                                type="object"
+                                                string="Check Templates"
+                                                class="btn-info"
+                                                icon="fa-search"
+                                                confirm="Check if all employees have required templates?"/>
+                                    </group>
+                                </group>
+
+                                <!-- List of performance plans -->
+                                <field name="performance_plan_ids">
+                                    <list string="Performance Plans">
+                                        <field name="name"/>
+                                        <field name="employee_id"/>
+                                        <field name="department_id"/>
+                                        <field name="state" widget="badge"/>
+                                        <field name="kpi_template_id"/>
+                                        <field name="competency_template_id"/>
+                                    </list>
+                                </field>
+                            </page>
+                        </notebook>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <!-- List View -->
+        <record id="view_evaluation_planning_list" model="ir.ui.view">
+            <field name="name">evaluation.planning.list</field>
+            <field name="model">evaluation.planning</field>
+            <field name="arch" type="xml">
+                <list string="Planning Cycles">
+                    <field name="plan_name"/>
+                    <field name="start_date"/>
+                    <field name="end_date"/>
+                    <field name="duration_days"/>
+                    <field name="state" widget="badge"
+                           options="{'warning': 'draft', 'success': 'active', 'info': 'completed'}"/>
+                    <field name="is_active" widget="boolean"/>
+                </list>
+            </field>
+        </record>
+
+        <!-- Search View -->
+        <record id="view_evaluation_planning_search" model="ir.ui.view">
+            <field name="name">evaluation.planning.search</field>
+            <field name="model">evaluation.planning</field>
+            <field name="arch" type="xml">
+                <search>
+                    <field name="plan_name"/>
+                    <filter name="active_plans" string="Active" domain="[('state', '=', 'active')]"/>
+                    <filter name="draft_plans" string="Draft" domain="[('state', '=', 'draft')]"/>
+                    <filter name="completed_plans" string="Completed" domain="[('state', '=', 'completed')]"/>
+                </search>
+            </field>
+        </record>
+
+        <!-- Action & Menu -->
+        <record id="Planning.action_evaluation_planning" model="ir.actions.act_window">
+            <field name="name">Planning</field>
+            <field name="res_model">evaluation.planning</field>
+            <field name="view_mode">list,form</field>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                    Create your first Planning Cycle
+                </p>
+                <p>
+                    Planning cycles define the timeline for setting performance goals.
+                    Create plans with custom start and end dates for planning periods.
+                </p>
+            </field>
+        </record>
+
+    </data>
+</odoo>

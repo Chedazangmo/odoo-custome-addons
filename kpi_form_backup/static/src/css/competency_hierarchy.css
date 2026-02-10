@@ -1,0 +1,50 @@
+/* Competency Hierarchy Styling - Simplified */
+
+/* Base styles for competency hierarchy */
+.competency-hierarchy-list tr[data-level="2"] .o_data_cell:first-child {
+    padding-left: 30px !important;
+}
+
+.competency-hierarchy-list tr[data-level="3"] .o_data_cell:first-child {
+    padding-left: 60px !important;
+}
+
+.competency-hierarchy-list tr[data-level="4"] .o_data_cell:first-child {
+    padding-left: 90px !important;
+}
+
+/* Visual indicators for hierarchy */
+.competency-hierarchy-list tr[data-level="2"] .o_data_cell:first-child:before {
+    content: "├── ";
+    color: #6c757d;
+    margin-right: 5px;
+}
+
+.competency-hierarchy-list tr[data-level="3"] .o_data_cell:first-child:before {
+    content: "│   ├── ";
+    color: #6c757d;
+    margin-right: 5px;
+}
+
+.competency-hierarchy-list tr[data-level="4"] .o_data_cell:first-child:before {
+    content: "│   │   ├── ";
+    color: #6c757d;
+    margin-right: 5px;
+}
+
+/* Parent row styling */
+.competency-hierarchy-list tr[data-has-children="true"] {
+    font-weight: bold;
+}
+
+/* Handle cell width */
+.o_handle_cell {
+    width: 30px;
+    min-width: 30px;
+}
+
+/* Make Sub / Make Main buttons */
+.oe_stat_button .fa-indent,
+.oe_stat_button .fa-outdent {
+    margin-right: 5px;
+}

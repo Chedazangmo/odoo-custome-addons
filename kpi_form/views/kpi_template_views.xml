@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <data>
+        <!-- Form View for KPI Template -->
+        <record id="view_kpi_template_form" model="ir.ui.view">
+            <field name="name">kpi.template.form</field>
+            <field name="model">kpi.template</field>
+            <field name="arch" type="xml">
+                <form string="KPI Template">
+                    <sheet>
+                        <div class="oe_button_box" name="button_box">
+                            <button name="action_validate_template"
+                                    type="object"
+                                    string="Validate Template"
+                                    class="oe_stat_button"
+                                    icon="fa-check"/>
+                            <!-- Debug button - removed attrs -->
+                            <button name="debug_calculation"
+                                    type="object"
+                                    string="Debug"
+                                    class="oe_stat_button"
+                                    icon="fa-bug"/>
+                        </div>
+
+                       <div class="oe_title">
+    <label for="name" string="Template Name"/>
+    <div>
+        <field name="name" placeholder="Enter KPI template name"/>
+    </div>
+    <label for="evaluation_group_id" string="Evaluation Group"/>
+    <div>
+        <field name="evaluation_group_id"
+               widget="many2one_tags"
+               placeholder="Select evaluation group"/>
+    </div>
+</div>
+
+
+
+                        <group>
+                            <group string="Score Allocation">
+                                <label for="total_score" string="Total Allowed Score"/>
+                                <field name="total_score" string="Total Score" required="1"/>
+
+                                <label for="computed_total" string="Used Score (Sum of KPI Lines)"/>
+                                <field name="computed_total" string="Used Score" readonly="1"/>
+
+                                <label for="remaining_score" string="Remaining Score"/>
+                                <field name="remaining_score" string="Remaining Score" readonly="1"/>
+
+                                <label for="allocation_percentage" string="Allocation Progress"/>
+                                <field name="allocation_percentage"
+                                       widget="progressbar"
+                                       string="Allocation Progress"
+                                       readonly="1"
+                                       options="{'max_value': 100, 'editable': false}"/>
+                            </group>
+                            <group string="Status">
+                                <label for="score_status" string="Allocation Status"/>
+                                <field name="score_status"
+                                       widget="badge"
+                                       readonly="1"
+                                       options="{'success': 'met', 'warning': 'under', 'danger': 'over'}"
+                                       string="Score Status"/>
+
+                                <!-- Visual indicator of score breakdown - removed attrs -->
+                                <div class="alert alert-info" role="alert">
+                                    <strong>Score Breakdown:</strong><br/>
+                                    Total Allowed: <field name="total_score" nolabel="1"/> points<br/>
+                                    Used by KPIs: <field name="computed_total" nolabel="1"/> points<br/>
+                                    Remaining: <field name="remaining_score" nolabel="1"/> points
+                                </div>
+                            </group>
+                        </group>
+
+                        <!-- KPI Items Section -->
+                        <notebook>
+                            <page string="KPI Items">
+                                <field name="line_ids">
+                                    <list string="KPI Items" editable="bottom">
+                                        <field name="kpi_name" string="KPI Name" required="1"/>
+                                        <field name="definition" string="Definition" widget="textarea"/>
+                                        <field name="score" string="Score" required="1"/>
+                                        <field name="evaluation_criteria" string="Evaluation Criteria" widget="textarea"/>
+                                    </list>
+                                </field>
+                            </page>
+                        </notebook>
+
+                    </sheet>
+                    <!-- Footer with instructions -->
+                    <div class="oe_chatter">
+                        <div class="alert alert-success" role="alert">
+                            <strong>Instructions:</strong>
+                            <ul>
+                                <li>Set the "Total Allowed Score" first (default: 80 points)</li>
+                                <li>Add KPI items below with their individual scores</li>
+                                <li>"Used Score" will automatically calculate as you add KPI items</li>
+                                <li>"Remaining Score" shows how many points are still available</li>
+                                <li>Use "Validate Template" button to check allocation</li>
+                            </ul>
+                        </div>
+                    </div>
+                </form>
+            </field>
+        </record>
+
+        <!-- List View for KPI Template -->
+        <record id="view_kpi_template_list" model="ir.ui.view">
+            <field name="name">kpi.template.list</field>
+            <field name="model">kpi.template</field>
+            <field name="arch" type="xml">
+                <list string="KPI Templates">
+                    <field name="name" string="Template Name"/>
+                    <field name="evaluation_group_id" string="Evaluation Group"/>
+                    <field name="total_score" string="Total Score"/>
+                    <field name="computed_total" string="Used Score"/>
+                    <field name="remaining_score" string="Remaining"/>
+                    <field name="score_status" widget="badge"
+                           options="{'success': 'met', 'warning': 'under', 'danger': 'over'}"
+                           string="Status"/>
+                </list>
+            </field>
+        </record>
+
+        <!-- Search View -->
+        <record id="view_kpi_template_search" model="ir.ui.view">
+            <field name="name">kpi.template.search</field>
+            <field name="model">kpi.template</field>
+            <field name="arch" type="xml">
+                <search>
+                    <field name="name" string="Template Name"/>
+                    <field name="evaluation_group_id" string="Evaluation Group"/>
+
+                    <!-- Score status filters -->
+                    <filter string="Under Allocated" name="under_allocated" domain="[('score_status', '=', 'under')]"/>
+                    <filter string="Perfectly Allocated" name="perfectly_allocated" domain="[('score_status', '=', 'met')]"/>
+                    <filter string="Over Allocated" name="over_allocated" domain="[('score_status', '=', 'over')]"/>
+                </search>
+            </field>
+        </record>
+
+        <!-- Action & Menu -->
+        <record id="action_kpi_template" model="ir.actions.act_window">
+            <field name="name">KPI Templates</field>
+            <field name="res_model">kpi.template</field>
+            <field name="view_mode">list,form</field>
+            <field name="search_view_id" ref="view_kpi_template_search"/>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                    Create your first KPI Template
+                </p>
+                <p>
+                    KPI templates define key performance indicators for each evaluation group.
+                    Allocate scores to each KPI without exceeding the total score.
+                </p>
+            </field>
+        </record>
+    </data>
+</odoo>

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <data>
+        <!-- Extend Employee FORM View ONLY -->
+        <record id="view_employee_form_inherit" model="ir.ui.view">
+            <field name="name">hr.employee.form.inherit</field>
+            <field name="model">hr.employee</field>
+            <field name="inherit_id" ref="hr.view_employee_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='parent_id']" position="after">
+                    <field name="second_manager_id"/>
+                    <field name="reviewer_id"/>
+                    <field name="evaluation_group_id"/>
+                </xpath>
+            </field>
+        </record>
+    </data>
+</odoo>

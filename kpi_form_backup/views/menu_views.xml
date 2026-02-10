@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <data>
+        <!-- Root Menu - Performance Management -->
+        <menuitem id="menu_performance_root" name="Performance Management" sequence="10"/>
+
+        <!-- Templates Configuration Menu (Parent) -->
+        <menuitem id="menu_templates_configuration"
+                  name="Templates Configuration"
+                  parent="menu_performance_root"
+                  sequence="20"/>
+
+        <!-- KPI Templates Sub-menu -->
+        <menuitem id="menu_kpi_template"
+                  name="KPI Templates"
+                  parent="menu_templates_configuration"
+                  action="action_kpi_template"
+                  sequence="20"/>
+
+        <!-- Competency Templates Sub-menu -->
+        <menuitem id="menu_competency_template"
+                  name="Competency Templates"
+                  parent="menu_templates_configuration"
+                  action="action_competency_template"
+                  sequence="20"/>
+    </data>
+</odoo>
