@@ -26,6 +26,7 @@ class PerformancePlanKpiLine(models.Model):
         string='Employee Target',
         help="Specific target set by the employee"
     )
+    evaluation_criteria = fields.Text(string='Evaluation Criteria',required=True)
 
     plan_state = fields.Selection(
         related='performance_plan_id.state',
@@ -34,8 +35,9 @@ class PerformancePlanKpiLine(models.Model):
         store=False  # Don't store in database, just compute on the fly
     )
     # Manager fields
-    manager_notes = fields.Text(string='Manager Notes')
-    achieved_score = fields.Float(string='Achieved Score')
+    manager_notes = fields.Text(string="Manager Notes")
+    reviewer_comments = fields.Text(string="Reviewer Comments")
+
 
     def _get_default_definition(self):
         """Get default definition if empty"""

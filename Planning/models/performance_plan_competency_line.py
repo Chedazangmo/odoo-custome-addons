@@ -32,7 +32,7 @@ class PerformancePlanCompetencyLine(models.Model):
     )
 
     # Manager fields
-    manager_notes = fields.Text(string='Manager Notes')
-    achieved_points = fields.Float(string='Achieved Points')
+    manager_notes = fields.Text(string="Manager Notes")
+    reviewer_comments = fields.Text(string="Reviewer Comments")
 
 

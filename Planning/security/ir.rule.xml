@@ -1,69 +1,186 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <data noupdate="1">
-        <!-- =========== EVALUATION PLANNING RULES =========== -->
-        <!-- HR Managers: See ALL planning records -->
+        <!-- ===== EVALUATION PLANNING RULES ===== -->
+
+        <!-- HR Rule: Can see all evaluation planning -->
+        <record id="evaluation_planning_hr_rule" model="ir.rule">
+            <field name="name">HR: Can see all evaluation planning</field>
+            <field name="model_id" ref="model_evaluation_planning"/>
+            <field name="groups" eval="[(4, ref('hr.group_hr_manager'))]"/>
+            <field name="domain_force">[(1, '=', 1)]</field>
+        </record>
+
+        <!-- Manager Rule: Can see active/completed evaluation planning -->
         <record id="evaluation_planning_manager_rule" model="ir.rule">
-            <field name="name">Evaluation Planning: HR Managers See All</field>
+            <field name="name">Manager: Can see active/completed evaluation planning</field>
             <field name="model_id" ref="model_evaluation_planning"/>
-            <field name="groups" eval="[(4, ref('hr.group_hr_manager'))]"/>
-            <field name="domain_force">[(1, '=', 1)]</field>
+            <field name="groups" eval="[(4, ref('Planning.group_performance_plan_manager'))]"/>
+            <field name="domain_force">[('state', 'in', ['active', 'completed'])]</field>
         </record>
 
-        <!-- HR Users: Only see plans they created OR active plans -->
+        <!-- User Rule: Can only see active evaluation planning -->
         <record id="evaluation_planning_user_rule" model="ir.rule">
-            <field name="name">Evaluation Planning: HR Users Limited</field>
+            <field name="name">User: Can only see active evaluation planning</field>
             <field name="model_id" ref="model_evaluation_planning"/>
-            <field name="groups" eval="[(4, ref('hr.group_hr_user'))]"/>
-            <field name="domain_force">['|', ('create_uid', '=', user.id), ('state', '=', 'active')]</field>
+            <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+            <field name="domain_force">[('state', '=', 'active')]</field>
         </record>
 
-        <!-- =========== PERFORMANCE PLAN RULES =========== -->
-        <!-- HR Managers: See ALL performance plans -->
+        <!-- ===== PERFORMANCE PLAN RULES ===== -->
+
+        <!-- Employee Rule: Can only see their own plans -->
+        <record id="performance_plan_employee_rule" model="ir.rule">
+            <field name="name">Employee: Can only see own performance plans</field>
+            <field name="model_id" ref="model_performance_plan"/>
+            <field name="groups" eval="[(4, ref('Planning.group_performance_plan_employee'))]"/>
+            <field name="domain_force">
+                [('employee_id.user_id', '=', user.id)]
+            </field>
+        </record>
+
+        <!-- Manager Rule: Can see plans of employees they manage -->
         <record id="performance_plan_manager_rule" model="ir.rule">
-            <field name="name">Performance Plan: HR Managers See All</field>
+            <field name="name">Manager: Can see managed employees' plans</field>
+            <field name="model_id" ref="model_performance_plan"/>
+            <field name="groups" eval="[(4, ref('Planning.group_performance_plan_manager'))]"/>
+            <field name="domain_force">
+                ['|',
+                 ('employee_id.parent_id.user_id', '=', user.id),
+                 ('first_manager_id.user_id', '=', user.id)
+                ]
+            </field>
+        </record>
+
+        <!-- Reviewer Rule: Can see plans they are assigned to review -->
+        <record id="performance_plan_reviewer_rule" model="ir.rule">
+            <field name="name">Reviewer: Can see assigned review plans</field>
+            <field name="model_id" ref="model_performance_plan"/>
+            <field name="groups" eval="[(4, ref('Planning.group_performance_plan_reviewer'))]"/>
+            <field name="domain_force">
+                [('reviewer_id.user_id', '=', user.id)]
+            </field>
+        </record>
+
+        <!-- HR Rule: Can see all performance plans (no restriction) -->
+        <record id="performance_plan_hr_rule" model="ir.rule">
+            <field name="name">HR: Can see all performance plans</field>
             <field name="model_id" ref="model_performance_plan"/>
             <field name="groups" eval="[(4, ref('hr.group_hr_manager'))]"/>
             <field name="domain_force">[(1, '=', 1)]</field>
         </record>
 
-        <!-- HR Users: Only see plans in their department OR plans they created -->
-        <record id="performance_plan_user_rule" model="ir.rule">
-            <field name="name">Performance Plan: HR Users Limited</field>
-            <field name="model_id" ref="model_performance_plan"/>
-            <field name="groups" eval="[(4, ref('hr.group_hr_user'))]"/>
-            <field name="domain_force">
-                ['|', ('create_uid', '=', user.id),
-                      ('department_id', 'in', user.employee_ids.department_id.ids)]
-            </field>
-        </record>
+        <!-- ===== KPI LINES RULES ===== -->
 
-        <!-- EMPLOYEES: Can only see THEIR OWN performance plans -->
-        <record id="performance_plan_employee_rule" model="ir.rule">
-            <field name="name">Performance Plan: Employee Own Records</field>
-            <field name="model_id" ref="model_performance_plan"/>
-            <field name="groups" eval="[(4, ref('base.group_user'))]"/>
-            <field name="domain_force">[('employee_id.user_id', '=', user.id)]</field>
-        </record>
-
-        <!-- =========== KPI LINE RULES =========== -->
-        <!-- Employees: Can only edit KPI lines in their own DRAFT plans -->
+        <!-- Employee Rule for KPI Lines -->
         <record id="kpi_line_employee_rule" model="ir.rule">
-            <field name="name">KPI Line: Employee Edit Rights</field>
+            <field name="name">Employee: Can only see own KPI lines</field>
             <field name="model_id" ref="model_performance_plan_kpi_line"/>
-            <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+            <field name="groups" eval="[(4, ref('Planning.group_performance_plan_employee'))]"/>
             <field name="domain_force">
-                [('performance_plan_id.employee_id.user_id', '=', user.id),
-                 ('performance_plan_id.state', '=', 'draft')]
+                [('performance_plan_id.employee_id.user_id', '=', user.id)]
             </field>
         </record>
 
-        <!-- HR: Can see all KPI lines -->
-        <record id="kpi_line_hr_rule" model="ir.rule">
-            <field name="name">KPI Line: HR Access</field>
+        <!-- Manager Rule for KPI Lines -->
+        <record id="kpi_line_manager_rule" model="ir.rule">
+            <field name="name">Manager: Can see KPI lines of managed employees</field>
             <field name="model_id" ref="model_performance_plan_kpi_line"/>
-            <field name="groups" eval="[(4, ref('hr.group_hr_user'))]"/>
+            <field name="groups" eval="[(4, ref('Planning.group_performance_plan_manager'))]"/>
+            <field name="domain_force">
+                ['|',
+                 ('performance_plan_id.employee_id.parent_id.user_id', '=', user.id),
+                 ('performance_plan_id.first_manager_id.user_id', '=', user.id)
+                ]
+            </field>
+        </record>
+
+        <!-- Reviewer Rule for KPI Lines -->
+        <record id="kpi_line_reviewer_rule" model="ir.rule">
+            <field name="name">Reviewer: Can see KPI lines of assigned review plans</field>
+            <field name="model_id" ref="model_performance_plan_kpi_line"/>
+            <field name="groups" eval="[(4, ref('Planning.group_performance_plan_reviewer'))]"/>
+            <field name="domain_force">
+                [('performance_plan_id.reviewer_id.user_id', '=', user.id)]
+            </field>
+        </record>
+
+        <!-- HR Rule for KPI Lines -->
+        <record id="kpi_line_hr_rule" model="ir.rule">
+            <field name="name">HR: Can see all KPI lines</field>
+            <field name="model_id" ref="model_performance_plan_kpi_line"/>
+            <field name="groups" eval="[(4, ref('hr.group_hr_manager'))]"/>
             <field name="domain_force">[(1, '=', 1)]</field>
         </record>
+
+        <!-- ===== COMPETENCY LINES RULES ===== -->
+
+        <!-- Employee Rule for Competency Lines -->
+        <record id="competency_line_employee_rule" model="ir.rule">
+            <field name="name">Employee: Can only see own competency lines</field>
+            <field name="model_id" ref="model_performance_plan_competency_line"/>
+            <field name="groups" eval="[(4, ref('Planning.group_performance_plan_employee'))]"/>
+            <field name="domain_force">
+                [('performance_plan_id.employee_id.user_id', '=', user.id)]
+            </field>
+        </record>
+
+        <!-- Manager Rule for Competency Lines -->
+        <record id="competency_line_manager_rule" model="ir.rule">
+            <field name="name">Manager: Can see competency lines of managed employees</field>
+            <field name="model_id" ref="model_performance_plan_competency_line"/>
+            <field name="groups" eval="[(4, ref('Planning.group_performance_plan_manager'))]"/>
+            <field name="domain_force">
+                ['|',
+                 ('performance_plan_id.employee_id.parent_id.user_id', '=', user.id),
+                 ('performance_plan_id.first_manager_id.user_id', '=', user.id)
+                ]
+            </field>
+        </record>
+
+        <!-- Reviewer Rule for Competency Lines -->
+        <record id="competency_line_reviewer_rule" model="ir.rule">
+            <field name="name">Reviewer: Can see competency lines of assigned review plans</field>
+            <field name="model_id" ref="model_performance_plan_competency_line"/>
+            <field name="groups" eval="[(4, ref('Planning.group_performance_plan_reviewer'))]"/>
+            <field name="domain_force">
+                [('performance_plan_id.reviewer_id.user_id', '=', user.id)]
+            </field>
+        </record>
+
+        <!-- HR Rule for Competency Lines -->
+        <record id="competency_line_hr_rule" model="ir.rule">
+            <field name="name">HR: Can see all competency lines</field>
+            <field name="model_id" ref="model_performance_plan_competency_line"/>
+            <field name="groups" eval="[(4, ref('hr.group_hr_manager'))]"/>
+            <field name="domain_force">[(1, '=', 1)]</field>
+        </record>
+
+        <!-- ===== TEMPLATE RULES (from kpi_form module) ===== -->
+
+        <!-- KPI Template Rule (HR only) -->
+        <record id="kpi_template_hr_rule" model="ir.rule">
+            <field name="name">HR: Can see all KPI templates</field>
+            <field name="model_id" ref="kpi_form.model_kpi_template"/>
+            <field name="groups" eval="[(4, ref('hr.group_hr_manager'))]"/>
+            <field name="domain_force">[(1, '=', 1)]</field>
+        </record>
+
+        <!-- Competency Template Rule (HR only) -->
+        <record id="competency_template_hr_rule" model="ir.rule">
+            <field name="name">HR: Can see all competency templates</field>
+            <field name="model_id" ref="kpi_form.model_competency_template"/>
+            <field name="groups" eval="[(4, ref('hr.group_hr_manager'))]"/>
+            <field name="domain_force">[(1, '=', 1)]</field>
+        </record>
+
+        <!-- Evaluation Group Rule (HR only) -->
+        <record id="evaluation_group_hr_rule" model="ir.rule">
+            <field name="name">HR: Can see all evaluation groups</field>
+            <field name="model_id" ref="hr_extension.model_evaluation_group"/>
+            <field name="groups" eval="[(4, ref('hr.group_hr_manager'))]"/>
+            <field name="domain_force">[(1, '=', 1)]</field>
+        </record>
+
     </data>
 </odoo>

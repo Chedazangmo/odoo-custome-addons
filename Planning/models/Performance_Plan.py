@@ -23,11 +23,71 @@ class PerformancePlan(models.Model):
     employee_id = fields.Many2one('hr.employee', string='Employee', required=True)
     department_id = fields.Many2one('hr.department', related='employee_id.department_id', readonly=True)
 
+    # === MANAGER AND REVIEWER FIELDS (LOADED FROM EMPLOYEE) ===
+    first_manager_id = fields.Many2one(
+        'hr.employee',
+        string='First Manager',
+        related='employee_id.parent_id',
+        readonly=True,
+        store=True
+    )
+
+    second_manager_id = fields.Many2one(
+        'hr.employee',
+        string='Second Manager',
+        related='employee_id.second_manager_id',
+        readonly=True,
+        store=True
+    )
+
+    reviewer_id = fields.Many2one(
+        'hr.employee',
+        string='Reviewer',
+        related='employee_id.reviewer_id',
+        readonly=True,
+        store=True
+    )
+
+    # Boolean field to control visibility in UI
+    has_second_manager = fields.Boolean(
+        string='Has Second Manager',
+        compute='_compute_has_second_manager',
+        store=True
+    )
+
+    # === ROLE-BASED FIELDS ===
+    is_current_user_employee = fields.Boolean(
+        compute='_compute_user_roles',
+        string='Is Current User Employee',
+        store=False
+    )
+
+    is_current_user_manager = fields.Boolean(
+        compute='_compute_user_roles',
+        string='Is Current User Manager',
+        store=False
+    )
+
+    is_current_user_reviewer = fields.Boolean(
+        compute='_compute_user_roles',
+        string='Is Current User Reviewer',
+        store=False
+    )
+
+    is_current_user_hr = fields.Boolean(
+        compute='_compute_user_roles',
+        string='Is Current User HR',
+        store=False
+    )
+
     # === GROUP/EVALUATION GROUP FIELD (IMPORTANT FOR TEMPLATE ASSIGNMENT) ===
     evaluation_group_id = fields.Many2one(
         'evaluation.group',
         string='Evaluation Group',
-        help="Group that determines which templates to use"
+        related='employee_id.evaluation_group_id',
+        readonly=True,
+        store=True,
+        help="Group that determines which templates to use (loaded from employee)"
     )
 
     # === TEMPLATES ===
@@ -62,19 +122,43 @@ class PerformancePlan(models.Model):
         store=True
     )
 
-
     competency_total_max = fields.Float(
         string='Total Max Points',
         compute='_compute_competency_totals',
         store=True
     )
 
-
-
     # === APPROVAL FIELDS ===
     employee_comments = fields.Text(string='Employee Comments')
     manager_comments = fields.Text(string='Manager Comments')
     approval_date = fields.Date(string='Approval Date', readonly=True)
+
+    @api.depends('second_manager_id')
+    def _compute_has_second_manager(self):
+        """Compute whether second manager exists for UI visibility control"""
+        for plan in self:
+            plan.has_second_manager = bool(plan.second_manager_id)
+
+    @api.depends('employee_id', 'first_manager_id', 'second_manager_id', 'reviewer_id')
+    def _compute_user_roles(self):
+        """Compute role-based fields for the current logged-in user"""
+        current_user = self.env.user
+
+        for plan in self:
+            # Check if current user is the employee
+            plan.is_current_user_employee = plan.employee_id.user_id == current_user if plan.employee_id.user_id else False
+
+            # Check if current user is the first or second manager
+            plan.is_current_user_manager = (
+                    plan.first_manager_id.user_id == current_user or
+                    (plan.second_manager_id and plan.second_manager_id.user_id == current_user)
+            )
+
+            # Check if current user has HR group
+            plan.is_current_user_hr = current_user.has_group('hr.group_hr_user')
+
+            # Check if current user is the reviewer
+            plan.is_current_user_reviewer = plan.reviewer_id.user_id == current_user if plan.reviewer_id.user_id else False
 
     @api.model_create_multi
     def create(self, vals_list):
@@ -125,6 +209,7 @@ class PerformancePlan(models.Model):
                 self.kpi_template_id = kpi_template
             if competency_template:
                 self.competency_template_id = competency_template
+
     @api.onchange('evaluation_group_id')
     def _onchange_evaluation_group_id(self):
         """When evaluation group changes, auto-assign templates"""
@@ -160,6 +245,7 @@ class PerformancePlan(models.Model):
                         'kpi_name': template_line.kpi_name,
                         'definition': template_line.definition,
                         'max_score': template_line.score,
+                        'evaluation_criteria': template_line.evaluation_criteria,
                         'employee_target': '',  # Empty for employee to fill
                     })
         except Exception as e:
@@ -191,6 +277,10 @@ class PerformancePlan(models.Model):
 
     def action_submit_for_approval(self):
         """Employee submits targets for approval"""
+        # Check if current user is the employee
+        #if not self.is_current_user_employee:
+         #   raise UserError("Only the employee can submit their performance plan.")
+
         # Validate all targets are filled
         for kpi_line in self.kpi_line_ids:
             if not kpi_line.employee_target or kpi_line.employee_target.strip() == '':
@@ -213,6 +303,10 @@ class PerformancePlan(models.Model):
 
     def action_approve(self):
         """Manager approves the plan"""
+        # TODO: SECURITY - UNCOMMENT BEFORE DEPLOYMENT!
+        # if not self.is_current_user_manager and not self.is_current_user_hr:
+        #     raise UserError("Only the manager or HR can approve performance plans.")
+
         self.state = 'approved'
         self.approval_date = fields.Date.today()
 
@@ -227,6 +321,10 @@ class PerformancePlan(models.Model):
 
     def action_reject(self):
         """Manager rejects the plan"""
+        # TODO: SECURITY - UNCOMMENT BEFORE DEPLOYMENT!
+        # if not self.is_current_user_manager and not self.is_current_user_hr:
+        #     raise UserError("Only the manager or HR can reject performance plans.")
+
         if not self.manager_comments:
             raise ValidationError("Please provide rejection comments")
 
@@ -243,6 +341,10 @@ class PerformancePlan(models.Model):
 
     def action_reset_to_draft(self):
         """Reset plan to draft for revisions"""
+        # TODO: SECURITY - UNCOMMENT BEFORE DEPLOYMENT!
+        # if not self.is_current_user_hr and not (self.is_current_user_employee and self.state in ['rejected', 'draft']):
+        #     raise UserError("You don't have permission to reset this plan to draft.")
+
         if self.state in ['rejected', 'submitted']:
             self.state = 'draft'
             self.manager_comments = False
@@ -261,6 +363,10 @@ class PerformancePlan(models.Model):
     def action_load_kpi_template(self):
         """Manual button to load KPI template"""
         self.ensure_one()
+
+        # Check permissions - only employee or HR can load templates
+        if not self.is_current_user_employee and not self.is_current_user_hr:
+            raise UserError("You don't have permission to load templates.")
 
         if self.state != 'draft':
             raise UserError("You can only load templates in draft state.")
@@ -284,6 +390,10 @@ class PerformancePlan(models.Model):
         """Manual button to load competency template"""
         self.ensure_one()
 
+        # Check permissions - only employee or HR can load templates
+        if not self.is_current_user_employee and not self.is_current_user_hr:
+            raise UserError("You don't have permission to load templates.")
+
         if self.state != 'draft':
             raise UserError("You can only load templates in draft state.")
 
@@ -305,6 +415,10 @@ class PerformancePlan(models.Model):
     def action_load_templates(self):
         """Load both templates at once"""
         self.ensure_one()
+
+        # Check permissions - only employee or HR can load templates
+        if not self.is_current_user_employee and not self.is_current_user_hr:
+            raise UserError("You don't have permission to load templates.")
 
         if self.state != 'draft':
             raise UserError("You can only load templates in draft state.")
@@ -335,3 +449,18 @@ class PerformancePlan(models.Model):
                 'sticky': False,
             }
         }
+
+    def write(self, vals):
+        """Override write to add role-based security checks"""
+        # Check if user is trying to edit fields they shouldn't
+        if 'state' in vals and not self.is_current_user_hr:
+            # Only HR can manually change state (others use action methods)
+            if vals['state'] not in ['draft', 'submitted', 'approved', 'rejected']:
+                raise UserError("You cannot manually change the state. Use the action buttons instead.")
+
+        # Check if employee is trying to edit after submission
+        if self.is_current_user_employee and self.state == 'submitted':
+            # Employee cannot edit after submission
+            raise UserError("You cannot edit the plan after submission. Please wait for manager review.")
+
+        return super(PerformancePlan, self).write(vals)

@@ -8,46 +8,87 @@
             <field name="arch" type="xml">
                 <form string="Planning">
                     <header>
+                        <!-- HR Only: Cancel button -->
                         <button
                             name="action_cancel"
                             string="Cancel"
                             type="object"
                             class="btn-danger"
-                            invisible="state != 'active'"
-                            confirm="Are you sure you want to cancel this plan?"
+                            invisible="state != 'active' or not is_current_user_hr"
+                            confirm="Are you sure you want to cancel this plan? All performance plans will be archived."
                         />
+
+                        <!-- HR Only: Activate button -->
                         <button
                             name="action_activate"
                             string="Activate"
                             type="object"
                             class="btn-primary"
-                            invisible="state != 'draft'"
+                            invisible="state != 'draft' or not is_current_user_hr"
                             confirm="Activate this planning? This will create performance plans for all employees."
                         />
-                        <!-- Complete button -->
+
+                        <!-- HR Only: Complete button -->
                         <button name="action_complete"
                                 type="object"
                                 string="Mark as Completed"
                                 class="btn-success"
                                 icon="fa-check"
-                                invisible="state != 'active'"
+                                invisible="state != 'active' or not is_current_user_hr"
                                 confirm="Are you sure you want to mark this plan as completed?"/>
 
-                        <!-- Reset to draft button -->
+                        <!-- HR Only: Reset to draft button -->
                         <button name="action_set_to_draft"
                                 type="object"
                                 string="Reset to Draft"
                                 class="btn-warning"
                                 icon="fa-undo"
-                                invisible="state != 'completed'"
+                                invisible="state != 'completed' or not is_current_user_hr"
                                 confirm="Are you sure you want to reset this completed plan to draft?"/>
 
-                        <!-- Copy button -->
+                        <!-- HR Only: Copy button -->
                         <button name="action_create_copy"
                                 type="object"
                                 string="Duplicate"
                                 class="btn-default"
-                                icon="fa-copy"/>
+                                icon="fa-copy"
+                                invisible="not is_current_user_hr"/>
+
+                        <!-- Debug buttons (HR Only) -->
+                     <!--   <button name="debug_template_search"
+                                type="object"
+                                string="Debug Templates"
+                                class="btn-info"
+                                icon="fa-bug"
+                                invisible="not is_current_user_hr"/>
+
+                        <button name="debug_template_contents"
+                                type="object"
+                                string="Debug Template Contents"
+                                class="btn-info"
+                                icon="fa-bug"
+                                invisible="not is_current_user_hr"/>
+
+                        <button name="debug_project_delivery_templates"
+                                type="object"
+                                string="Debug Project Delivery"
+                                class="btn-info"
+                                icon="fa-bug"
+                                invisible="not is_current_user_hr"/>
+
+                        <button name="test_fixed_population"
+                                type="object"
+                                string="Test Plan Creation"
+                                class="btn-warning"
+                                icon="fa-flask"
+                                invisible="not is_current_user_hr"/>
+
+                        <button name="test_activation_only"
+                                type="object"
+                                string="Test Activation"
+                                class="btn-warning"
+                                icon="fa-flask"
+                                invisible="not is_current_user_hr"/>-->
 
                         <!-- STATUS BAR -->
                         <field name="state"
@@ -63,21 +104,35 @@
                             This planning has been completed and is now read-only.
                         </div>
 
+                        <!-- HR Only warning -->
+                        <div class="alert alert-warning" role="alert" invisible="is_current_user_hr or is_current_user_manager">
+                            <strong>⚠️ Read-Only View</strong><br/>
+                            You have view-only access to planning cycles. Only HR administrators can create or modify plans.
+                        </div>
+
                         <div class="oe_title">
-                            <h1><field name="plan_name" placeholder="Enter plan name"/></h1>
+                            <h1>
+                                <field name="plan_name" placeholder="Enter plan name"
+                                       readonly="not is_current_user_hr and state != 'draft'"/>
+                            </h1>
                         </div>
 
                         <!-- Plan Configuration -->
                         <group string="Plan Details">
                             <group>
-                                <field name="plan_name" string="Plan Name" required="1"/>
-                                <field name="start_date" string="Planning Start Date" required="1" on_change="1"/>
-                                <field name="end_date" string="Planning End Date" required="1" on_change="1"/>
+                                <field name="plan_name" string="Plan Name" required="1"
+                                       readonly="not is_current_user_hr and state != 'draft'"/>
+                                <field name="start_date" string="Planning Start Date" required="1"
+                                       readonly="not is_current_user_hr and state != 'draft'"/>
+                                <field name="end_date" string="Planning End Date" required="1"
+                                       readonly="not is_current_user_hr and state != 'draft'"/>
                             </group>
                             <group>
                                 <field name="duration_days" string="Duration (Days)" readonly="1"/>
                                 <field name="state" string="Status" readonly="1"/>
                                 <field name="is_active" string="Currently Active" widget="boolean" readonly="1"/>
+                                <field name="is_current_user_hr" string="HR Admin" widget="boolean" invisible="1"/>
+                                <field name="is_current_user_manager" string="Manager" widget="boolean" invisible="1"/>
                             </group>
                         </group>
 
@@ -85,7 +140,9 @@
                         <notebook>
                             <page string="Description">
                                 <group>
-                                    <field name="description" widget="textarea" nolabel="1" placeholder="Add description for this planning cycle..."/>
+                                    <field name="description" widget="textarea" nolabel="1"
+                                           placeholder="Add description for this planning cycle..."
+                                           readonly="not is_current_user_hr and state != 'draft'"/>
                                 </group>
                             </page>
 
@@ -105,12 +162,13 @@
                                                 class="btn-default"
                                                 icon="fa-list"/>
 
-                                        <!-- Template check button -->
+                                        <!-- Template check button (HR and Managers only) -->
                                         <button name="action_check_templates"
                                                 type="object"
                                                 string="Check Templates"
                                                 class="btn-info"
                                                 icon="fa-search"
+                                                invisible="not (is_current_user_hr or is_current_user_manager)"
                                                 confirm="Check if all employees have required templates?"/>
                                     </group>
                                 </group>
@@ -126,6 +184,88 @@
                                         <field name="competency_template_id"/>
                                     </list>
                                 </field>
+                            </page>
+
+                            <!-- Statistics Page -->
+                            <page string="Statistics">
+                                <group>
+                                    <div class="row">
+                                        <div class="col-md-4">
+                                            <div class="card text-center">
+                                                <div class="card-body">
+                                                    <h3 class="card-title">
+                                                        <field name="plans_created" widget="integer"/>
+                                                    </h3>
+                                                    <p class="card-text">Total Plans Created</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="card text-center">
+                                                <div class="card-body">
+                                                    <h3 class="card-title">
+                                                        <field name="plans_in_progress" widget="integer"/>
+                                                    </h3>
+                                                    <p class="card-text">Plans In Progress</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="card text-center">
+                                                <div class="card-body">
+                                                    <h3 class="card-title">
+                                                        <field name="plans_completed" widget="integer"/>
+                                                    </h3>
+                                                    <p class="card-text">Plans Completed</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </group>
+                            </page>
+
+                            <!-- Admin Tools Page (HR Only) -->
+                            <page string="Admin Tools" invisible="not is_current_user_hr">
+                                <div class="alert alert-info" role="alert">
+                                    <strong>⚙️ Administrative Tools</strong><br/>
+                                    These tools are only available to HR administrators.
+                                </div>
+
+                                <group string="Debug Tools">
+                                    <button name="debug_template_search"
+                                            type="object"
+                                            string="Debug Template Search"
+                                            class="btn-info"
+                                            icon="fa-search"/>
+
+                                    <button name="debug_template_contents"
+                                            type="object"
+                                            string="Debug Template Contents"
+                                            class="btn-info"
+                                            icon="fa-code"/>
+
+                                    <button name="debug_project_delivery_templates"
+                                            type="object"
+                                            string="Debug Project Delivery"
+                                            class="btn-info"
+                                            icon="fa-project-diagram"/>
+                                </group>
+
+                                <group string="Test Tools">
+                                    <button name="test_fixed_population"
+                                            type="object"
+                                            string="Test Single Plan Creation"
+                                            class="btn-warning"
+                                            icon="fa-flask"
+                                            confirm="Create a test performance plan for one employee?"/>
+
+                                    <button name="test_activation_only"
+                                            type="object"
+                                            string="Test Activation Only"
+                                            class="btn-warning"
+                                            icon="fa-flask"
+                                            confirm="Activate without creating performance plans?"/>
+                                </group>
                             </page>
                         </notebook>
                     </sheet>
@@ -157,9 +297,24 @@
             <field name="arch" type="xml">
                 <search>
                     <field name="plan_name"/>
+
+                    <!-- State filters -->
                     <filter name="active_plans" string="Active" domain="[('state', '=', 'active')]"/>
                     <filter name="draft_plans" string="Draft" domain="[('state', '=', 'draft')]"/>
                     <filter name="completed_plans" string="Completed" domain="[('state', '=', 'completed')]"/>
+
+                    <!-- Role-based filters -->
+                    <filter name="hr_view_all" string="All Plans"
+                            domain="[]"
+                            help="All planning cycles"/>
+
+                    <filter name="manager_view" string="Active &amp; Completed"
+                            domain="[('state', 'in', ['active', 'completed'])]"
+                            help="Active and completed planning cycles"/>
+
+                    <filter name="user_view" string="Active Only"
+                            domain="[('state', '=', 'active')]"
+                            help="Currently active planning cycles"/>
                 </search>
             </field>
         </record>
@@ -169,6 +324,7 @@
             <field name="name">Planning</field>
             <field name="res_model">evaluation.planning</field>
             <field name="view_mode">list,form</field>
+            <field name="context">{'default_state': 'draft'}</field>
             <field name="help" type="html">
                 <p class="o_view_nocontent_smiling_face">
                     Create your first Planning Cycle

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record id="group_performance_plan_employee" model="res.groups">
+            <field name="name">Performance Plan / Employee</field>
+        </record>
+        <record id="group_performance_plan_manager" model="res.groups">
+            <field name="name">Performance Plan / Manager</field>
+        </record>
+        <record id="group_performance_plan_reviewer" model="res.groups">
+            <field name="name">Performance Plan / Reviewer</field>
+        </record>
+    </data>
+</odoo>
