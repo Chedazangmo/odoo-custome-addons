@@ -1,0 +1,137 @@
+.o_kra_tabs_container {
+    font-family: inherit;
+    background: #fff;
+    border-radius: 4px;
+
+    /* --- 1. KRA Tabs Styling --- */
+    .o_kra_tabs_nav {
+        display: flex;
+        border-bottom: 1px solid #e0e0e0;
+        margin-bottom: 1.5rem;
+        gap: 2rem;
+        padding: 0 1rem;
+
+
+        overflow-x: auto;
+        overflow-y: visible;
+        // Hide the scrollbar visually  (donest work need to redo it)
+        scrollbar-width: none;           // Firefox
+        -ms-overflow-style: none;        // IE / Edge legacy
+        &::-webkit-scrollbar {
+            display: none;               // Chrome / Safari
+        }
+
+        .o_kra_tab {
+            padding: 1rem 0.5rem;
+            cursor: pointer;
+            color: #6c757d;
+            font-weight: 500;
+            border-bottom: 3px solid transparent;
+            transition: all 0.2s ease-in-out;
+            background: transparent !important;
+
+            flex-shrink: 0;
+            white-space: nowrap;
+
+            &:hover {
+                color: #004D8B;
+            }
+
+            &.o_active_tab {
+                color: #004D8B;
+                font-weight: 700;
+                border-bottom-color: #004D8B;
+            }
+        }
+    }
+
+    /* --- 2. Empty State (Corporate Standard) --- */
+    .o_kra_no_content {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 4rem 2rem;
+        background-color: #f8f9fa;
+        border: 2px dashed #dee2e6;
+        border-radius: 8px;
+        color: #adb5bd;
+        text-align: center;
+
+        i {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        p {
+            font-size: 1.1rem;
+            margin: 0;
+        }
+    }
+
+    /* --- 3. Table Styling --- */
+    .o_kra_kpi_section {
+        padding: 0 1rem 1rem 1rem;
+
+        h5 {
+            color: #212529;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+        }
+
+        .table {
+            table-layout: fixed;
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+
+            thead th {
+                background-color: #f8f9fa;
+                border-bottom: 2px solid #e9ecef;
+                color: #495057;
+                font-weight: 600;
+                text-transform: uppercase;
+                font-size: 0.75rem;
+                letter-spacing: 0.05em;
+                padding: 12px;
+                vertical-align: middle;
+            }
+
+            tbody td {
+                vertical-align: top;
+                padding: 8px;
+                border-color: #f1f3f5;
+            }
+
+            // Input/Textarea Styling
+            input.form-control,
+            textarea.form-control {
+                border: none;
+                border-radius: 0;
+                background: transparent;
+                box-shadow: none;
+                padding: 6px 8px;         
+                font-size: 0.85rem;       
+                color: #212529;
+                resize: none;
+                overflow: hidden;
+                min-height: 36px;         
+                line-height: 1.4;
+
+                &::placeholder {
+                    color: #adb5bd;
+                    font-style: italic;
+                }
+
+                &:focus {
+                    background: #f8f9fa;
+                    outline: none;
+                    border-bottom: 1px solid #004D8B;
+                }
+            }
+        }
+    }
+}

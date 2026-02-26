@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+        <record id="action_pms_cycle" model="ir.actions.act_window">
+        <field name="name">Performance Cycles</field>
+        <field name="res_model">pms.cycle</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create a new Performance Cycle
+            </p>
+            <p>
+                Performance cycles help you manage employee evaluations throughout the year.
+                Click "Activate Cycle" to get started.
+            </p>
+        </field>
+    </record>
+    
+    <record id="view_pms_cycle_list" model="ir.ui.view">
+        <field name="name">pms.cycle.list</field>
+        <field name="model">pms.cycle</field>
+        <field name="arch" type="xml">
+            <list multi_edit="1">
+                <field name="sequence" widget="handle"/>
+                <field name="name"/>
+                <field name="cycle_type"/>
+                <field name="start_date"/>
+                <field name="end_date"/>
+                <field name="planning_deadline"/>
+                <field name="state" widget="badge"
+                       decoration-success="state == 'planning' or state == 'appraisal'"
+                       decoration-info="state == 'draft'"
+                       decoration-muted="state == 'cancelled'"
+                       decoration-warning="state == 'completed'"/>
+            </list>
+        </field>
+    </record>
+    
+    <record id="view_pms_cycle_form" model="ir.ui.view">
+        <field name="name">pms.cycle.form</field>
+        <field name="model">pms.cycle</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="action_activate_cycle"
+                            string="Activate Cycle"
+                            type="object"
+                            class="oe_highlight"
+                            invisible="state != 'draft'"
+                            groups="hr_employee_evaluation.group_pms_hr_manager"/>
+
+                    <button name="action_move_to_monitoring"
+                            string="Move to Monitoring Phase"
+                            type="object"
+                            class="oe_highlight"
+                            invisible="state != 'planning'"
+                            groups="hr_employee_evaluation.group_pms_hr_manager"
+                            confirm="Are you sure you want to move to the Monitoring phase? Planning will be locked."/>
+
+                    <button name="action_move_to_appraisal"
+                            string="Move to Appraisal Phase"
+                            type="object"
+                            class="oe_highlight"
+                            invisible="state != 'monitoring'"
+                            groups="hr_employee_evaluation.group_pms_hr_manager"
+                            confirm="Are you sure you want to move to the Appraisal phase?"/>
+
+                    <button name="action_complete_cycle"
+                            string="Complete Cycle"
+                            type="object"
+                            invisible="state != 'appraisal'"
+                            groups="hr_employee_evaluation.group_pms_hr_manager"
+                            confirm="Are you sure you want to complete this cycle?"/>
+
+                    <button name="action_cancel_cycle"
+                            string="Cancel Cycle"
+                            type="object"
+                            invisible="state in ['completed', 'cancelled']"
+                            groups="hr_employee_evaluation.group_pms_hr_manager"
+                            confirm="Are you sure you want to cancel this cycle?"/>
+                    
+                    <field name="state" widget="statusbar" 
+                           statusbar_visible="draft,planning,monitoring,appraisal,completed"/>
+                </header>
+                
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_appraisals" 
+                                type="object" 
+                                class="oe_stat_button" 
+                                icon="fa-users">
+                            <field name="appraisal_count" widget="statinfo" string="Appraisals"/>
+                        </button>
+                    </div>
+                    
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" readonly="1"/>
+                        </h1>
+                    </div>
+                    
+                    <group>
+                        <group string="Cycle Information">
+                            <field name="sequence" readonly="1"/>
+                            <field name="cycle_type" readonly="state != 'draft'"/>
+                            <field name="start_date" readonly="state != 'draft'"/>
+                            <field name="end_date" readonly="state != 'draft'"/>
+                        </group>
+                        
+                        <group string="Planning Settings">
+                            <field name="planning_duration" readonly="state != 'draft'"/>
+                            <field name="planning_deadline"/>
+                            <field name="resubmission_days"/>
+                        </group>
+                    </group>
+                    
+                    <group>
+                        <group string="Employee Application">
+                            <field name="apply_to" widget="radio" readonly="state != 'draft'"/>
+                            <field name="employee_ids" 
+                                   widget="many2many_tags"
+                                   options="{'no_create': True}"
+                                   invisible="apply_to == 'all'"
+                                   readonly="state != 'draft'"/>
+                        </group>
+                        
+                        <group string="Status">
+                            <field name="active" widget="boolean_toggle"/>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                        </group>
+                    </group>
+                    
+                    <notebook invisible="state == 'draft'">
+                        <page string="Employee List" 
+                              name="selected_employees" 
+                              invisible="apply_to == 'all'">
+                            <field name="employee_ids" mode="list" nolabel="1" readonly="1">
+                                <list>
+                                    <field name="name"/>
+                                    <field name="job_id"/>
+                                    <field name="department_id"/>
+                                    <field name="evaluation_group_id"/>
+                                    <field name="parent_id"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+                
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+</odoo>

@@ -1,0 +1,363 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+    <t t-name="hr_employee_evaluation.KraTabs">
+        <div class="o_kra_tabs_container" t-ref="root">
+            
+            <!-- NEW KRA Button (Template mode only) -->
+            <div class="mb-4 px-3 pt-3" t-if="!props.readonly and isTemplateMode">
+                <button class="btn btn-primary shadow-sm" 
+                        t-on-click="onAddKRA">
+                    <i class="fa fa-plus me-1"/> New KRA
+                </button>
+            </div>
+            
+            <!-- KRA Tabs Header -->
+            <div class="o_kra_tabs_header" t-if="hasKras">
+                <div class="o_kra_tabs_nav">
+                    <t t-foreach="kraRecords" t-as="kra" t-key="kra.id">
+                        <div class="o_kra_tab"
+                             t-att-class="{ 'o_active_tab': isActiveTab(kra_index) }"
+                             t-on-click="() => this.setActiveTab(kra_index)">
+                            <span t-esc="kra.data.name || 'Unnamed KRA'"/>
+                        </div>
+                    </t>
+                </div>
+            </div>
+
+            <!-- No Content State -->
+            <div class="o_kra_no_content" t-if="!hasKras">
+                <i class="fa fa-folder-open-o"/>
+                <p>No Key Result Areas (KRAs) defined.</p>
+                <small class="text-muted mt-2" t-if="!props.readonly and isTemplateMode">
+                    Click the "New KRA" button to get started.
+                </small>
+            </div>
+
+            <!-- Active KRA Content -->
+            <div class="o_kra_content" t-if="activeKRA">
+                <div class="o_kra_kpi_section">
+                    
+                    <!-- KRA Header -->
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="m-0">
+                            <t t-esc="activeKRA.data.name"/>
+                            <span class="badge bg-light text-dark border ms-2 fw-normal">
+                                Score: <t t-esc="activeTotalScore.toFixed(2)"/>
+                            </span>
+                        </h5>
+                        <!-- Template mode buttons -->
+                        <div t-if="!props.readonly and isTemplateMode">
+                            <button class="btn btn-light text-danger btn-sm border me-2" 
+                                    t-on-click="onDeleteKRA">
+                                Delete KRA 
+                            </button>
+                            <button class="btn btn-light text-primary btn-sm border" 
+                                    t-on-click="onAddKPI">
+                                Add KPI
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 
+                        Table for template creation by HR
+                        Can enter KRAs and KPIs, assign scores to KPIs, and set criteria.
+                    -->
+                    <table class="table" t-if="isTemplateMode">
+                        <thead>
+                            <tr>
+                                <th style="width: 20%;">KPI Name</th>
+                                <th style="width: 35%;">Description</th>
+                                <th style="width: 10%;">Score</th>
+                                <th style="width: 30%;">Criteria</th>
+                                <th style="width: 5%;" t-if="!props.readonly"></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <t t-if="activeKPIs.length === 0">
+                                <tr>
+                                    <td colspan="5" class="text-center text-muted py-5 bg-light">
+                                        <em>No KPIs added to this KRA yet.</em>
+                                    </td>
+                                </tr>
+                            </t>
+                            <t t-foreach="activeKPIs" t-as="kpi" t-key="kpi.id">
+                                <tr>
+                                    <td>
+                                        <textarea class="form-control"
+                                                  rows="1"
+                                                  placeholder="Name" 
+                                                  t-att-readonly="props.readonly" 
+                                                  oninput="this.style.height = ''; this.style.height = this.scrollHeight + 'px'"
+                                                  t-on-change="(e) => this.onKPIFieldChange(kpi, 'name', e)"
+                                                  t-esc="kpi.data.name"/>
+                                               
+                                    </td>
+                                    <td>
+                                        <textarea class="form-control" 
+                                                  rows="1" 
+                                                  placeholder="Enter Description..."
+                                                  t-att-readonly="props.readonly" 
+                                                  oninput="this.style.height = ''; this.style.height = this.scrollHeight + 'px'"
+                                                  t-on-change="(e) => this.onKPIFieldChange(kpi, 'description', e)" 
+                                                  t-esc="kpi.data.description"/>
+                                    </td>
+                                    <td>
+                                        <input type="number" 
+                                               class="form-control text-end" 
+                                               t-att-value="kpi.data.score" 
+                                               t-att-readonly="props.readonly" 
+                                               step="1"
+                                               t-on-change="(e) => this.onKPIFieldChange(kpi, 'score', e)"/>
+                                    </td>
+                                    <td>
+                                        <textarea class="form-control" 
+                                                  rows="1" 
+                                                  placeholder="Enter Criteria..."
+                                                  t-att-readonly="props.readonly" 
+                                                  oninput="this.style.height = ''; this.style.height = this.scrollHeight + 'px'"
+                                                  t-on-change="(e) => this.onKPIFieldChange(kpi, 'criteria', e)" 
+                                                  t-esc="kpi.data.criteria"/>
+                                    </td>
+                                    <td t-if="!props.readonly" class="text-center align-middle">
+                                        <button class="btn btn-link text-muted hover-danger p-0" 
+                                                t-on-click="() => this.onDeleteKPI(kpi)">
+                                            <i class="fa fa-times"/>
+                                        </button>
+                                    </td>
+                                </tr>
+                            </t>
+                        </tbody>
+                    </table>
+
+                    <!-- 
+                        Employee table for planning 
+                        employee can select kpis and then allocate own scores for each kpi
+                        add target and remarks for each kpi in planning phase
+                    -->
+                    <table class="table" t-if="isEmployeeMode">
+                        <thead>
+                            <tr>
+                                <th style="width: 5%;">Select</th>
+                                <th style="width: 16%;">KPI Name</th>
+                                <th style="width: 20%;">Description</th>
+                                <th style="width: 8%;">Score</th>
+                                <th style="width: 17%;">Criteria</th>
+                                <th style="width: 17%;">Target</th>
+                                <!-- Narrow Employee Remarks when Supervisor Remarks column is also present -->
+                                <th t-if="!showSupervisorRemarks" style="width: 17%;">Employee Remarks</th>
+                                <th t-if="showSupervisorRemarks" style="width: 10%;">Employee Remarks</th>
+                                <!-- Supervisor Remarks: only shown when explicitly enabled via show_supervisor_remarks option.
+                                     This prevents the column appearing during draft/pending_supervisor. -->
+                                <th t-if="showSupervisorRemarks" style="width: 7%;">Supervisor Remarks</th>
+                                <!-- <th style="width: 5%;" t-if="!props.readonly"></th> -->
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <t t-if="activeKPIs.length === 0">
+                                <tr>
+                                    <td colspan="8" class="text-center text-muted py-5 bg-light">
+                                        <em>No KPIs in this KRA.</em>
+                                    </td>
+                                </tr>
+                            </t>
+                            <t t-foreach="activeKPIs" t-as="kpi" t-key="kpi.id">
+                                <tr t-att-class="{ 'text-muted': !kpi.data.is_selected }">
+                                    <td class="text-center align-middle">
+                                        <input type="checkbox" 
+                                               class="form-check-input" 
+                                               t-att-checked="kpi.data.is_selected"
+                                               t-att-disabled="props.readonly"
+                                               t-on-change="(e) => this.onKPICheckboxChange(kpi, e)"/>
+                                    </td>
+                                    <td>
+                                        <textarea type="text" 
+                                               class="form-control"
+                                               t-att-value="kpi.data.name" 
+                                               readonly="readonly"/>
+                                    </td>
+                                    <td>
+                                        <textarea class="form-control" 
+                                                  rows="1" 
+                                                  readonly="readonly"
+                                                  oninput="this.style.height = ''; this.style.height = this.scrollHeight + 'px'"
+                                                  t-esc="kpi.data.description"/>
+                                    </td>
+                                    <td>
+                                        <input type="number" 
+                                               class="form-control text-end" 
+                                               t-att-value="kpi.data.weightage" 
+                                               t-att-readonly="props.readonly"
+                                               step="1"
+                                               t-on-input="(e) => this.onKPIFieldChange(kpi, 'weightage', e)"/>
+                                    </td>
+                                    <td>
+                                        <textarea class="form-control" 
+                                                  rows="1" 
+                                                  readonly="readonly"
+                                                  oninput="this.style.height = ''; this.style.height = this.scrollHeight + 'px'"
+                                                  t-esc="kpi.data.criteria"/>
+                                    </td>
+                                    <td>
+                                        <textarea class="form-control" 
+                                                  rows="1" 
+                                                  placeholder="Enter target..."
+                                                  t-att-readonly="props.readonly"
+                                                  oninput="this.style.height = ''; this.style.height = this.scrollHeight + 'px'"
+                                                  t-on-change="(e) => this.onKPIFieldChange(kpi, 'target', e)" 
+                                                  t-esc="kpi.data.target"/>
+                                    </td>
+                                    <td>
+                                        <textarea class="form-control" 
+                                                  rows="1" 
+                                                  placeholder="Your remarks..."
+                                                  t-att-readonly="props.readonly"
+                                                  oninput="this.style.height = ''; this.style.height = this.scrollHeight + 'px'"
+                                                  t-on-change="(e) => this.onKPIFieldChange(kpi, 'planning_remarks', e)" 
+                                                  t-esc="kpi.data.planning_remarks"/>
+                                    </td>
+                                    <!-- Supervisor Remarks: readonly always — employee can see but never edit.
+                                         Backend will strip it anyway, but locked visually for clarity. -->
+                                    <td t-if="showSupervisorRemarks">
+                                        <textarea class="form-control"
+                                                  rows="1"
+                                                  readonly="readonly"
+                                                  style="background-color: #f8f9fa; font-style: italic;"
+                                                  placeholder="No supervisor remarks yet..."
+                                                  oninput="this.style.height = ''; this.style.height = this.scrollHeight + 'px'"
+                                                  t-esc="kpi.data.supervisor_planning_remarks"/>
+                                    </td>
+                                    <!-- <td t-if="!props.readonly" class="text-center align-middle">
+                                        <button class="btn btn-link text-muted hover-danger p-0" 
+                                                t-on-click="() => this.onDeleteKPI(kpi)">
+                                            <i class="fa fa-times"/>
+                                        </button>
+                                    </td> -->
+                                </tr>
+                            </t>
+                        </tbody>
+                    </table>
+
+                    <!-- 
+                        Supervisor table to see employee plans 
+                        Leave remarks against each kpi
+                        approve or reject plan
+                    -->
+                    <table class="table" t-if="isSupervisorMode">
+                        <thead>
+                            <tr>
+                                <th style="width: 5%;">Selected</th>
+                                <th style="width: 12%;">KPIs Name</th>
+                                <th style="width: 15%;">Description</th>
+                                <th style="width: 7%;">Score</th>
+                                <th style="width: 13%;">Criteria</th>
+                                <th style="width: 13%;">Target</th>
+                                <th style="width: 13%;">Employee Remarks</th>
+                                <th style="width: 17%;">Supervisor Remarks</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <t t-if="activeKPIs.length === 0">
+                                <tr>
+                                    <td colspan="8" class="text-center text-muted py-5 bg-light">
+                                        <em>No KPIs in this KRA.</em>
+                                    </td>
+                                </tr>
+                            </t>
+                            <t t-foreach="activeKPIs" t-as="kpi" t-key="kpi.id">
+                                <tr t-att-class="{ 'text-muted': !kpi.data.is_selected }">
+                                    <td class="text-center align-middle">
+                                        <input type="checkbox" 
+                                               class="form-check-input" 
+                                               t-att-checked="kpi.data.is_selected"
+                                               disabled="disabled"/>
+                                    </td>
+                                    <td>
+                                        <input type="text" 
+                                               class="form-control"
+                                               t-att-value="kpi.data.name" 
+                                               readonly="readonly"/>
+                                    </td>
+                                    <td>
+                                        <textarea class="form-control" 
+                                                  rows="1" 
+                                                  readonly="readonly"
+                                                  oninput="this.style.height = ''; this.style.height = this.scrollHeight + 'px'"
+                                                  t-esc="kpi.data.description"/>
+                                    </td>
+                                    <td>
+                                        <input type="number" 
+                                               class="form-control text-end" 
+                                               t-att-value="kpi.data.weightage" 
+                                               readonly="readonly"/>
+                                    </td>
+                                    <td>
+                                        <textarea class="form-control" 
+                                                  rows="1" 
+                                                  readonly="readonly"
+                                                  oninput="this.style.height = ''; this.style.height = this.scrollHeight + 'px'"
+                                                  t-esc="kpi.data.criteria"/>
+                                    </td>
+                                    <td>
+                                        <textarea class="form-control" 
+                                                  rows="1" 
+                                                  readonly="readonly"
+                                                  oninput="this.style.height = ''; this.style.height = this.scrollHeight + 'px'"
+                                                  t-esc="kpi.data.target"/>
+                                    </td>
+                                    <td>
+                                        <textarea class="form-control" 
+                                                  rows="1" 
+                                                  readonly="readonly"
+                                                  oninput="this.style.height = ''; this.style.height = this.scrollHeight + 'px'"
+                                                  t-esc="kpi.data.planning_remarks"/>
+                                    </td>
+                                    <td>
+                                        <textarea class="form-control" 
+                                                  rows="1" 
+                                                  placeholder="Add your remarks..."
+                                                  t-att-readonly="props.readonly"
+                                                  oninput="this.style.height = ''; this.style.height = this.scrollHeight + 'px'"
+                                                  t-on-change="(e) => this.onKPIFieldChange(kpi, 'supervisor_planning_remarks', e)" 
+                                                  t-esc="kpi.data.supervisor_planning_remarks"/>
+                                    </td>
+                                </tr>
+                            </t>
+                        </tbody>
+                    </table>
+
+                </div>
+            </div>
+        </div>
+    </t>
+
+    <!-- Add KRA Pop-up dialog -->
+    <t t-name="hr_employee_evaluation.AddKraDialog">
+        <Dialog title="'Add Key Result Area'">
+            <div class="mb-3">
+                <label class="form-label fw-bold text-secondary">KRA Name</label>
+                <input type="text" 
+                       class="form-control" 
+                       t-att-value="state.kraName"
+                       t-on-input="onNameChange"
+                       placeholder="e.g., Financial Growth"
+                       t-on-keydown="onKeydown"
+                       autofocus="autofocus"/>
+                <div t-if="state.error" class="text-danger mt-2 small">
+                    <i class="fa fa-exclamation-circle"/> <t t-esc="state.error"/>
+                </div>
+            </div>
+            <t t-set-slot="footer">
+                <button class="btn btn-primary" 
+                        t-on-click="onConfirm"
+                        t-att-disabled="!state.kraName.trim()">
+                    Add
+                </button>
+                <button class="btn btn-light border" t-on-click="props.close">
+                    Cancel
+                </button>
+            </t>
+        </Dialog>
+    </t>
+
+</templates>

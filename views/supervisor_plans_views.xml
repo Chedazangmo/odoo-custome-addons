@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- list view for subordinate plans -->
+    <record id="view_employee_plans_all_list" model="ir.ui.view">
+        <field name="name">pms.appraisal.supervisor.list</field>
+        <field name="model">pms.appraisal</field>
+        <field name="arch" type="xml">
+            <list string="Employee Plans"
+                  create="false"
+                  delete="false"
+                  decoration-muted="state == 'draft'">
+                <field name="employee_id" string="Employee Name"/>
+                <field name="employee_evaluation_group_id" string="Evaluation Group"/>
+                <field name="supervisor_id" string="Supervisor"/>
+                <field name="reviewer_id" string="Reviewer"/>
+                <field name="planning_start_date" string="Planning Start"/>
+                <field name="planning_end_date" string="Planning Deadline"/>
+                <field name="state"
+                       widget="badge"
+                       decoration-muted="state == 'draft'"
+                       decoration-warning="state == 'pending_supervisor'"
+                       decoration-success="state == 'approved'"
+                       decoration-danger="state == 'rejected'"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_employee_plans_supervisor_form" model="ir.ui.view">
+        <field name="name">pms.appraisal.supervisor.form</field>
+        <field name="model">pms.appraisal</field>
+        <field name="arch" type="xml">
+            <form string="Employee Performance Plan" create="false" delete="false">
+                <header>
+                    <div class="alert alert-info" role="alert" invisible="state != 'draft'">
+                        <strong>Not Yet Submitted:</strong> This employee has not submitted their plan yet.
+                        You will be able to review and add remarks once they submit.
+                    </div>
+
+                    <!--
+                        Approve/Reject: visible only to the assigned supervisor and HR managers 
+                    -->
+                    <button name="action_supervisor_approve"
+                            string="Approve Plan"
+                            type="object"
+                            class="oe_highlight"
+                            invisible="state != 'pending_supervisor'"
+                            groups="hr_employee_evaluation.group_pms_supervisor"
+                            confirm="Are you sure you want to approve this performance plan?"/>
+
+                    <button name="action_supervisor_reject"
+                            string="Reject Plan"
+                            type="object"
+                            invisible="state != 'pending_supervisor'"
+                            groups="hr_employee_evaluation.group_pms_supervisor"
+                            confirm="Are you sure you want to reject this plan? The employee will have to revise and resubmit."/>
+
+                    <field name="state"
+                           widget="statusbar"
+                           statusbar_visible="draft,pending_supervisor,approved,rejected"/>
+                </header>
+
+                <sheet>
+                    <group>
+                        <group string="Employee Information">
+                            <field name="employee_id" readonly="1"/>
+                            <field name="employee_job_id" string="Job Position" readonly="1"/>
+                            <field name="employee_department_id" string="Department" readonly="1"/>
+                            <field name="employee_evaluation_group_id" string="Evaluation Group" readonly="1"/>
+                        </group>
+
+                        <group string="Plan Details">
+                            <field name="supervisor_id" string="Supervisor" readonly="1"/>
+                            <field name="reviewer_id" string="Reviewer" readonly="1"/>
+                            <field name="template_id" string="Template Name" readonly="1"/>
+                        </group>
+                    </group>
+
+                    <group>
+                        <group string="Planning Period">
+                            <field name="planning_start_date" string="Start Date" readonly="1"/>
+                            <field name="planning_end_date" string="Deadline" readonly="1"/>
+                            <field name="submitted_date" string="Submitted On" readonly="1"/>
+                        </group>
+
+                        <group string="Score Summary">
+                            <field name="template_total_score"
+                                   string="Template Total"
+                                   readonly="1"
+                                   widget="float"
+                                   class="fw-bold text-primary"/>
+                            <field name="current_total_score"
+                                   string="Employee's Total"
+                                   readonly="1"
+                                   widget="float"
+                                   decoration-success="current_total_score == template_total_score"
+                                   decoration-danger="current_total_score != template_total_score"
+                                   class="fw-bold"/>
+                        </group>
+                    </group>
+
+                    <!-- Access control flags (invisible helpers) -->
+                    <field name="is_supervisor_of_appraisal" invisible="1"/>
+                    <field name="can_supervisor_add_remarks" invisible="1"/>
+                    <field name="cycle_id" invisible="1"/>
+
+                    <notebook>
+                        <page string="Employee Plan" name="page_kpis">
+                            <!--
+                                can_supervisor_add_remarks:
+                                if True: supervisor can fill in supervisor_planning_remarks
+                                if False → entire widget is read-only 
+                            -->
+                            <field name="kra_ids"
+                                   widget="kra_tabs_widget"
+                                   options="{'mode': 'supervisor'}"
+                                   readonly="not can_supervisor_add_remarks"
+                                   nolabel="1">
+                                <list>
+                                    <field name="name"/>
+                                    <field name="kpi_ids">
+                                        <list>
+                                            <field name="name"/>
+                                            <field name="description"/>
+                                            <field name="criteria"/>
+                                            <field name="weightage"/>
+                                            <field name="is_selected"/>
+                                            <field name="target"/>
+                                            <field name="planning_remarks"/>
+                                            <field name="supervisor_planning_remarks"/>
+                                        </list>
+                                    </field>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_employee_plans_all" model="ir.actions.act_window">
+        <field name="name">Employee Plans</field>
+        <field name="res_model">pms.appraisal</field>
+        <field name="view_mode">list,form</field>
+        <field name="view_ids" eval="[(5, 0, 0),
+            (0, 0, {'view_mode': 'list', 'view_id': ref('view_employee_plans_all_list')}),
+            (0, 0, {'view_mode': 'form', 'view_id': ref('view_employee_plans_supervisor_form')})]"/>
+        <field name="domain">[('cycle_id.state', '=', 'planning')]</field>
+        <field name="context">{
+            'create': False,
+            'delete': False,
+        }</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No employee plans found
+            </p>
+            <p>
+                Employee plans will appear here once a performance cycle is activated
+                and employees submit their plans for review.
+            </p>
+        </field>
+    </record>
+
+</odoo>

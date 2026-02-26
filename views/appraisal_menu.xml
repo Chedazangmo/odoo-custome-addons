@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Root Menu -->
+      <menuitem id="menu_appraisal_root"
+              name="Employee Evaluation"
+              sequence="85"
+              web_icon="hr_employee_evaluation,static/description/icon.png"/>
+      
+      <menuitem id="menu_performance_planning"
+              name="Performance Planning"
+              parent="menu_appraisal_root"
+              action="action_employee_performance_planning"
+              groups="hr_employee_evaluation.group_pms_employee"
+              sequence="5"/>
+
+      <menuitem id="menu_employee_plans"
+              name="Employee Plans"
+              parent="menu_appraisal_root"
+              action="action_employee_plans_all"
+              groups="hr_employee_evaluation.group_pms_supervisor"
+              sequence="10"/>
+
+    <!-- Configuration Menu -->
+      <menuitem id="menu_appraisal_configuration"
+              name="Configuration"
+              parent="menu_appraisal_root"
+              groups="hr_employee_evaluation.group_pms_hr_manager"
+              sequence="100"/>
+
+      <menuitem id="menu_appraisal_templates"
+              name="Templates"
+              parent="menu_appraisal_configuration"
+              action="action_appraisal_template"
+              groups="hr_employee_evaluation.group_pms_hr_manager"
+              sequence="1"/>
+
+      <menuitem id="menu_activate_cycle"
+              name="Activate Cycle"
+              parent="menu_appraisal_configuration"
+              action="action_pms_cycle"
+              groups="hr_employee_evaluation.group_pms_hr_manager"
+              sequence="2"/>
+</odoo>

@@ -1,0 +1,213 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Employee can only see their own plan as a list -->
+    <record id="view_employee_performance_planning_list" model="ir.ui.view">
+        <field name="name">pms.appraisal.employee.planning.list</field>
+        <field name="model">pms.appraisal</field>
+        <field name="arch" type="xml">
+            <list string="My Performance Plan" create="false" delete="false">
+                <field name="employee_id" string="Employee Name"/>
+                <field name="employee_evaluation_group_id" string="Evaluation Group"/>
+                <field name="supervisor_id" string="Supervisor"/>
+                <field name="reviewer_id" string="Reviewer"/>
+                <field name="planning_start_date" string="Planning Start"/>
+                <field name="planning_end_date" string="Planning Deadline"/>
+                <field name="state"
+                       widget="badge"
+                       decoration-info="state == 'draft'"
+                       decoration-warning="state == 'pending_supervisor'"
+                       decoration-success="state == 'approved'"
+                       decoration-danger="state == 'rejected'"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_employee_performance_planning_form" model="ir.ui.view">
+        <field name="name">pms.appraisal.employee.planning.form</field>
+        <field name="model">pms.appraisal</field>
+        <field name="arch" type="xml">
+            <form string="My Performance Plan" create="false" delete="false">
+                <header>
+                    <!--
+                        Submit button only visible to the employee, only in draft/rejected.
+                    -->
+                    <button name="action_submit_for_review"
+                            string="Submit for Review"
+                            type="object"
+                            class="btn-primary"
+                            invisible="state not in ['draft', 'rejected'] or not is_own_appraisal"
+                            confirm="Are you sure you want to submit your performance plan? Make sure your total score matches the template."/>
+
+                    <field name="state"
+                           widget="statusbar"
+                           statusbar_visible="draft,pending_supervisor,approved,rejected"/>
+                </header>
+
+                <sheet>
+                    <group>
+                        <group string="Employee Information">
+                            <field name="employee_id" readonly="1"/>
+                            <field name="employee_job_id" string="Job Position" readonly="1"/>
+                            <field name="employee_department_id" string="Department" readonly="1"/>
+                            <field name="employee_evaluation_group_id" string="Evaluation Group" readonly="1"/>
+                        </group>
+
+                        <group string="Plan Details">
+                            <field name="supervisor_id" string="Supervisor" readonly="1"/>
+                            <field name="reviewer_id" string="Reviewer" readonly="1"/>
+                            <field name="template_id" string="Template Name" readonly="1"/>
+                        </group>
+                    </group>
+
+                    <group>
+                        <group string="Planning Period">
+                            <field name="planning_start_date" string="Start Date"/>
+                            <field name="planning_end_date" string="Deadline"/>
+                        </group>
+
+                        <group string="Score Validation">
+                            <field name="template_total_score"
+                                   string="Required Total Score"
+                                   widget="float"
+                                   class="fw-bold text-primary"/>
+                            <field name="current_total_score"
+                                   string="Your Current Total"
+                                   widget="float"
+                                   decoration-success="current_total_score == template_total_score"
+                                   decoration-danger="current_total_score != template_total_score"
+                                   class="fw-bold"/>
+                            <div class="alert alert-warning"
+                                 invisible="current_total_score == template_total_score or state != 'draft'">
+                                <i class="fa fa-exclamation-triangle"/>
+                                <strong>Warning:</strong> Your total score must equal
+                                <field name="template_total_score" class="d-inline fw-bold"/>
+                                before you can submit.
+                            </div>
+                        </group>
+                    </group>
+
+                    <!-- Access control flags (helpers) -->
+                    <field name="is_own_appraisal" invisible="1"/>
+                    <field name="can_employee_edit" invisible="1"/>
+                    <field name="is_editable" invisible="1"/>
+                    <field name="cycle_id" invisible="1"/>
+
+                    <notebook>
+                        <page string="Performance KPIs" name="page_kpis">
+
+                            <!--
+                                employee edit during draft
+                                readonly during pending_supervisor
+                            -->
+                            <field name="kra_ids"
+                                   widget="kra_tabs_widget"
+                                   options="{'mode': 'employee'}"
+                                   readonly="not can_employee_edit"
+                                   nolabel="1"
+                                   invisible="state not in ['draft', 'pending_supervisor']">
+                                <list>
+                                    <field name="name"/>
+                                    <field name="kpi_ids">
+                                        <list>
+                                            <field name="name"/>
+                                            <field name="description"/>
+                                            <field name="criteria"/>
+                                            <field name="weightage"/>
+                                            <field name="is_selected"/>
+                                            <field name="target"/>
+                                            <field name="planning_remarks"/>
+                                        </list>
+                                    </field>
+                                </list>
+                            </field>
+
+                            <!--
+                                emp edit after rejection
+                            -->
+                            <field name="kra_ids"
+                                   widget="kra_tabs_widget"
+                                   options="{'mode': 'employee', 'show_supervisor_remarks': true}"
+                                   readonly="not can_employee_edit"
+                                   nolabel="1"
+                                   invisible="state != 'rejected' or not can_employee_edit">
+                                <list>
+                                    <field name="name"/>
+                                    <field name="kpi_ids">
+                                        <list>
+                                            <field name="name"/>
+                                            <field name="description"/>
+                                            <field name="criteria"/>
+                                            <field name="weightage"/>
+                                            <field name="is_selected"/>
+                                            <field name="target"/>
+                                            <field name="planning_remarks"/>
+                                            <field name="supervisor_planning_remarks"/>
+                                        </list>
+                                    </field>
+                                </list>
+                            </field>
+
+                            <!--
+                                employee read-only view
+                            -->
+                            <field name="kra_ids"
+                                   widget="kra_tabs_widget"
+                                   options="{'mode': 'supervisor'}"
+                                   readonly="1"
+                                   nolabel="1"
+                                   invisible="state not in ['approved', 'rejected'] or (state == 'rejected' and can_employee_edit)">
+                                <list>
+                                    <field name="name"/>
+                                    <field name="kpi_ids">
+                                        <list>
+                                            <field name="name"/>
+                                            <field name="description"/>
+                                            <field name="criteria"/>
+                                            <field name="weightage"/>
+                                            <field name="is_selected"/>
+                                            <field name="target"/>
+                                            <field name="planning_remarks"/>
+                                            <field name="supervisor_planning_remarks"/>
+                                        </list>
+                                    </field>
+                                </list>
+                            </field>
+
+                        </page>
+                    </notebook>
+                </sheet>
+
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <!-- Employee Performance Planning Action -->
+    <record id="action_employee_performance_planning" model="ir.actions.act_window">
+        <field name="name">My Performance Plan</field>
+        <field name="res_model">pms.appraisal</field>
+        <field name="view_mode">list,form</field>
+        <field name="view_ids" eval="[(5, 0, 0),
+            (0, 0, {'view_mode': 'list', 'view_id': ref('view_employee_performance_planning_list')}),
+            (0, 0, {'view_mode': 'form', 'view_id': ref('view_employee_performance_planning_form')})]"/>
+        <field name="domain">[
+            ('employee_id.user_id', '=', uid),
+            ('cycle_id.state', '=', 'planning')
+        ]</field>
+        <field name="context">{
+            'create': False,
+            'delete': False,
+        }</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No active performance plan
+            </p>
+            <p>
+                You don't have an active performance plan yet.
+                Your plan will appear here once HR activates a performance cycle.
+            </p>
+        </field>
+    </record>
+
+</odoo>

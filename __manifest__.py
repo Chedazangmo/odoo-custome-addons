@@ -1,0 +1,32 @@
+{
+    'name': 'HR Employee Evaluation',
+    'version': '19.0.1.0.0',
+    'category': 'Human Resources',
+    'summary': 'Performance Management System for Employee Evaluation',
+    'description': 'Dynamic Performance Management System (PMS)',
+    'author': 'Druksmart',
+    'website': 'https://www.yourcompany.com',
+    'depends': ['base', 'hr', 'mail', 'web', 'employee_pms'],
+    'data': [
+        'security/pms_security.xml',
+        'security/ir.model.access.csv',
+        'security/pms_record_rules.xml',
+        'data/pms_data.xml',        
+        'views/employee_planning_views.xml',
+        'views/supervisor_plans_views.xml',
+        'views/appraisal_template_views.xml',
+        'views/pms_cycle_views.xml',
+        'views/appraisal_menu.xml',
+    ],
+    'assets': {
+        'web.assets_backend': [
+            'hr_employee_evaluation/static/src/components/kra_tabs/kra_tabs.js',
+            'hr_employee_evaluation/static/src/components/kra_tabs/kra_tabs.xml',
+            'hr_employee_evaluation/static/src/components/kra_tabs/kra_tabs.scss',
+        ],
+    },
+    'installable': True,
+    'application': True,
+    'auto_install': False,
+    'license': 'LGPL-3',
+}
