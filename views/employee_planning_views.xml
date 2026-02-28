@@ -117,6 +117,7 @@
                                             <field name="is_selected"/>
                                             <field name="target"/>
                                             <field name="planning_remarks"/>
+                                            <field name="is_clone" invisible="1"/>
                                         </list>
                                     </field>
                                 </list>
@@ -142,7 +143,8 @@
                                             <field name="is_selected"/>
                                             <field name="target"/>
                                             <field name="planning_remarks"/>
-                                            <field name="supervisor_planning_remarks"/>
+                                            <field name="is_clone" invisible="1"/>
+                                            <!-- <field name="supervisor_planning_remarks"/> -->
                                         </list>
                                     </field>
                                 </list>
@@ -168,7 +170,7 @@
                                             <field name="is_selected"/>
                                             <field name="target"/>
                                             <field name="planning_remarks"/>
-                                            <field name="supervisor_planning_remarks"/>
+                                            <!-- <field name="supervisor_planning_remarks"/> -->
                                         </list>
                                     </field>
                                 </list>
@@ -193,7 +195,7 @@
             (0, 0, {'view_mode': 'form', 'view_id': ref('view_employee_performance_planning_form')})]"/>
         <field name="domain">[
             ('employee_id.user_id', '=', uid),
-            ('cycle_id.state', '=', 'planning')
+            ('cycle_id.state', 'in', ['planning', 'monitoring', 'appraisal'])
         ]</field>
         <field name="context">{
             'create': False,

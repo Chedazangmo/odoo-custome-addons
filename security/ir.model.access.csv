@@ -7,7 +7,7 @@ access_appraisal_kra_supervisor,appraisal.kra.supervisor,model_appraisal_kra,gro
 access_appraisal_kra_employee,appraisal.kra.employee,model_appraisal_kra,group_pms_employee,1,0,0,0
 access_appraisal_kpi_hr,appraisal.kpi.hr,model_appraisal_kpi,group_pms_hr_manager,1,1,1,1
 access_appraisal_kpi_supervisor,appraisal.kpi.supervisor,model_appraisal_kpi,group_pms_supervisor,1,0,0,0
-access_appraisal_kpi_employee,appraisal.kpi.employee,model_appraisal_kpi,group_pms_employee,1,0,0,0
+access_appraisal_kpi_employee,appraisal.kpi.employee,model_appraisal_kpi,group_pms_employee,1,1,1,0
 access_pms_cycle_hr,pms.cycle.hr,model_pms_cycle,group_pms_hr_manager,1,1,1,1
 access_pms_cycle_supervisor,pms.cycle.supervisor,model_pms_cycle,group_pms_supervisor,1,0,0,0
 access_pms_cycle_employee,pms.cycle.employee,model_pms_cycle,group_pms_employee,1,0,0,0
@@ -19,4 +19,4 @@ access_pms_appraisal_kra_supervisor,pms.appraisal.kra.supervisor,model_pms_appra
 access_pms_appraisal_kra_employee,pms.appraisal.kra.employee,model_pms_appraisal_kra,group_pms_employee,1,1,0,0
 access_pms_appraisal_kpi_hr,pms.appraisal.kpi.hr,model_pms_appraisal_kpi,group_pms_hr_manager,1,1,1,1
 access_pms_appraisal_kpi_supervisor,pms.appraisal.kpi.supervisor,model_pms_appraisal_kpi,group_pms_supervisor,1,1,0,0
-access_pms_appraisal_kpi_employee,pms.appraisal.kpi.employee,model_pms_appraisal_kpi,group_pms_employee,1,1,0,1
+access_pms_appraisal_kpi_employee,pms.appraisal.kpi.employee,model_pms_appraisal_kpi,group_pms_employee,1,1,1,1

@@ -1,55 +1,67 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-        <!-- CATEGORIES -->
-        <record id="module_category_pms" model="ir.module.category">
-            <field name="name">Performance Management</field>
-            <field name="description">Manage performance appraisal access rights</field>
-            <field name="sequence">16</field>
-        </record>
-        
-        <!-- PRIVILEGES -->
-        
-        <!-- Employee Privilege -->
-        <record id="privilege_pms_employee" model="res.groups.privilege">
-            <field name="name">Employee</field>
-            <field name="category_id" ref="module_category_pms"/>
-            <field name="sequence">10</field>
-        </record>
-        
-        <!-- Supervisor Privilege -->
-        <record id="privilege_pms_supervisor" model="res.groups.privilege">
-            <field name="name">Supervisor</field>
-            <field name="category_id" ref="module_category_pms"/>
-            <field name="sequence">20</field>
-        </record>
-        
-        <!-- HR Manager Privilege -->
-        <record id="privilege_pms_hr_manager" model="res.groups.privilege">
-            <field name="name">HR Manager</field>
-            <field name="category_id" ref="module_category_pms"/>
-            <field name="sequence">30</field>
-        </record>
-        
-        <!-- GROUPS -->        
-        <!-- Employee: Can view and edit only their own appraisals -->
-        <record id="group_pms_employee" model="res.groups">
-            <field name="name">Employee: Own Appraisals</field>
-            <field name="privilege_id" ref="privilege_pms_employee"/>
-            <field name="implied_ids" eval="[(4, ref('base.group_user'))]"/>
-        </record>
-        
-        <!-- Supervisor: Can review and approve subordinate appraisals -->
-        <record id="group_pms_supervisor" model="res.groups">
-            <field name="name">Supervisor: Team Appraisals</field>
-            <field name="privilege_id" ref="privilege_pms_supervisor"/>
-            <field name="implied_ids" eval="[(4, ref('group_pms_employee'))]"/>
-        </record>
-        
-        <!-- HR Manager: Full access to all PMS features -->
-        <record id="group_pms_hr_manager" model="res.groups">
-            <field name="name">HR Manager: Full Access</field>
-            <field name="privilege_id" ref="privilege_pms_hr_manager"/>
-            <field name="implied_ids" eval="[(4, ref('group_pms_supervisor')), (4, ref('hr.group_hr_manager'))]"/>
-        </record>
-        
+    <record id="module_category_pms" model="ir.module.category">
+        <field name="name">Performance Management</field>
+        <field name="description">Manage performance appraisal access rights</field>
+        <field name="sequence">16</field>
+    </record>
+
+    <record id="privilege_pms_employee" model="res.groups.privilege">
+        <field name="name">Employee</field>
+        <field name="category_id" ref="module_category_pms"/>
+        <field name="sequence">10</field>
+    </record>
+
+    <!-- primary supervisor and secondary supervisor roles -->
+    <record id="privilege_pms_supervisor" model="res.groups.privilege">
+        <field name="name">Supervisor</field>
+        <field name="category_id" ref="module_category_pms"/>
+        <field name="sequence">20</field>
+    </record>
+
+    <!-- HR -->
+    <record id="privilege_pms_hr_manager" model="res.groups.privilege">
+        <field name="name">HR Manager</field>
+        <field name="category_id" ref="module_category_pms"/>
+        <field name="sequence">30</field>
+    </record>
+
+    <!-- Reviewer -->
+    <record id="privilege_pms_reviewer" model="res.groups.privilege">
+        <field name="name">Reviewer</field>
+        <field name="category_id" ref="module_category_pms"/>
+        <field name="sequence">40</field>
+    </record>
+
+    <!-- Employee - can only see and edit their own appraisal plan -->
+    <record id="group_pms_employee" model="res.groups">
+        <field name="name">Employee: Own Appraisals</field>
+        <field name="privilege_id" ref="privilege_pms_employee"/>
+        <field name="implied_ids" eval="[(4, ref('base.group_user'))]"/>
+    </record>
+
+    <!-- Supervisor - primary manager AND secondary manager. -->
+    <record id="group_pms_supervisor" model="res.groups">
+        <field name="name">Supervisor: Team Appraisals</field>
+        <field name="privilege_id" ref="privilege_pms_supervisor"/>
+        <field name="implied_ids" eval="[(4, ref('group_pms_employee'))]"/>
+    </record>
+
+    <!-- HR - also inherits Odoo's built-in HR Manager. -->
+    <record id="group_pms_hr_manager" model="res.groups">
+        <field name="name">HR Manager: Full Access</field>
+        <field name="privilege_id" ref="privilege_pms_hr_manager"/>
+        <field name="implied_ids" eval="[
+            (4, ref('group_pms_supervisor')),
+            (4, ref('hr.group_hr_manager')),
+        ]"/>
+    </record>
+
+    <!-- Reviewer: Inherits HR Manager → Supervisor → Employee automatically. -->
+    <record id="group_pms_reviewer" model="res.groups">
+        <field name="name">Reviewer: Full Oversight</field>
+        <field name="privilege_id" ref="privilege_pms_reviewer"/>
+        <field name="implied_ids" eval="[(4, ref('group_pms_hr_manager'))]"/>
+    </record>
+
 </odoo>

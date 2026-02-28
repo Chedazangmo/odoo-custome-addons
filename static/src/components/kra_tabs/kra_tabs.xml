@@ -57,6 +57,40 @@
                                 Add KPI
                             </button>
                         </div>
+                        <!-- Employee mode: Restore KPI button — only shown when there are deselected KPIs
+                             and the employee is in an editable state (draft / rejected within window). -->
+                        <div t-if="!props.readonly and isEmployeeMode">
+                            <button class="btn btn-light btn-sm border"
+                                    t-if="activeDeselectedKPIs.length > 0"
+                                    t-on-click="onToggleRestorePanel">
+                                <i class="fa fa-undo me-1"/>
+                                Restore KPI (<t t-esc="activeDeselectedKPIs.length"/>)
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Restore panel: lists all soft-deleted KPIs for this KRA so the employee can
+                         re-select them. Only visible to the employee when the restore button is toggled. -->
+                    <div class="border rounded p-3 mb-3 bg-light"
+                         t-if="!props.readonly and isEmployeeMode and state.showRestorePanel and activeDeselectedKPIs.length > 0">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <strong class="text-secondary">
+                                <i class="fa fa-undo me-1"/>
+                            </strong>
+                            <button class="btn btn-link btn-sm text-muted p-0"
+                                    t-on-click="onToggleRestorePanel">
+                                <i class="fa fa-times"/>
+                            </button>
+                        </div>
+                        <t t-foreach="activeDeselectedKPIs" t-as="dkpi" t-key="dkpi.id">
+                            <div class="d-flex align-items-center justify-content-between py-1 border-bottom">
+                                <span class="text-muted" t-esc="dkpi.data.name"/>
+                                <button class="btn btn-sm btn-outline-secondary ms-3"
+                                        t-on-click="() => this.onRestoreKPI(dkpi)">
+                                    <i class="fa fa-plus me-1"/> Restore
+                                </button>
+                            </div>
+                        </t>
                     </div>
 
                     <!-- 
@@ -135,22 +169,29 @@
                         employee can select kpis and then allocate own scores for each kpi
                         add target and remarks for each kpi in planning phase
                     -->
+                    <!-- 
+                        Employee table for planning 
+                        employee can set targets, adjust scores, add remarks
+                        delete button soft-deletes (deselects) a KPI — restoring is done via the Restore KPI panel above
+                    -->
                     <table class="table" t-if="isEmployeeMode">
                         <thead>
                             <tr>
-                                <th style="width: 5%;">Select</th>
-                                <th style="width: 16%;">KPI Name</th>
+                                <th style="width: 18%;">KPI Name</th>
                                 <th style="width: 20%;">Description</th>
                                 <th style="width: 8%;">Score</th>
-                                <th style="width: 17%;">Criteria</th>
-                                <th style="width: 17%;">Target</th>
+                                <th style="width: 16%;">Criteria</th>
+                                <th style="width: 16%;">Target</th>
                                 <!-- Narrow Employee Remarks when Supervisor Remarks column is also present -->
-                                <th t-if="!showSupervisorRemarks" style="width: 17%;">Employee Remarks</th>
-                                <th t-if="showSupervisorRemarks" style="width: 10%;">Employee Remarks</th>
+                                <!-- <th t-if="!showSupervisorRemarks" style="width: 17%;">Employee Remarks</th> -->
+                                <th style="width: 16%;">Employee Remarks</th>
+                                <!-- <th t-if="showSupervisorRemarks" style="width: 10%;">Employee Remarks</th> -->
                                 <!-- Supervisor Remarks: only shown when explicitly enabled via show_supervisor_remarks option.
                                      This prevents the column appearing during draft/pending_supervisor. -->
-                                <th t-if="showSupervisorRemarks" style="width: 7%;">Supervisor Remarks</th>
-                                <!-- <th style="width: 5%;" t-if="!props.readonly"></th> -->
+                                <!-- <th t-if="showSupervisorRemarks" style="width: 7%;">Supervisor Remarks</th> -->
+                                <!-- Empty heading for the delete button column — no label intentionally -->
+                                <th t-if="!props.readonly" style="width: 3%;"></th>
+                                <th t-if="!props.readonly" style="width: 3%;"></th>
                             </tr>
                         </thead>
                         <tbody>
@@ -162,14 +203,8 @@
                                 </tr>
                             </t>
                             <t t-foreach="activeKPIs" t-as="kpi" t-key="kpi.id">
-                                <tr t-att-class="{ 'text-muted': !kpi.data.is_selected }">
-                                    <td class="text-center align-middle">
-                                        <input type="checkbox" 
-                                               class="form-check-input" 
-                                               t-att-checked="kpi.data.is_selected"
-                                               t-att-disabled="props.readonly"
-                                               t-on-change="(e) => this.onKPICheckboxChange(kpi, e)"/>
-                                    </td>
+                                <!-- Only render selected KPIs — deselected ones are hidden and accessible via the Restore panel -->
+                                <tr t-if="kpi.data.is_selected">
                                     <td>
                                         <textarea type="text" 
                                                class="form-control"
@@ -218,21 +253,30 @@
                                     </td>
                                     <!-- Supervisor Remarks: readonly always — employee can see but never edit.
                                          Backend will strip it anyway, but locked visually for clarity. -->
-                                    <td t-if="showSupervisorRemarks">
+                                    <!-- <td t-if="showSupervisorRemarks">
                                         <textarea class="form-control"
                                                   rows="1"
                                                   readonly="readonly"
-                                                  style="background-color: #f8f9fa; font-style: italic;"
-                                                  placeholder="No supervisor remarks yet..."
+                                                  placeholder="Supervisor remarks"
                                                   oninput="this.style.height = ''; this.style.height = this.scrollHeight + 'px'"
                                                   t-esc="kpi.data.supervisor_planning_remarks"/>
-                                    </td>
-                                    <!-- <td t-if="!props.readonly" class="text-center align-middle">
-                                        <button class="btn btn-link text-muted hover-danger p-0" 
-                                                t-on-click="() => this.onDeleteKPI(kpi)">
-                                            <i class="fa fa-times"/>
-                                        </button>
                                     </td> -->
+                                    <!-- soft-deletes deselects the KPI row.
+                                         Hidden when readonly so the employee cannot remove KPIs after submission. -->
+                                    <td t-if="!props.readonly" class="text-center align-top">
+                                        <button class="btn btn-link text-primary p-0" 
+                                                title="Duplicate KPI" 
+                                                t-on-click="() => this.onDuplicateKPI(kpi)">
+                                            <i class="fa fa-copy"/>
+                                        </button>
+                                    </td>
+                                    <td t-if="!props.readonly" class="text-center align-top">
+                                        <button class="btn btn-link text-danger p-0"
+                                                t-on-click="() => this.onDeleteKPI(kpi)"
+                                                title="Remove KPI">
+                                            <i class="fa fa-trash"/>
+                                        </button>
+                                    </td>
                                 </tr>
                             </t>
                         </tbody>
@@ -246,14 +290,13 @@
                     <table class="table" t-if="isSupervisorMode">
                         <thead>
                             <tr>
-                                <th style="width: 5%;">Selected</th>
-                                <th style="width: 12%;">KPIs Name</th>
-                                <th style="width: 15%;">Description</th>
-                                <th style="width: 7%;">Score</th>
-                                <th style="width: 13%;">Criteria</th>
-                                <th style="width: 13%;">Target</th>
-                                <th style="width: 13%;">Employee Remarks</th>
-                                <th style="width: 17%;">Supervisor Remarks</th>
+                                <th style="width: 21%;">KPIs Name</th>
+                                <th style="width: 20%;">Description</th>
+                                <th style="width: 8%;">Score</th>
+                                <th style="width: 17%;">Criteria</th>
+                                <th style="width: 17%;">Target</th>
+                                <th style="width: 17%;">Employee Remarks</th>
+                                <!-- <th style="width: 17%;">Supervisor Remarks</th> -->
                             </tr>
                         </thead>
                         <tbody>
@@ -265,13 +308,7 @@
                                 </tr>
                             </t>
                             <t t-foreach="activeKPIs" t-as="kpi" t-key="kpi.id">
-                                <tr t-att-class="{ 'text-muted': !kpi.data.is_selected }">
-                                    <td class="text-center align-middle">
-                                        <input type="checkbox" 
-                                               class="form-check-input" 
-                                               t-att-checked="kpi.data.is_selected"
-                                               disabled="disabled"/>
-                                    </td>
+                                 <tr t-if="kpi.data.is_selected">
                                     <td>
                                         <input type="text" 
                                                class="form-control"
@@ -301,8 +338,9 @@
                                     <td>
                                         <textarea class="form-control" 
                                                   rows="1" 
-                                                  readonly="readonly"
+                                                  t-att-readonly="props.readonly"
                                                   oninput="this.style.height = ''; this.style.height = this.scrollHeight + 'px'"
+                                                  t-on-change="(e) => this.onKPIFieldChange(kpi, 'target', e)"
                                                   t-esc="kpi.data.target"/>
                                     </td>
                                     <td>
@@ -312,7 +350,7 @@
                                                   oninput="this.style.height = ''; this.style.height = this.scrollHeight + 'px'"
                                                   t-esc="kpi.data.planning_remarks"/>
                                     </td>
-                                    <td>
+                                    <!-- <td>
                                         <textarea class="form-control" 
                                                   rows="1" 
                                                   placeholder="Add your remarks..."
@@ -320,7 +358,7 @@
                                                   oninput="this.style.height = ''; this.style.height = this.scrollHeight + 'px'"
                                                   t-on-change="(e) => this.onKPIFieldChange(kpi, 'supervisor_planning_remarks', e)" 
                                                   t-esc="kpi.data.supervisor_planning_remarks"/>
-                                    </td>
+                                    </td> -->
                                 </tr>
                             </t>
                         </tbody>

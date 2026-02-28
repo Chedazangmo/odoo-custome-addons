@@ -62,6 +62,7 @@ export class KraTabs extends Component {
         this.state = useState({
             activeTabIndex: 0,
             isDeleting: false,
+            showRestorePanel: false, // toggles the restore panel for employee mode
         });
 
         useEffect(() => { //for setting height of textareas to fit content on initial render and when active tab changes on runtime
@@ -131,10 +132,10 @@ export class KraTabs extends Component {
         return this.mode === 'supervisor';
     }
 
-    // Controls whether the Supervisor Remarks column is visible in the employee table.
-    get showSupervisorRemarks() {
-        return !!(this.props.options && this.props.options.show_supervisor_remarks);
-    }
+    // Controls whether the Supervisor Remarks column is visible in the employee table. (not needed for now)
+    // get showSupervisorRemarks() {
+    //     return !!(this.props.options && this.props.options.show_supervisor_remarks);
+    // }
 
     isVirtualId(id) {
         return typeof id === 'string' || id < 0;
@@ -158,6 +159,11 @@ export class KraTabs extends Component {
 
     get activeKPIs() {
         return this.activeKRA?.data.kpi_ids?.records || [];
+    }
+
+    get activeDeselectedKPIs() {
+        // KPIs that the employee has soft-deleted (deselected) — used by the restore panel.
+        return this.activeKPIs.filter(kpi => !kpi.data.is_selected);
     }
 
     get activeTotalScore() {
@@ -204,6 +210,26 @@ export class KraTabs extends Component {
         this.state.activeTabIndex = this.kraRecords.length - 1;
     }
 
+    async onDuplicateKPI(kpiRecord) {
+        if (this.props.readonly || !this.activeKRA) return;
+        
+        await this.activeKRA.update({
+            kpi_ids: [
+                [0, 0, {
+                    name: kpiRecord.data.name,
+                    description: kpiRecord.data.description,
+                    criteria: kpiRecord.data.criteria,
+                    weightage: 0.0, 
+                    template_kpi_id: kpiRecord.data.template_kpi_id ? kpiRecord.data.template_kpi_id[0] : false,
+                    is_selected: true,
+                    is_clone: true, 
+                    target: "", 
+                    planning_remarks: "" 
+                }]
+            ]
+        });
+    }
+
     async onDeleteKRA() {
         if (this.props.readonly || !this.activeKRA || this.state.isDeleting) return;
         // Only allow in template mode
@@ -227,6 +253,7 @@ export class KraTabs extends Component {
             this.state.isDeleting = false;
         }
     }
+    
 
     setActiveTab(index) {
         this.state.activeTabIndex = index;
@@ -253,21 +280,68 @@ export class KraTabs extends Component {
         });
     }
 
+    // async onDeleteKPI(kpiRecord) {
+    //     if (this.props.readonly || !this.activeKRA || this.state.isDeleting) return;
+    //     // Allow in template AND employee modes, NOT supervisor (come here later for employee)
+    //     if (this.isSupervisorMode) return;
+
+    //     if (this.isEmployeeMode) {
+    //         // Soft-delete: deselect the KPI rather than removing it from the database.
+    //         // This preserves the template structure and allows the employee to restore it.
+    //         // The server-side write() allows is_selected changes for employees.
+    //         await kpiRecord.update({ is_selected: false });
+    //         return;
+    //     }
+        
+    //     this.state.isDeleting = true;
+
+    //     try {
+    //         const kpiList = this.activeKRA.data.kpi_ids;
+    //         await kpiList.delete(kpiRecord);
+    //     } catch (error) {
+    //         console.error("Error deleting KPI:", error);
+    //     } finally {
+    //         this.state.isDeleting = false;
+    //     }
+    // }
     async onDeleteKPI(kpiRecord) {
         if (this.props.readonly || !this.activeKRA || this.state.isDeleting) return;
-        // Allow in template AND employee modes, NOT supervisor (come here later for employee)
         if (this.isSupervisorMode) return;
         
         this.state.isDeleting = true;
 
         try {
-            const kpiList = this.activeKRA.data.kpi_ids;
-            await kpiList.delete(kpiRecord);
+            if (this.isTemplateMode) {
+                // HR Mode: Hard Delete from the template database
+                const kpiList = this.activeKRA.data.kpi_ids;
+                await kpiList.delete(kpiRecord);
+            } else if (this.isEmployeeMode) {
+                // Employee Mode: Check if it's an unsaved ghost OR a saved clone
+                if (kpiRecord.isNew || kpiRecord.data.is_clone) {
+                    // Destroy clones permanently
+                    const kpiList = this.activeKRA.data.kpi_ids;
+                    await kpiList.delete(kpiRecord);
+                } else {
+                    // Original HR Template KPI: Soft-delete it so it goes to the Restore panel
+                    await kpiRecord.update({ is_selected: false });
+                }
+            }
         } catch (error) {
             console.error("Error deleting KPI:", error);
         } finally {
             this.state.isDeleting = false;
         }
+    }
+
+    async onRestoreKPI(kpiRecord) {
+        // Re-selects a soft-deleted KPI, making it visible in the employee table again.
+        if (this.props.readonly) return;
+        await kpiRecord.update({ is_selected: true });
+    }
+
+    onToggleRestorePanel() {
+        // Shows/hides the restore panel listing all deselected KPIs for this KRA.
+        this.state.showRestorePanel = !this.state.showRestorePanel;
     }
 
     async onKPIFieldChange(kpiRecord, fieldName, event) {

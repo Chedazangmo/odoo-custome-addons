@@ -34,7 +34,6 @@
                 <header>
                     <div class="alert alert-info" role="alert" invisible="state != 'draft'">
                         <strong>Not Yet Submitted:</strong> This employee has not submitted their plan yet.
-                        You will be able to review and add remarks once they submit.
                     </div>
 
                     <!--
@@ -127,7 +126,7 @@
                                             <field name="is_selected"/>
                                             <field name="target"/>
                                             <field name="planning_remarks"/>
-                                            <field name="supervisor_planning_remarks"/>
+                                            <!-- <field name="supervisor_planning_remarks"/> -->
                                         </list>
                                     </field>
                                 </list>
@@ -148,7 +147,7 @@
         <field name="view_ids" eval="[(5, 0, 0),
             (0, 0, {'view_mode': 'list', 'view_id': ref('view_employee_plans_all_list')}),
             (0, 0, {'view_mode': 'form', 'view_id': ref('view_employee_plans_supervisor_form')})]"/>
-        <field name="domain">[('cycle_id.state', '=', 'planning')]</field>
+        <field name="domain">[('cycle_id.state', 'in', ['planning', 'monitoring', 'appraisal'])]</field>
         <field name="context">{
             'create': False,
             'delete': False,

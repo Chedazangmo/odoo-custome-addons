@@ -344,7 +344,7 @@ class PMSAppraisal(models.Model):
         EMPLOYEE_KPI_FIELDS = {'is_selected', 'target', 'planning_remarks', 'weightage'}
 
         # Fields the supervisor is permitted to change on a KPI row.
-        SUPERVISOR_KPI_FIELDS = {'supervisor_planning_remarks'}
+        SUPERVISOR_KPI_FIELDS = {'target'} #{'supervisor_planning_remarks', 'target'}
 
         filtered_vals = dict(vals)
 
@@ -463,7 +463,7 @@ class PMSAppraisal(models.Model):
         all_kpis = self.kra_ids.mapped('kpi_ids')
         selected_kpis = all_kpis.filtered(lambda k: k.is_selected)
 
-        incomplete_kpis = selected_kpis.filtered(lambda k: not k.target or not k.planning_remarks)
+        incomplete_kpis = selected_kpis.filtered(lambda k: not k.target) #(lambda k: not k.target or not k.planning_remarks) incase remarks is required
         if incomplete_kpis:
             raise UserError('All selected KPIs must have Target and Planning Remarks filled.')
 
@@ -509,10 +509,11 @@ class PMSAppraisal(models.Model):
             raise UserError('Only the assigned supervisor can approve this plan.')
 
         selected_kpis = self.kra_ids.mapped('kpi_ids').filtered(lambda k: k.is_selected)
-        missing_remarks = selected_kpis.filtered(lambda k: not k.supervisor_planning_remarks)
-        if missing_remarks:
-            kpi_names = ', '.join(missing_remarks.mapped('name'))
-            raise UserError(f'Supervisor remarks are required for all selected KPIs before approving. Missing remarks on: {kpi_names}')
+        # missing_remarks = selected_kpis.filtered(lambda k: not k.supervisor_planning_remarks)
+        # uncomment if supremarks are necessary
+        # if missing_remarks:
+        #     kpi_names = ', '.join(missing_remarks.mapped('name'))
+        #     raise UserError(f'Supervisor remarks are required for all selected KPIs before approving. Missing remarks on: {kpi_names}')
 
         self.with_context(skip_edit_check=True).write({
             'state': 'approved',
@@ -546,10 +547,11 @@ class PMSAppraisal(models.Model):
             raise UserError('Only the assigned supervisor can reject this plan.')
 
         selected_kpis = self.kra_ids.mapped('kpi_ids').filtered(lambda k: k.is_selected)
-        missing_remarks = selected_kpis.filtered(lambda k: not k.supervisor_planning_remarks)
-        if missing_remarks:
-            kpi_names = ', '.join(missing_remarks.mapped('name'))
-            raise UserError(f'Supervisor remarks are required for all selected KPIs before rejecting. Missing remarks on: {kpi_names}')
+        # missing_remarks = selected_kpis.filtered(lambda k: not k.supervisor_planning_remarks)
+        # uncommnent if you sup remarks is needed ask sir
+        # if missing_remarks:
+        #     kpi_names = ', '.join(missing_remarks.mapped('name'))
+        #     raise UserError(f'Supervisor remarks are required for all selected KPIs before rejecting. Missing remarks on: {kpi_names}')
 
         self.with_context(skip_edit_check=True).write({
             'state': 'rejected',

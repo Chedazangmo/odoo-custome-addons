@@ -54,10 +54,20 @@ class AppraisalTemplate(models.Model):
         string='Active', default=True
     )
 
-    _sql_constraints = [
-        ('unique_evaluation_group', 'UNIQUE(evaluation_group_id)', 
-         'Only one template can be created per employee_evaluation!')
-    ]
+    @api.constrains('evaluation_group_id')
+    def _check_unique_evaluation_group(self):
+        for record in self:
+            # Check if any other template exists with the same evaluation group, cannot create multiple templates for the same group
+            existing_template = self.search([
+                ('evaluation_group_id', '=', record.evaluation_group_id.id),
+                ('id', '!=', record.id) # Exclude the current record being saved
+            ])
+            
+            if existing_template:
+                raise ValidationError(
+                    f"A template for the Evaluation Group '{record.evaluation_group_id.name}' "
+                    f"already exists. You can only create one template per group"
+                )
 
     @api.depends('kra_ids')
     def _compute_kra_count(self):
