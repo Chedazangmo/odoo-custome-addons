@@ -9,7 +9,8 @@
             <list string="My Performance Plan" create="false" delete="false">
                 <field name="employee_id" string="Employee Name"/>
                 <field name="employee_evaluation_group_id" string="Evaluation Group"/>
-                <field name="supervisor_id" string="Supervisor"/>
+                <field name="supervisor_id" string="Manager"/>
+                <field name="secondary_supervisor_id" string="Secondary Manager"/>
                 <field name="reviewer_id" string="Reviewer"/>
                 <field name="planning_start_date" string="Planning Start"/>
                 <field name="planning_end_date" string="Planning Deadline"/>
@@ -41,7 +42,7 @@
 
                     <field name="state"
                            widget="statusbar"
-                           statusbar_visible="draft,pending_supervisor,approved,rejected"/>
+                           statusbar_visible="draft,pending_supervisor,pending_secondary_supervisor,pending_reviewer,approved,rejected"/>
                 </header>
 
                 <sheet>
@@ -54,7 +55,8 @@
                         </group>
 
                         <group string="Plan Details">
-                            <field name="supervisor_id" string="Supervisor" readonly="1"/>
+                            <field name="supervisor_id" string="Manager" readonly="1"/>
+                            <field name="secondary_supervisor_id" string="Secondary Manager" readonly="1"/>
                             <field name="reviewer_id" string="Reviewer" readonly="1"/>
                             <field name="template_id" string="Template Name" readonly="1"/>
                         </group>
@@ -105,7 +107,7 @@
                                    options="{'mode': 'employee'}"
                                    readonly="not can_employee_edit"
                                    nolabel="1"
-                                   invisible="state not in ['draft', 'pending_supervisor']">
+                                   invisible="state not in ['draft', 'pending_supervisor', 'pending_secondary_supervisor', 'pending_reviewer']">
                                 <list>
                                     <field name="name"/>
                                     <field name="kpi_ids">

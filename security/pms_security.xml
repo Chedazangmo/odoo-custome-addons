@@ -33,6 +33,8 @@
         <field name="sequence">40</field>
     </record>
 
+    
+
     <!-- Employee - can only see and edit their own appraisal plan -->
     <record id="group_pms_employee" model="res.groups">
         <field name="name">Employee: Own Appraisals</field>
@@ -57,11 +59,11 @@
         ]"/>
     </record>
 
-    <!-- Reviewer: Inherits HR Manager → Supervisor → Employee automatically. -->
+    <!-- Reviewer - final approval for employees -->
     <record id="group_pms_reviewer" model="res.groups">
-        <field name="name">Reviewer: Full Oversight</field>
+        <field name="name">Reviewer: Final Approval</field>
         <field name="privilege_id" ref="privilege_pms_reviewer"/>
-        <field name="implied_ids" eval="[(4, ref('group_pms_hr_manager'))]"/>
+        <field name="implied_ids" eval="[(4, ref('group_pms_supervisor'))]"/>
     </record>
 
 </odoo>

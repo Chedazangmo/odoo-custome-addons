@@ -12,14 +12,15 @@
                   decoration-muted="state == 'draft'">
                 <field name="employee_id" string="Employee Name"/>
                 <field name="employee_evaluation_group_id" string="Evaluation Group"/>
-                <field name="supervisor_id" string="Supervisor"/>
+                <field name="supervisor_id" string="Manager"/>
+                <field name="secondary_supervisor_id" string="Secondary Manager"/>
                 <field name="reviewer_id" string="Reviewer"/>
                 <field name="planning_start_date" string="Planning Start"/>
                 <field name="planning_end_date" string="Planning Deadline"/>
                 <field name="state"
                        widget="badge"
                        decoration-muted="state == 'draft'"
-                       decoration-warning="state == 'pending_supervisor'"
+                       decoration-warning="state in ('pending_supervisor', 'pending_secondary_supervisor', 'pending_reviewer')"
                        decoration-success="state == 'approved'"
                        decoration-danger="state == 'rejected'"/>
             </list>
@@ -37,26 +38,60 @@
                     </div>
 
                     <!--
-                        Approve/Reject: visible only to the assigned supervisor and HR managers 
+                        Approve/Reject: visible only to the assigned supervisor 
                     -->
-                    <button name="action_supervisor_approve"
+                   <button name="action_supervisor_approve"
                             string="Approve Plan"
                             type="object"
-                            class="oe_highlight"
-                            invisible="state != 'pending_supervisor'"
+                            class="btn-primary"
+                            invisible="state != 'pending_supervisor' or not is_supervisor_of_appraisal"
                             groups="hr_employee_evaluation.group_pms_supervisor"
                             confirm="Are you sure you want to approve this performance plan?"/>
 
                     <button name="action_supervisor_reject"
                             string="Reject Plan"
                             type="object"
-                            invisible="state != 'pending_supervisor'"
+                            class="btn-secondary"
+                            invisible="state != 'pending_supervisor' or not is_supervisor_of_appraisal"
                             groups="hr_employee_evaluation.group_pms_supervisor"
-                            confirm="Are you sure you want to reject this plan? The employee will have to revise and resubmit."/>
+                            confirm="Are you sure you want to reject this plan?"/>
+
+                    <button name="action_secondary_supervisor_approve"
+                            string="Approve Plan"
+                            type="object"
+                            class="btn-primary"
+                            invisible="state != 'pending_secondary_supervisor' or not is_secondary_supervisor_of_appraisal"
+                            groups="hr_employee_evaluation.group_pms_supervisor"
+                            confirm="Are you sure you want to approve this performance plan?"/>
+
+                    <button name="action_secondary_supervisor_reject"
+                            string="Reject Plan"
+                            type="object"
+                            class="btn-secondary"
+                            invisible="state != 'pending_secondary_supervisor' or not is_secondary_supervisor_of_appraisal"
+                            groups="hr_employee_evaluation.group_pms_supervisor"
+                            confirm="Are you sure you want to reject this plan?"/>
+
+                    <button name="action_reviewer_approve"
+                            string="Approve Plan"
+                            type="object"
+                            class="btn-primary"
+                            invisible="state != 'pending_reviewer' or not is_reviewer_of_appraisal"
+                            groups="hr_employee_evaluation.group_pms_reviewer"
+                            confirm="Are you sure you want to give final approval to this performance plan?"/>
+
+                    <button name="action_reviewer_reject"
+                            string="Reject Plan"
+                            type="object"
+                            class="btn-secondary"
+                            invisible="state != 'pending_reviewer' or not is_reviewer_of_appraisal"
+                            groups="hr_employee_evaluation.group_pms_reviewer"
+                            confirm="Are you sure you want to reject this plan?"/>
+
 
                     <field name="state"
                            widget="statusbar"
-                           statusbar_visible="draft,pending_supervisor,approved,rejected"/>
+                           statusbar_visible="draft,pending_supervisor,pending_secondary_supervisor,pending_reviewer,approved,rejected"/>
                 </header>
 
                 <sheet>
@@ -69,7 +104,8 @@
                         </group>
 
                         <group string="Plan Details">
-                            <field name="supervisor_id" string="Supervisor" readonly="1"/>
+                            <field name="supervisor_id" string="Manager" readonly="1"/>
+                            <field name="secondary_supervisor_id" string="Secondary Manager" readonly="1"/>
                             <field name="reviewer_id" string="Reviewer" readonly="1"/>
                             <field name="template_id" string="Template Name" readonly="1"/>
                         </group>
@@ -98,10 +134,14 @@
                         </group>
                     </group>
 
-                    <!-- Access control flags (invisible helpers) -->
-                    <field name="is_supervisor_of_appraisal" invisible="1"/>
-                    <field name="can_supervisor_add_remarks" invisible="1"/>
-                    <field name="cycle_id" invisible="1"/>
+                    <!-- Access control flags -->
+                    <field name="is_supervisor_of_appraisal"             invisible="1"/>
+                    <field name="is_secondary_supervisor_of_appraisal"   invisible="1"/> 
+                    <field name="is_reviewer_of_appraisal"               invisible="1"/> 
+                    <field name="can_supervisor_add_remarks"              invisible="1"/>
+                    <field name="can_secondary_supervisor_add_remarks"    invisible="1"/>
+                    <field name="can_reviewer_add_remarks"                invisible="1"/>
+                    <field name="cycle_id"                                invisible="1"/>
 
                     <notebook>
                         <page string="Employee Plan" name="page_kpis">
@@ -113,7 +153,7 @@
                             <field name="kra_ids"
                                    widget="kra_tabs_widget"
                                    options="{'mode': 'supervisor'}"
-                                   readonly="not can_supervisor_add_remarks"
+                                   readonly="not (can_supervisor_add_remarks or can_secondary_supervisor_add_remarks)"
                                    nolabel="1">
                                 <list>
                                     <field name="name"/>

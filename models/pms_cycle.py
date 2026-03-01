@@ -313,6 +313,7 @@ class PMSCycle(models.Model):
             
             # Get supervisor (parent_id from hr.employee)
             supervisor = employee.parent_id
+            sec_supervisor = employee.secondary_manager_id
             reviewer = employee.reviewer_id
             
             # Create appraisal with deep copy of template
@@ -321,6 +322,10 @@ class PMSCycle(models.Model):
                 'employee_id': employee.id,
                 'template_id': template.id,
                 'supervisor_id': supervisor.id if supervisor else False,
+                'secondary_supervisor_id': (                                     
+                    sec_supervisor.id
+                    if sec_supervisor else False
+                ),
                 'reviewer_id': reviewer.id if reviewer else False,
             }
             
@@ -449,7 +454,19 @@ class PMSCycle(models.Model):
             'name': f'Appraisals - {self.name}',
             'type': 'ir.actions.act_window',
             'res_model': 'pms.appraisal',
-            'view_mode': 'kanban,list,form',
+            'view_mode': 'list,form',
             'domain': [('cycle_id', '=', self.id)],
             'context': {'default_cycle_id': self.id}
         }
+
+    @api.model
+    def _cron_auto_move_to_monitoring(self):
+        today = fields.Date.today()
+        # move state to monitoring after planning deadline has passed
+        expired_planning_cycles = self.search([
+            ('state', '=', 'planning'),
+            ('planning_deadline', '<', today)
+        ])
+        
+        for cycle in expired_planning_cycles:
+            cycle.action_move_to_monitoring()

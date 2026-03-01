@@ -49,6 +49,13 @@ class PMSAppraisal(models.Model):
         help='Direct manager who will review this appraisal'
     )
 
+    secondary_supervisor_id = fields.Many2one(
+        'hr.employee',
+        string='Secondary Supervisor',
+        tracking=True,
+        help='Second-level manager for review'
+    )
+
     reviewer_id = fields.Many2one(
         'hr.employee',
         string='Reviewer',
@@ -64,14 +71,16 @@ class PMSAppraisal(models.Model):
 
     state = fields.Selection([
         ('draft', 'Draft'),
-        ('pending_supervisor', 'Supervisor Approval'),
-        ('pending_reviewer', 'Reviewer Approval'),
+        ('pending_supervisor', '1st Review'),
+        ('pending_secondary_supervisor', '2nd Review'),
+        ('pending_reviewer', 'Final Review'),
         ('approved', 'Approved'),
         ('rejected', 'Rejected')
     ], string='Status', default='draft', required=True, tracking=True, copy=False)
 
     submitted_date = fields.Datetime(string='Submitted Date', readonly=True, tracking=True)
     supervisor_review_date = fields.Datetime(string='Supervisor Review Date', readonly=True, tracking=True)
+    secondary_supervisor_review_date = fields.Datetime(string='Secondary Supervisor Review Date', readonly=True, tracking=True)
     reviewer_approval_date = fields.Datetime(string='Reviewer Approval Date', readonly=True, tracking=True)
     rejection_date = fields.Datetime(string='Rejection Date', readonly=True, tracking=True)
 
@@ -105,6 +114,18 @@ class PMSAppraisal(models.Model):
         help='True if the current user is the supervisor of this appraisal'
     )
 
+    is_secondary_supervisor_of_appraisal = fields.Boolean(
+        string='Is Secondary Supervisor',
+        compute='_compute_access_flags',
+        help='True if the current user is the secondary supervisor of this appraisal'
+    )
+
+    is_reviewer_of_appraisal = fields.Boolean(
+        string='Is Reviewer',
+        compute='_compute_access_flags',
+        help='True if the current user is the reviewer of this appraisal'
+    )
+
     can_employee_edit = fields.Boolean(
         string='Can Employee Edit',
         compute='_compute_access_flags',
@@ -117,6 +138,18 @@ class PMSAppraisal(models.Model):
         compute='_compute_access_flags',
         help='True only when: current user is the supervisor, state is pending_supervisor, '
              'and cycle is in planning phase'
+    )
+
+    can_secondary_supervisor_add_remarks = fields.Boolean(
+        string='Can Secondary Supervisor Add Remarks',
+        compute='_compute_access_flags',
+        help='True only when: current user is the secondary supervisor, state is pending_secondary_supervisor, '
+    )
+
+    can_reviewer_add_remarks = fields.Boolean(
+        string='Can Reviewer Add Remarks',
+        compute='_compute_access_flags',
+        help='True only when: current user is the reviewer, state is pending_reviewer' #currently reviewer cant edit
     )
 
     is_editable = fields.Boolean(
@@ -215,6 +248,8 @@ class PMSAppraisal(models.Model):
         'state',
         'employee_id.user_id',
         'supervisor_id.user_id',
+        'secondary_supervisor_id.user_id',
+        'reviewer_id.user_id',
         'cycle_id.state',
         'cycle_id.planning_deadline',
         'rejection_date',
@@ -228,13 +263,19 @@ class PMSAppraisal(models.Model):
         for record in self:
             emp_user = record.employee_id.user_id
             sup_user = record.supervisor_id.user_id
+            sec_sup_user = record.secondary_supervisor_id.user_id
+            rev_user = record.reviewer_id.user_id
 
             is_own = bool(emp_user and emp_user.id == current_user.id)
             is_sup = bool(sup_user and sup_user.id == current_user.id)
+            is_sec_sup = bool(sec_sup_user and sec_sup_user.id == current_user.id)
+            is_rev = bool(rev_user and rev_user.id == current_user.id)
             cycle_in_planning = record.cycle_id.state == 'planning'
 
             record.is_own_appraisal = is_own
             record.is_supervisor_of_appraisal = is_sup
+            record.is_secondary_supervisor_of_appraisal = is_sec_sup
+            record.is_reviewer_of_appraisal = is_rev
 
             # --- can_employee_edit ---
             if not is_own or not cycle_in_planning:
@@ -261,6 +302,18 @@ class PMSAppraisal(models.Model):
             record.can_supervisor_add_remarks = bool(
                 is_sup
                 and record.state == 'pending_supervisor'
+                and cycle_in_planning
+            )
+
+            record.can_secondary_supervisor_add_remarks = bool(
+                is_sec_sup
+                and record.state == 'pending_secondary_supervisor'
+                and cycle_in_planning
+            )
+
+            record.can_reviewer_add_remarks = bool(
+                is_rev
+                and record.state == 'pending_reviewer'
                 and cycle_in_planning
             )
 
@@ -303,16 +356,21 @@ class PMSAppraisal(models.Model):
     @api.model_create_multi
     def create(self, vals_list):
         for vals in vals_list:
-            if 'employee_id' in vals and 'supervisor_id' not in vals:
+            if 'employee_id' in vals:
                 employee = self.env['hr.employee'].browse(vals['employee_id'])
-                if employee.parent_id:
+                # Auto-populate approval chain from hr.employee fields
+                if 'supervisor_id' not in vals and employee.parent_id:
                     vals['supervisor_id'] = employee.parent_id.id
+                if 'secondary_supervisor_id' not in vals and employee.secondary_manager_id:  
+                    vals['secondary_supervisor_id'] = employee.secondary_manager_id.id
+                if 'reviewer_id' not in vals and employee.reviewer_id:
+                    vals['reviewer_id'] = employee.reviewer_id.id
         return super().create(vals_list)
 
     def write(self, vals):
         # The OWL widget always sends the full KPI row on save not just the
         # changed field. So we strip the payload per-role before it hits
-        # the database, not just check whether kra_ids is present.
+        # the database
 
         # Roles:
         #   Employee (can_employee_edit=True):
@@ -321,19 +379,18 @@ class PMSAppraisal(models.Model):
         #       kra_ids → kpi_ids → supervisor_planning_remarks  ← ONLY this field
         #   HR (skip_edit_check context):
         #       Unrestricted — used by action methods for state transitions.
-        #   Everyone else: denied.
         # Action methods bypass this guard via context flag.
         if self.env.context.get('skip_edit_check'):
             return super().write(vals)
 
         system_fields = {
             'state', 'submitted_date', 'supervisor_review_date',
-            'reviewer_approval_date', 'rejection_date', 'active',
+            'secondary_supervisor_review_date','reviewer_approval_date', 'rejection_date', 'active',
         }
 
         user_facing_fields = set(vals.keys()) - system_fields
 
-        # Nothing user-facing — let through (e.g. pure state change).
+        # Nothing user-facing — let through 
         if not user_facing_fields:
             return super().write(vals)
 
@@ -346,11 +403,13 @@ class PMSAppraisal(models.Model):
         # Fields the supervisor is permitted to change on a KPI row.
         SUPERVISOR_KPI_FIELDS = {'target'} #{'supervisor_planning_remarks', 'target'}
 
+        SECONDARY_SUPERVISOR_KPI_FIELDS = {'target'} 
+
         filtered_vals = dict(vals)
 
         for record in self:
             if record.can_employee_edit:
-                # Employee path — strip supervisor-only fields from any kra_ids payload.
+                # Employee path 
                 if 'kra_ids' in filtered_vals:
                     filtered_vals['kra_ids'] = self._filter_kra_commands(
                         filtered_vals['kra_ids'],
@@ -374,9 +433,23 @@ class PMSAppraisal(models.Model):
                     raise UserError(
                         'You do not have permission to modify these fields on a performance plan.'
                     )
+            
+            elif record.can_secondary_supervisor_add_remarks:    
+                if 'kra_ids' in filtered_vals:
+                    filtered_vals['kra_ids'] = self._filter_kra_commands(
+                        filtered_vals['kra_ids'],
+                        allowed_kpi_fields=SECONDARY_SUPERVISOR_KPI_FIELDS,
+                    )
+                non_kra = user_facing_fields - {'kra_ids'}
+                if non_kra:
+                    raise UserError('You do not have permission to modify these fields on a performance plan.')
+
+            elif record.can_reviewer_add_remarks:               
+                # Reviewer only approves/rejects — they have no KPI fields to edit.
+                raise UserError('Reviewers cannot edit KPI fields. Please use the Approve/Reject buttons.')
 
             elif is_hr:
-                # HR path — read-only through the UI; only reachable via
+                # HR path — read-only through the UI
                 # technical/admin operations. Pass through as-is.
                 pass
 
@@ -447,6 +520,74 @@ class PMSAppraisal(models.Model):
 
         return filtered_kra_commands
 
+
+    def _next_state_after_supervisor(self):
+        """Return the correct next state after the primary supervisor approves."""
+        self.ensure_one()
+        if self.secondary_supervisor_id:
+            return 'pending_secondary_supervisor'
+        elif self.reviewer_id:
+            return 'pending_reviewer'
+        else:
+            return 'approved'
+
+    def _next_state_after_secondary(self):
+        """Return the correct next state after the secondary supervisor approves."""
+        self.ensure_one()
+        if self.reviewer_id:
+            return 'pending_reviewer'
+        else:
+            return 'approved'
+
+    def _state_label(self, state_key):
+        """Return the human-readable label for a state key."""
+        return dict(self._fields['state'].selection).get(state_key, state_key)
+
+    def _notify_next_approver(self, next_state):
+        """Schedule an activity for whoever is next in the approval chain."""
+        self.ensure_one()
+        emp_name = self.employee_id.name
+
+        if next_state == 'pending_secondary_supervisor' and self.secondary_supervisor_id.user_id:
+            self.activity_schedule(
+                activity_type_id=self.env.ref('mail.mail_activity_data_todo').id,
+                user_id=self.secondary_supervisor_id.user_id.id,
+                summary=f'Review performance plan for {emp_name}',
+                note=(
+                    f"{emp_name}'s plan has been approved by the primary supervisor "
+                    f"and now requires your review."
+                ),
+            )
+        elif next_state == 'pending_reviewer' and self.reviewer_id.user_id:
+            self.activity_schedule(
+                activity_type_id=self.env.ref('mail.mail_activity_data_todo').id,
+                user_id=self.reviewer_id.user_id.id,
+                summary=f'Final review: performance plan for {emp_name}',
+                note=f"{emp_name}'s plan is ready for your final approval.",
+            )
+        elif next_state == 'approved' and self.employee_id.user_id:
+            self.activity_schedule(
+                activity_type_id=self.env.ref('mail.mail_activity_data_todo').id,
+                user_id=self.employee_id.user_id.id,
+                summary='Your performance plan has been approved',
+                note='Your performance plan has been fully approved.',
+            )
+    
+    def _notify_employee_rejected(self, rejected_by):
+        """Notify the employee their plan was rejected and needs revision."""
+        self.ensure_one()
+        if self.employee_id.user_id:
+            self.activity_schedule(
+                activity_type_id=self.env.ref('mail.mail_activity_data_todo').id,
+                user_id=self.employee_id.user_id.id,
+                summary='Your performance plan needs revision',
+                note=(
+                    f'{rejected_by.name} has rejected your performance plan. '
+                    f'You have {self.cycle_id.resubmission_days} days to revise and resubmit. '
+                    f'Please check the remarks on each KPI for feedback.'
+                ),
+            )
+
     def action_submit_for_review(self):
         # employee submits their plan for supervisor review
         self.ensure_one()
@@ -496,86 +637,170 @@ class PMSAppraisal(models.Model):
         return True
 
     def action_supervisor_approve(self):
-        # Supervisor approves employee plan
+        """Primary supervisor approves. Routes to secondary, reviewer, or approved."""
         self.ensure_one()
 
         if self.state != 'pending_supervisor':
-            raise UserError('Only plans pending supervisor review can be approved.')
+            raise UserError('Only plans pending supervisor review can be approved here.')
 
-        # Enforce: only the assigned supervisor (or HR) can approve
-        current_user = self.env.user
-        is_hr = current_user.has_group('hr_employee_evaluation.group_pms_hr_manager')
-        if not is_hr and not self.is_supervisor_of_appraisal:
+        if not self.is_supervisor_of_appraisal:
             raise UserError('Only the assigned supervisor can approve this plan.')
 
-        selected_kpis = self.kra_ids.mapped('kpi_ids').filtered(lambda k: k.is_selected)
-        # missing_remarks = selected_kpis.filtered(lambda k: not k.supervisor_planning_remarks)
-        # uncomment if supremarks are necessary
-        # if missing_remarks:
-        #     kpi_names = ', '.join(missing_remarks.mapped('name'))
-        #     raise UserError(f'Supervisor remarks are required for all selected KPIs before approving. Missing remarks on: {kpi_names}')
+        # Uncomment if supervisor remarks are required before approving:
+        # selected_kpis = self.kra_ids.mapped('kpi_ids').filtered(lambda k: k.is_selected)
+        # missing = selected_kpis.filtered(lambda k: not k.supervisor_planning_remarks)
+        # if missing:
+        #     raise UserError(f'Supervisor remarks required on: {", ".join(missing.mapped("name"))}')
+
+        next_state = self._next_state_after_supervisor()
 
         self.with_context(skip_edit_check=True).write({
-            'state': 'approved',
+            'state': next_state,
             'supervisor_review_date': fields.Datetime.now(),
         })
 
-        if self.employee_id.user_id:
-            self.activity_schedule(
-                activity_type_id=self.env.ref('mail.mail_activity_data_todo').id,
-                user_id=self.employee_id.user_id.id,
-                summary='Your performance plan has been approved',
-                note=f'Your supervisor {self.supervisor_id.name} has approved your performance plan.'
-            )
+        self._notify_next_approver(next_state)
 
         self.message_post(
-            body=f"Planning approved by supervisor {self.supervisor_id.name}. Planning phase complete.",
-            message_type='notification'
+            body=(
+                f"Plan approved by supervisor {self.supervisor_id.name}. "
+                f"Status → {self._state_label(next_state)}."
+            ),
+            message_type='notification',
         )
         return True
 
     def action_supervisor_reject(self):
-        # Supervisor rejects the planning
+        """Primary supervisor rejects. Plan goes back to employee for revision."""
         self.ensure_one()
 
         if self.state != 'pending_supervisor':
-            raise UserError('Only plans pending supervisor review can be rejected.')
+            raise UserError('Only plans pending supervisor review can be rejected here.')
 
-        current_user = self.env.user
-        is_hr = current_user.has_group('hr_employee_evaluation.group_pms_hr_manager')
-        if not is_hr and not self.is_supervisor_of_appraisal:
+        if not self.is_supervisor_of_appraisal:
             raise UserError('Only the assigned supervisor can reject this plan.')
 
-        selected_kpis = self.kra_ids.mapped('kpi_ids').filtered(lambda k: k.is_selected)
-        # missing_remarks = selected_kpis.filtered(lambda k: not k.supervisor_planning_remarks)
-        # uncommnent if you sup remarks is needed ask sir
-        # if missing_remarks:
-        #     kpi_names = ', '.join(missing_remarks.mapped('name'))
-        #     raise UserError(f'Supervisor remarks are required for all selected KPIs before rejecting. Missing remarks on: {kpi_names}')
+        # Uncomment if supervisor remarks are required before rejecting:
+        # selected_kpis = self.kra_ids.mapped('kpi_ids').filtered(lambda k: k.is_selected)
+        # missing = selected_kpis.filtered(lambda k: not k.supervisor_planning_remarks)
+        # if missing:
+        #     raise UserError(f'Supervisor remarks required on: {", ".join(missing.mapped("name"))}')
 
         self.with_context(skip_edit_check=True).write({
             'state': 'rejected',
             'rejection_date': fields.Datetime.now(),
         })
 
-        if self.employee_id.user_id:
-            self.activity_schedule(
-                activity_type_id=self.env.ref('mail.mail_activity_data_todo').id,
-                user_id=self.employee_id.user_id.id,
-                summary='Your performance plan needs revision',
-                note=(
-                    f'Your supervisor has rejected your plan. '
-                    f'You have {self.cycle_id.resubmission_days} days to revise and resubmit. '
-                    f'Check supervisor remarks for feedback.'
-                )
-            )
+        self._notify_employee_rejected(rejected_by=self.supervisor_id)
+        self.message_post(
+            body=(
+                f"Plan rejected by supervisor {self.supervisor_id.name}. "
+                f"Employee has {self.cycle_id.resubmission_days} days to resubmit."
+            ),
+            message_type='notification',
+        )
+        return True
+
+    def action_secondary_supervisor_approve(self):
+        """Secondary supervisor approves. Routes to reviewer or approved."""
+        self.ensure_one()
+
+        if self.state != 'pending_secondary_supervisor':
+            raise UserError('Only plans pending secondary supervisor review can be approved here.')
+
+        if not self.is_secondary_supervisor_of_appraisal:
+            raise UserError('Only the assigned secondary supervisor can approve this plan.')
+
+        next_state = self._next_state_after_secondary()
+
+        self.with_context(skip_edit_check=True).write({
+            'state': next_state,
+            'secondary_supervisor_review_date': fields.Datetime.now(),
+        })
+
+        self._notify_next_approver(next_state)
 
         self.message_post(
             body=(
-                f"Planning rejected by supervisor {self.supervisor_id.name}. "
-                f"Employee has {self.cycle_id.resubmission_days} days to resubmit."
+                f"Plan approved by secondary supervisor {self.secondary_supervisor_id.name}. "
+                f"Status → {self._state_label(next_state)}."
             ),
-            message_type='notification'
+            message_type='notification',
+        )
+        return True
+
+    def action_secondary_supervisor_reject(self):
+        """Secondary supervisor rejects. Plan goes back to employee — full chain restarts."""
+        self.ensure_one()
+
+        if self.state != 'pending_secondary_supervisor':
+            raise UserError('Only plans pending secondary supervisor review can be rejected here.')
+
+        if not self.is_secondary_supervisor_of_appraisal:
+            raise UserError('Only the assigned secondary supervisor can reject this plan.')
+
+        self.with_context(skip_edit_check=True).write({
+            'state': 'rejected',
+            'rejection_date': fields.Datetime.now(),
+        })
+
+        self._notify_employee_rejected(rejected_by=self.secondary_supervisor_id)
+        self.message_post(
+            body=(
+                f"Plan rejected by secondary supervisor {self.secondary_supervisor_id.name}. "
+                f"Employee has {self.cycle_id.resubmission_days} days to resubmit. "
+                f"After resubmission the full approval chain restarts."
+            ),
+            message_type='notification',
+        )
+        return True
+
+    def action_reviewer_approve(self):
+        """Reviewer gives final approval. Plan is now approved."""
+        self.ensure_one()
+
+        if self.state != 'pending_reviewer':
+            raise UserError('Only plans pending reviewer approval can be approved here.')
+
+        if not self.is_reviewer_of_appraisal:
+            raise UserError('Only the assigned reviewer can give final approval.')
+
+        self.with_context(skip_edit_check=True).write({
+            'state': 'approved',
+            'reviewer_approval_date': fields.Datetime.now(),
+        })
+
+        self._notify_next_approver('approved')  # notifies the employee
+
+        self.message_post(
+            body=f"Plan fully approved by reviewer {self.reviewer_id.name}. Planning phase complete.",
+            message_type='notification',
+        )
+        return True
+
+    def action_reviewer_reject(self):
+        """Reviewer rejects. Plan goes back to employee — full chain restarts."""
+        self.ensure_one()
+
+        if self.state != 'pending_reviewer':
+            raise UserError('Only plans pending reviewer approval can be rejected here.')
+
+        if not self.is_reviewer_of_appraisal:
+            raise UserError('Only the assigned reviewer can reject this plan.')
+
+        self.with_context(skip_edit_check=True).write({
+            'state': 'rejected',
+            'rejection_date': fields.Datetime.now(),
+        })
+
+        self._notify_employee_rejected(rejected_by=self.reviewer_id)
+        self.message_post(
+            body=(
+                f"Plan rejected by reviewer {self.reviewer_id.name}. "
+                f"Employee has {self.cycle_id.resubmission_days} days to resubmit. "
+                f"After resubmission the full approval chain restarts."
+            ),
+            message_type='notification',
         )
         return True
 
