@@ -1,0 +1,5 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_pms_evaluation_group_user,pms.evaluation.group user,model_pms_evaluation_group,base.group_user,1,0,0,0
+access_pms_evaluation_group_hr,pms.evaluation.group hr,model_pms_evaluation_group,hr.group_hr_user,1,1,1,1
+access_hr_employee_secondary_manager_user,hr.employee user,model_hr_employee,base.group_user,1,1,1,0
+
