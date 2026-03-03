@@ -101,4 +101,6 @@ If emp doesnt have secondary manager and reviwer:
 Manager (approves/rejects) -> complete
 
 And the flow must of approval must always be
+
 Manager -> Secondary Manager -> Reviewer
+
