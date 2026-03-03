@@ -1,4 +1,4 @@
-# odoo-custome-addons
+# Performance Management System
 
 Done so far:
 Access Rigts:
@@ -57,4 +57,5 @@ Flow of approval:
     Manager (approves/rejects) -> complete
 And the flow must of approval must always be
 Manager -> Secondary Manager -> Reviewer
+
 
