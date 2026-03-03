@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+    
+    <record id="view_evaluation_group_list" model="ir.ui.view">
+        <field name="name">evaluation.group.list</field>
+        <field name="model">pms.evaluation.group</field>
+        <field name="arch" type="xml">
+            <list string="Evaluation Groups">
+                <field name="name"/>
+                <field name="company_id"/>
+                <field name="employee_count"/>
+            </list>
+        </field>
+    </record>
+    
+    <record id="view_evaluation_group_kanban" model="ir.ui.view">
+        <field name="name">evaluation.group.kanban</field>
+        <field name="model">pms.evaluation.group</field>
+        <field name="arch" type="xml">
+            <kanban>
+                <templates>
+                    <t t-name="card">
+                        <div class="oe_kanban_global_click">
+                            <div class="oe_kanban_details">
+                                <div class="o_kanban_record_top mb-2">
+                                    <div class="o_kanban_record_headings">
+                                        <strong class="o_kanban_record_title fs-4 fw-bold">
+                                            <field name="name"/>
+                                        </strong>
+                                    </div>
+                                </div>
+
+                                <div class="o_kanban_record_subtitle text-muted mb-3">
+                                    <i class="fa fa-building-o me-2" role="img" aria-label="Company" title="Company"/>
+                                    <field name="company_id"/>
+                                </div>
+
+                                <div class="o_kanban_record_bottom">
+                                    <div class="oe_kanban_bottom_left"></div>
+                                    <div class="oe_kanban_bottom_right">
+                                        <div class="hr_kanban_buttons">
+                                            <div class="o_kanban_inline_block">
+                                                <i class="fa fa-users me-1" role="img" aria-label="Employees" title="Employees"/>
+                                                <field name="employee_count"/>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+    
+    <record id="view_evaluation_group_form" model="ir.ui.view">
+        <field name="name">evaluation.group.form</field>
+        <field name="model">pms.evaluation.group</field>
+        <field name="arch" type="xml">
+            <form string="">
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="toggle_active" type="object" class="oe_stat_button" icon="fa-archive">
+                            <field name="active" widget="boolean_button" options="{'terminology': 'archive'}"/>
+                        </button>
+                    </div>
+
+                    <group>
+                        <field name="name"/>
+                        <field name="company_id"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+    
+    <record id="action_evaluation_group" model="ir.actions.act_window">
+        <field name="name">Evaluation Groups</field>
+        <field name="res_model">pms.evaluation.group</field>
+        <field name="view_mode">kanban,list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create your evaluation group
+            </p>
+        </field>
+    </record>
+    
+    </data>
+</odoo>

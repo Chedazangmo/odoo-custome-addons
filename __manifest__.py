@@ -22,6 +22,8 @@
     'data': [
         'security/ir.model.access.csv',
         'views/employee_pms_views.xml',
+        'views/evaluation_group_view.xml',
+        'views/evaluation_group_menu.xml',
     ],
     # only loaded in demonstration mode
     'demo': [
