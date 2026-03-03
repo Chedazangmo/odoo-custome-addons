@@ -26,11 +26,11 @@ class AppraisalTemplate(models.Model):
         string='Key Result Areas'
     )
     
-    kra_count = fields.Integer(
-        string='KRA Count', 
-        compute='_compute_kra_count', 
-        store=True
-    )
+    # kra_count = fields.Integer(
+    #     string='KRA Count', 
+    #     compute='_compute_kra_count', 
+    #     store=True
+    # )
     
     # compute_sudo: prevent issues during nested deletion
     total_kpi_score = fields.Float(
@@ -44,7 +44,7 @@ class AppraisalTemplate(models.Model):
     state = fields.Selection(
         [
             ('draft', 'Draft'),
-            ('locked', 'Locked (In Use)'),
+            ('locked', 'Locked'),
         ],
         default='draft',
         tracking=True,
@@ -69,10 +69,10 @@ class AppraisalTemplate(models.Model):
                     f"already exists. You can only create one template per group"
                 )
 
-    @api.depends('kra_ids')
-    def _compute_kra_count(self):
-        for record in self:
-            record.kra_count = len(record.kra_ids)
+    # @api.depends('kra_ids')
+    # def _compute_kra_count(self):
+    #     for record in self:
+    #         record.kra_count = len(record.kra_ids)
 
     @api.depends('kra_ids.kpi_ids.score')
     def _compute_total_kpi_score(self):

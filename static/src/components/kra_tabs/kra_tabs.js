@@ -90,7 +90,8 @@ export class KraTabs extends Component {
         });
     }
 
-    // Mode detection (supervisor or employee) is based on options passed from XML or activeFields, with a fallback to 'employee' if not specified. Template mode is determined by the model.
+    // Mode detection to check employee or supervisor is based on options passed from XML or activeFields, with a fallback to 'employee' if not specified. Template mode is determined by the model.
+    // Mainly to check and give permission for emps to edit plan and supervisors to edit emp target field and approves
     get mode() {
         // Check what database model we currently are on
         if (this.props.record.resModel === 'appraisal.template') {

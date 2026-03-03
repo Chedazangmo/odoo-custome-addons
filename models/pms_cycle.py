@@ -214,6 +214,20 @@ class PMSCycle(models.Model):
         
         error_messages = []
 
+        active_appraisals = self.env['pms.appraisal'].search([
+            ('employee_id', 'in', employees.ids),
+            ('cycle_id', '!=', self.id),
+            ('cycle_id.state', 'not in', ['draft', 'completed', 'cancelled'])
+        ])
+
+        if active_appraisals:
+            # Get unique names of employees involved in active cycles
+            busy_employee_names = list(set(active_appraisals.mapped('employee_id.name')))
+            names = "\n".join([f"- {name}" for name in busy_employee_names])
+            error_messages.append(
+                f"The following employees are already have an active cycle:\n{names}\n"
+            )
+
         # Check Missing Supervisors
         # Filter employees who do not have a parent_id set
         employees_missing_supervisor = employees.filtered(lambda e: not e.parent_id)
@@ -254,7 +268,7 @@ class PMSCycle(models.Model):
             names = "\n".join([f"- {e.name} (Group: {e.evaluation_group_id.name or 'None'})" for e in total_template_errors])
             error_messages.append(
                 f"The following employees do not have a valid Appraisal Template assigned:\n{names}\n"
-                "Please ensure they have an Evaluation Group and that the Group has an active Template."
+                "Please ensure they have an Evaluation Group assigned and a valid Template."
             )
 
         if error_messages:
@@ -275,8 +289,6 @@ class PMSCycle(models.Model):
         )
         
         return True
-
-
 
     # create a copy of the tenplates for each employee based on their evaluation group 
     def _create_employee_appraisals(self, employees):
@@ -378,12 +390,11 @@ class PMSCycle(models.Model):
                         date_deadline=self.planning_deadline
                     )
                     
-                    # Also send an email notification
+                    #send an email notification
                     appraisal.message_post(
                         body=f"""Dear {appraisal.employee_id.name}, your performance plan for {self.name} is now active.""",
                         subject=f'Performance Plan Active - {self.name}',
                         message_type='notification',
-                        partner_ids=[appraisal.employee_id.user_id.partner_id.id],
                         subtype_xmlid='mail.mt_comment'
                     )
                 except Exception as e:
@@ -402,7 +413,7 @@ class PMSCycle(models.Model):
 
         self.write({'state': 'monitoring'})
         self.message_post(
-            body="Moved to Monitoring phase. KPI plans are now locked for monitoring.",
+            body="Moved to Monitoring phase. Plans are now locked",
             message_type='notification'
         )
         return True

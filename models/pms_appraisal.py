@@ -272,32 +272,33 @@ class PMSAppraisal(models.Model):
             is_rev = bool(rev_user and rev_user.id == current_user.id)
             cycle_in_planning = record.cycle_id.state == 'planning'
 
+            has_started = bool(record.cycle_id.start_date and record.cycle_id.start_date <= today) #prevent submission before planning
+
             record.is_own_appraisal = is_own
             record.is_supervisor_of_appraisal = is_sup
             record.is_secondary_supervisor_of_appraisal = is_sec_sup
             record.is_reviewer_of_appraisal = is_rev
 
-            # --- can_employee_edit ---
-            if not is_own or not cycle_in_planning:
+            # can_employee_edit (checks for employee to be able to edit the form based on state and deadlines) 
+            if not is_own or not cycle_in_planning or not has_started:
                 record.can_employee_edit = False
             elif record.state == 'approved':
                 record.can_employee_edit = False
             elif record.cycle_id.planning_deadline and record.cycle_id.planning_deadline < today:
-                # Past deadline: only editable if rejected and within resubmission window
+                # Grace period after rejection
+                # Only rejected plans get a resubmission window
                 if record.state == 'rejected' and record.resubmission_deadline:
                     record.can_employee_edit = now <= record.resubmission_deadline
                 else:
                     record.can_employee_edit = False
             elif record.state in ('draft', 'rejected'):
-                if record.state == 'rejected' and record.resubmission_deadline:
-                    record.can_employee_edit = now <= record.resubmission_deadline
-                else:
-                    record.can_employee_edit = True
+                # Can always edit before deadline
+                record.can_employee_edit = True
             else:
-                # pending_supervisor, pending_reviewer, etc.
+                # pending_supervisor, pending_secondary_supervisor, pending_reviewer
                 record.can_employee_edit = False
 
-            # can_supervisor_add_remarks is True ONLY when: current user is the supervisor, plan has been
+            # can_supervisor_add_remarks is True when: current user is the supervisor, plan has been
             # submitted (pending_supervisor), and the cycle is still in planning.
             record.can_supervisor_add_remarks = bool(
                 is_sup
@@ -555,7 +556,6 @@ class PMSAppraisal(models.Model):
                 summary=f'Review performance plan for {emp_name}',
                 note=(
                     f"{emp_name}'s plan has been approved by the primary supervisor "
-                    f"and now requires your review."
                 ),
             )
         elif next_state == 'pending_reviewer' and self.reviewer_id.user_id:
@@ -591,6 +591,10 @@ class PMSAppraisal(models.Model):
     def action_submit_for_review(self):
         # employee submits their plan for supervisor review
         self.ensure_one()
+
+        today = fields.Date.today()
+        if self.cycle_id.start_date and today < self.cycle_id.start_date:
+            raise UserError(f"You cannot submit your plan before the cycle start date ({self.cycle_id.start_date}).")
 
         if self.state not in ['draft', 'rejected']:
             raise UserError('Only draft or rejected plans can be submitted.')
@@ -833,3 +837,38 @@ class PMSAppraisal(models.Model):
                 })
 
         return True
+
+    
+ 
+    def action_view_plan_summary(self):
+            """
+            Opens a readonly popup showing all selected KPIs for this appraisal,
+            grouped by KRA so each KRA appears as a section header with a Score
+            subtotal in its footer.
+            Columns: KPI Name | Description | Score | Criteria | Target
+            """
+            self.ensure_one()
+
+            view_id = self.env.ref(
+                'hr_employee_evaluation.view_pms_appraisal_kpi_summary_list'
+            ).id
+
+            return {
+                'name': f'Plan Summary — {self.employee_id.name}',
+                'type': 'ir.actions.act_window',
+                'res_model': 'pms.appraisal.kpi',
+                'view_mode': 'list',
+                'views': [(view_id, 'list')],
+                'target': 'new',
+                'domain': [
+                    ('appraisal_id', '=', self.id),
+                    ('is_selected', '=', True),
+                ],
+                'context': {
+                    'create': False,
+                    'edit': False,
+                    'delete': False,
+                    'group_by': ['kra_id'],
+                    'expand': True,
+                },
+            }

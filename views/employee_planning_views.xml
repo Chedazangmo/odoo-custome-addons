@@ -46,6 +46,18 @@
                 </header>
 
                 <sheet>
+
+                    <div class="oe_button_box" name="button_box">
+                        <button class="oe_stat_button"
+                                type="object"
+                                name="action_view_plan_summary"
+                                icon="fa-list-alt">
+                            <div class="o_stat_info">
+                                <span class="o_stat_text">View Summary</span>
+                            </div>
+                        </button>
+                    </div>
+                    
                     <group>
                         <group string="Employee Information">
                             <field name="employee_id" readonly="1"/>

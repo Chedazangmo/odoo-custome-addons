@@ -17,6 +17,7 @@
         'views/supervisor_plans_views.xml',
         'views/appraisal_template_views.xml',
         'views/pms_cycle_views.xml',
+        'views/pms_plan_summary_view.xml',
         'views/appraisal_menu.xml',
     ],
     'assets': {

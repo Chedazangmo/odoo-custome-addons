@@ -369,6 +369,7 @@
         </div>
     </t>
 
+
     <!-- Add KRA Pop-up dialog -->
     <t t-name="hr_employee_evaluation.AddKraDialog">
         <Dialog title="'Add Key Result Area'">

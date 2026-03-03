@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!--
+        View to see the plan summary for a particular summary
+        All of the reviewrs can see if and also supervisors can see the plan summary of their subordinates
+    -->
+    <record id="view_pms_appraisal_kpi_summary_list" model="ir.ui.view">
+        <field name="name">pms.appraisal.kpi.summary.list</field>
+        <field name="model">pms.appraisal.kpi</field>
+        <field name="arch" type="xml">
+            <list string="Plan Summary"
+                  create="false"
+                  edit="false"
+                  delete="false"
+                  expand="1">
+
+                <field name="kra_id"
+                       invisible="1"
+                       groupby="1"/>
+
+                <field name="name"
+                       string="KPI Name"
+                       readonly="1"/>
+
+                <field name="description"
+                       string="Description"
+                       readonly="1"/>
+
+                <field name="weightage"
+                       string="Score"
+                       readonly="1"
+                       sum="Total Score"
+                       widget="float"/>
+
+                <field name="criteria"
+                       string="Criteria"
+                       readonly="1"/>
+
+                <field name="target"
+                       string="Target"
+                       readonly="1"/>
+
+            </list>
+        </field>
+    </record>
+
+</odoo>
