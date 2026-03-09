@@ -45,7 +45,7 @@ class PMSCycle(models.Model):
     planning_duration = fields.Integer(
         string='Planning Duration (Days)',
         required=True,
-        default=30,
+        default=15,
         tracking=True,
         help='Number of days from start date for planning'
     )
@@ -60,7 +60,7 @@ class PMSCycle(models.Model):
     resubmission_days = fields.Integer(
         string='Resubmission Days',
         default=5,
-        help='Days allowed for resubmission after rejection'
+        help='Days allowed for resubmission after HR sets plan to draft'
     )
     
     apply_to = fields.Selection([
@@ -98,7 +98,7 @@ class PMSCycle(models.Model):
         ('cancelled', 'Cancelled')
     ], string='Status', default='draft', required=True, tracking=True, copy=False)
     
-    active = fields.Boolean(string='Active', default=True)
+    active = fields.Boolean(string='Active', default=True) #not the state of the cycle but whether the record is active or archived
     
     company_id = fields.Many2one(
         'res.company',
@@ -108,10 +108,10 @@ class PMSCycle(models.Model):
     
     @api.depends('sequence', 'cycle_type', 'start_date')
     def _compute_name(self):
-        """Generate human-readable name from sequence and cycle info"""
+        # auto-generate name using sequence
         for record in self:
             if record.sequence and record.sequence != 'New':
-                # cycle_type_label = dict(record._fields['cycle_type'].selection).get(record.cycle_type, '')
+                # cycle_type_label = dict(record._fields['cycle_type'].selection).get(record.cycle_type, '') look into this as now sequence is incremental and not based on cycle type, we can just use sequence as name and remove cycle type from name
                 if record.start_date:
                     record.name = f"{record.sequence}"
             else:
@@ -214,6 +214,20 @@ class PMSCycle(models.Model):
         
         error_messages = []
 
+        active_appraisals = self.env['pms.appraisal'].search([
+            ('employee_id', 'in', employees.ids),
+            ('cycle_id', '!=', self.id),
+            ('cycle_id.state', 'not in', ['draft', 'completed', 'cancelled'])
+        ])
+
+        if active_appraisals:
+            # Get unique names of employees involved in active cycles
+            busy_employee_names = list(set(active_appraisals.mapped('employee_id.name')))
+            names = "\n".join([f"- {name}" for name in busy_employee_names])
+            error_messages.append(
+                f"The following employees are already have an active cycle:\n{names}\n"
+            )
+
         # Check Missing Supervisors
         # Filter employees who do not have a parent_id set
         employees_missing_supervisor = employees.filtered(lambda e: not e.parent_id)
@@ -254,7 +268,7 @@ class PMSCycle(models.Model):
             names = "\n".join([f"- {e.name} (Group: {e.evaluation_group_id.name or 'None'})" for e in total_template_errors])
             error_messages.append(
                 f"The following employees do not have a valid Appraisal Template assigned:\n{names}\n"
-                "Please ensure they have an Evaluation Group and that the Group has an active Template."
+                "Please ensure they have an Evaluation Group assigned and a valid Template."
             )
 
         if error_messages:
@@ -275,8 +289,6 @@ class PMSCycle(models.Model):
         )
         
         return True
-
-
 
     # create a copy of the tenplates for each employee based on their evaluation group 
     def _create_employee_appraisals(self, employees):
@@ -313,6 +325,7 @@ class PMSCycle(models.Model):
             
             # Get supervisor (parent_id from hr.employee)
             supervisor = employee.parent_id
+            sec_supervisor = employee.secondary_manager_id
             reviewer = employee.reviewer_id
             
             # Create appraisal with deep copy of template
@@ -321,6 +334,10 @@ class PMSCycle(models.Model):
                 'employee_id': employee.id,
                 'template_id': template.id,
                 'supervisor_id': supervisor.id if supervisor else False,
+                'secondary_supervisor_id': (                                     
+                    sec_supervisor.id
+                    if sec_supervisor else False
+                ),
                 'reviewer_id': reviewer.id if reviewer else False,
             }
             
@@ -373,12 +390,11 @@ class PMSCycle(models.Model):
                         date_deadline=self.planning_deadline
                     )
                     
-                    # Also send an email notification
+                    #send an email notification
                     appraisal.message_post(
                         body=f"""Dear {appraisal.employee_id.name}, your performance plan for {self.name} is now active.""",
                         subject=f'Performance Plan Active - {self.name}',
                         message_type='notification',
-                        partner_ids=[appraisal.employee_id.user_id.partner_id.id],
                         subtype_xmlid='mail.mt_comment'
                     )
                 except Exception as e:
@@ -397,7 +413,7 @@ class PMSCycle(models.Model):
 
         self.write({'state': 'monitoring'})
         self.message_post(
-            body="Moved to Monitoring phase. KPI plans are now locked for monitoring.",
+            body="Moved to Monitoring phase. Plans are now locked",
             message_type='notification'
         )
         return True
@@ -449,7 +465,19 @@ class PMSCycle(models.Model):
             'name': f'Appraisals - {self.name}',
             'type': 'ir.actions.act_window',
             'res_model': 'pms.appraisal',
-            'view_mode': 'kanban,list,form',
+            'view_mode': 'list,form',
             'domain': [('cycle_id', '=', self.id)],
             'context': {'default_cycle_id': self.id}
         }
+
+    @api.model
+    def _cron_auto_move_to_monitoring(self):
+        today = fields.Date.today()
+        # move state to monitoring after planning deadline has passed
+        expired_planning_cycles = self.search([
+            ('state', '=', 'planning'),
+            ('planning_deadline', '<', today)
+        ])
+        
+        for cycle in expired_planning_cycles:
+            cycle.action_move_to_monitoring()
