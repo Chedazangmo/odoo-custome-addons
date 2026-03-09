@@ -73,12 +73,6 @@ class PMSAppraisalKPI(models.Model):
         help='Employee adds remarks during planning'
     )
     
-    # supervisor_planning_remarks = fields.Text(
-    #     string='Supervisor Remarks',
-    #     tracking=True,
-    #     help='Supervisor can add remarks during planning review'
-    # )
-    
     # appraisal phase fields (will make soon)
     self_score = fields.Float(
         string='Self Score',
@@ -129,6 +123,24 @@ class PMSAppraisalKPI(models.Model):
     )
 
     is_clone = fields.Boolean(string="Is Employee Clone", default=False) #check if the KPI record is created as a clone for employee editing
+
+    snapshot_employee_target = fields.Text(  
+    string='Employee Submitted Target',
+    readonly=True,
+    help='See employees target field.'
+    )
+
+    snapshot_supervisor_target = fields.Text(  
+        string='Supervisor Target',
+        readonly=True,
+        help='See supervisors edits to the employees target field.'
+    )
+
+    snapshot_secondary_target = fields.Text(  
+        string='Secondary Supervisor Target',
+        readonly=True,
+        help='See supervisors edits to the employees target field.'
+    )
     
     # computed fields
     is_planning_complete = fields.Boolean(

@@ -45,6 +45,17 @@ class AddKraDialog extends Component {
     }
 }
 
+class KpiHistoryDialog extends Component {     
+    static template = "hr_employee_evaluation.KpiHistoryDialog";     
+    static components = { Dialog };     
+    static props = {     
+        close: Function,     
+        kpiName: String,     
+        kpiData: Object,     
+        hasSecondary: { type: Boolean, optional: true },     
+    };     
+}
+
 export class KraTabs extends Component {
     static template = "hr_employee_evaluation.KraTabs";
     static props = {
@@ -133,11 +144,6 @@ export class KraTabs extends Component {
         return this.mode === 'supervisor';
     }
 
-    // Controls whether the Supervisor Remarks column is visible in the employee table. (not needed for now)
-    // get showSupervisorRemarks() {
-    //     return !!(this.props.options && this.props.options.show_supervisor_remarks);
-    // }
-
     isVirtualId(id) {
         return typeof id === 'string' || id < 0;
     }
@@ -163,7 +169,7 @@ export class KraTabs extends Component {
     }
 
     get activeDeselectedKPIs() {
-        // KPIs that the employee has soft-deleted (deselected) — used by the restore panel.
+        // KPIs that the employee has soft-deleted
         return this.activeKPIs.filter(kpi => !kpi.data.is_selected);
     }
 
@@ -178,6 +184,14 @@ export class KraTabs extends Component {
                 .reduce((sum, kpi) => sum + (kpi.data.weightage || 0), 0);
         }
     }
+
+    onViewKpiHistory(kpiRecord) {     
+    this.dialog.add(KpiHistoryDialog, {     
+            kpiName: kpiRecord.data.name || '',     
+            kpiData: kpiRecord.data,     
+            hasSecondary: !!this.props.record.data.secondary_supervisor_id,     
+        });     
+    } 
 
     async onAddKRA() {
         if (this.props.readonly) return;
@@ -281,31 +295,7 @@ export class KraTabs extends Component {
         });
     }
 
-    // async onDeleteKPI(kpiRecord) {
-    //     if (this.props.readonly || !this.activeKRA || this.state.isDeleting) return;
-    //     // Allow in template AND employee modes, NOT supervisor (come here later for employee)
-    //     if (this.isSupervisorMode) return;
-
-    //     if (this.isEmployeeMode) {
-    //         // Soft-delete: deselect the KPI rather than removing it from the database.
-    //         // This preserves the template structure and allows the employee to restore it.
-    //         // The server-side write() allows is_selected changes for employees.
-    //         await kpiRecord.update({ is_selected: false });
-    //         return;
-    //     }
-        
-    //     this.state.isDeleting = true;
-
-    //     try {
-    //         const kpiList = this.activeKRA.data.kpi_ids;
-    //         await kpiList.delete(kpiRecord);
-    //     } catch (error) {
-    //         console.error("Error deleting KPI:", error);
-    //     } finally {
-    //         this.state.isDeleting = false;
-    //     }
-    // }
-    async onDeleteKPI(kpiRecord) {
+    async onDeleteKPI(kpiRecord) { //we are just deselecting the KPI and not rendering it in the employee mode, but in template mode we are hard deleting it as it is not yet assigned to any employee and is just a template KPI
         if (this.props.readonly || !this.activeKRA || this.state.isDeleting) return;
         if (this.isSupervisorMode) return;
         

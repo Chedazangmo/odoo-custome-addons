@@ -45,7 +45,7 @@ class PMSCycle(models.Model):
     planning_duration = fields.Integer(
         string='Planning Duration (Days)',
         required=True,
-        default=30,
+        default=15,
         tracking=True,
         help='Number of days from start date for planning'
     )
@@ -60,7 +60,7 @@ class PMSCycle(models.Model):
     resubmission_days = fields.Integer(
         string='Resubmission Days',
         default=5,
-        help='Days allowed for resubmission after rejection'
+        help='Days allowed for resubmission after HR sets plan to draft'
     )
     
     apply_to = fields.Selection([
@@ -98,7 +98,7 @@ class PMSCycle(models.Model):
         ('cancelled', 'Cancelled')
     ], string='Status', default='draft', required=True, tracking=True, copy=False)
     
-    active = fields.Boolean(string='Active', default=True)
+    active = fields.Boolean(string='Active', default=True) #not the state of the cycle but whether the record is active or archived
     
     company_id = fields.Many2one(
         'res.company',
@@ -108,10 +108,10 @@ class PMSCycle(models.Model):
     
     @api.depends('sequence', 'cycle_type', 'start_date')
     def _compute_name(self):
-        """Generate human-readable name from sequence and cycle info"""
+        # auto-generate name using sequence
         for record in self:
             if record.sequence and record.sequence != 'New':
-                # cycle_type_label = dict(record._fields['cycle_type'].selection).get(record.cycle_type, '')
+                # cycle_type_label = dict(record._fields['cycle_type'].selection).get(record.cycle_type, '') look into this as now sequence is incremental and not based on cycle type, we can just use sequence as name and remove cycle type from name
                 if record.start_date:
                     record.name = f"{record.sequence}"
             else:
