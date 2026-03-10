@@ -131,7 +131,7 @@
                                             <field name="target"/>
                                             <field name="planning_remarks"/>
                                             <field name="is_clone" invisible="1"/>
-                                            <field name="snapshot_employee_target" invisible="1"/>  <!-- History fields (snapshots) -->
+                                            <field name="snapshot_employee_target" invisible="1"/>  <!-- History fields -->
                                             <field name="snapshot_supervisor_target" invisible="1"/>
                                             <field name="snapshot_secondary_target" invisible="1"/>
                                         </list>

@@ -76,6 +76,24 @@ export class KraTabs extends Component {
             showRestorePanel: false, // toggles the restore panel for employee mode
         });
 
+        useEffect(() => {
+            const header = this.rootRef.el?.querySelector('.o_kra_tabs_header');
+            const nav    = this.rootRef.el?.querySelector('.o_kra_tabs_nav');
+            if (!header || !nav) return;
+
+            const updateFades = () => {
+                const scrollLeft = nav.scrollLeft;
+                const maxScroll  = nav.scrollWidth - nav.clientWidth;
+                header.classList.toggle('can-scroll-left',  scrollLeft > 2);
+                header.classList.toggle('can-scroll-right', scrollLeft < maxScroll - 2);
+            };
+
+            nav.addEventListener('scroll', updateFades, { passive: true });
+            updateFades(); // run once on mount to set initial state
+
+            return () => nav.removeEventListener('scroll', updateFades);
+        });
+
         useEffect(() => { //for setting height of textareas to fit content on initial render and when active tab changes on runtime
             if (this.rootRef.el) {
                 setTimeout(() => {

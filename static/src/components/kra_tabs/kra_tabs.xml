@@ -97,79 +97,79 @@
                         Table for template creation by HR
                         Can enter KRAs and KPIs, assign scores to KPIs, and set criteria.
                     -->
-                    <table class="table" t-if="isTemplateMode">
-                        <thead>
-                            <tr>
-                                <th style="width: 20%;">KPI Name</th>
-                                <th style="width: 35%;">Description</th>
-                                <th style="width: 10%;">Score</th>
-                                <th style="width: 30%;">Criteria</th>
-                                <th style="width: 5%;" t-if="!props.readonly"></th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <t t-if="activeKPIs.length === 0">
+                    <div class="table-responsive" t-if="isTemplateMode">
+                        <table class="table">
+                            <thead>
                                 <tr>
-                                    <td colspan="5" class="text-center text-muted py-5 bg-light">
-                                        <em>No KPIs added to this KRA yet.</em>
-                                    </td>
+                                    <th style="width: 20%;">KPI Name</th>
+                                    <th style="width: 35%;">Description</th>
+                                    <th style="width: 10%;">Score</th>
+                                    <th style="width: 30%;">Criteria</th>
+                                    <th style="width: 5%;" t-if="!props.readonly"></th>
                                 </tr>
-                            </t>
-                            <t t-foreach="activeKPIs" t-as="kpi" t-key="kpi.id">
-                                <tr>
-                                    <td>
-                                        <textarea class="form-control"
-                                                  rows="1"
-                                                  placeholder="Name" 
-                                                  t-att-readonly="props.readonly" 
-                                                  oninput="this.style.height = ''; this.style.height = this.scrollHeight + 'px'"
-                                                  t-on-change="(e) => this.onKPIFieldChange(kpi, 'name', e)"
-                                                  t-esc="kpi.data.name"/>
-                                               
-                                    </td>
-                                    <td>
-                                        <textarea class="form-control" 
-                                                  rows="1" 
-                                                  placeholder="Enter Description..."
-                                                  t-att-readonly="props.readonly" 
-                                                  oninput="this.style.height = ''; this.style.height = this.scrollHeight + 'px'"
-                                                  t-on-change="(e) => this.onKPIFieldChange(kpi, 'description', e)" 
-                                                  t-esc="kpi.data.description"/>
-                                    </td>
-                                    <td>
-                                        <input type="number" 
-                                               class="form-control text-end" 
-                                               t-att-value="kpi.data.score" 
-                                               t-att-readonly="props.readonly" 
-                                               step="1"
-                                               t-on-change="(e) => this.onKPIFieldChange(kpi, 'score', e)"/>
-                                    </td>
-                                    <td>
-                                        <textarea class="form-control" 
-                                                  rows="1" 
-                                                  placeholder="Enter Criteria..."
-                                                  t-att-readonly="props.readonly" 
-                                                  oninput="this.style.height = ''; this.style.height = this.scrollHeight + 'px'"
-                                                  t-on-change="(e) => this.onKPIFieldChange(kpi, 'criteria', e)" 
-                                                  t-esc="kpi.data.criteria"/>
-                                    </td>
-                                    <td t-if="!props.readonly" class="text-center align-middle">
-                                        <button class="btn btn-link text-muted hover-danger p-0" 
-                                                t-on-click="() => this.onDeleteKPI(kpi)">
-                                            <i class="fa fa-times"/>
-                                        </button>
-                                    </td>
-                                </tr>
-                            </t>
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody>
+                                <t t-if="activeKPIs.length === 0">
+                                    <tr>
+                                        <td colspan="5" class="text-center text-muted py-5 bg-light">
+                                            <em>No KPIs added to this KRA yet.</em>
+                                        </td>
+                                    </tr>
+                                </t>
+                                <t t-foreach="activeKPIs" t-as="kpi" t-key="kpi.id">
+                                    <tr>
+                                        <td>
+                                            <textarea class="form-control"
+                                                    rows="1"
+                                                    placeholder="Name" 
+                                                    t-att-readonly="props.readonly" 
+                                                    oninput="this.style.height = ''; this.style.height = this.scrollHeight + 'px'"
+                                                    t-on-change="(e) => this.onKPIFieldChange(kpi, 'name', e)"
+                                                    t-esc="kpi.data.name"/>
+                                                
+                                        </td>
+                                        <td>
+                                            <textarea class="form-control" 
+                                                    rows="1" 
+                                                    placeholder="Enter Description..."
+                                                    t-att-readonly="props.readonly" 
+                                                    oninput="this.style.height = ''; this.style.height = this.scrollHeight + 'px'"
+                                                    t-on-change="(e) => this.onKPIFieldChange(kpi, 'description', e)" 
+                                                    t-esc="kpi.data.description"/>
+                                        </td>
+                                        <td>
+                                            <input type="number" 
+                                                class="form-control text-end" 
+                                                t-att-value="kpi.data.score" 
+                                                t-att-readonly="props.readonly" 
+                                                step="1"
+                                                t-on-change="(e) => this.onKPIFieldChange(kpi, 'score', e)"/>
+                                        </td>
+                                        <td>
+                                            <textarea class="form-control" 
+                                                    rows="1" 
+                                                    placeholder="Enter Criteria..."
+                                                    t-att-readonly="props.readonly" 
+                                                    oninput="this.style.height = ''; this.style.height = this.scrollHeight + 'px'"
+                                                    t-on-change="(e) => this.onKPIFieldChange(kpi, 'criteria', e)" 
+                                                    t-esc="kpi.data.criteria"/>
+                                        </td>
+                                        <td t-if="!props.readonly" class="text-center align-middle">
+                                            <button class="btn btn-link text-muted hover-danger p-0" 
+                                                    t-on-click="() => this.onDeleteKPI(kpi)">
+                                                <i class="fa fa-times"/>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </t>
+                            </tbody>
+                        </table>
+                    </div>
 
                     <!-- 
                         Employee table for planning 
                         employee can select kpis and then allocate own scores for each kpi
                         add target and remarks for each kpi in planning phase
-                    -->
-                    <!-- 
                         Employee table for planning 
                         employee can set targets, adjust scores, add remarks
                         delete button soft-deletes (deselects) a KPI 
@@ -182,10 +182,10 @@
                                 <th style="width: 8%;">Score</th>
                                 <th style="width: 15%;">Criteria</th>
                                 <th style="width: 15%;">Target</th>
-                                <th style="width: 3%;"></th>
+                                <th style="width: 3%;"></th> <!-- History button column -->
                                 <th style="width: 15%;">Employee Remarks</th>
-                                <th t-if="!props.readonly" style="width: 3%;"></th>
-                                <th t-if="!props.readonly" style="width: 3%;"></th>
+                                <th t-if="!props.readonly" style="width: 3%;"></th> <!-- Duplicate button column -->
+                                <th t-if="!props.readonly" style="width: 3%;"></th> <!-- Delete button column -->
                             </tr>
                         </thead>
                         <tbody>
@@ -240,7 +240,7 @@
                                         <button class="btn btn-link text-secondary p-0"  
                                                 title="View Target History"   
                                                 t-on-click="() => this.onViewKpiHistory(kpi)">
-                                            <i class="fa fa-history"/>
+                                            <i class="fa fa-history text-dark"/>
                                         </button>   
                                     </td>
                                     <td>
@@ -338,7 +338,7 @@
                                         <button class="btn btn-link text-secondary p-0"
                                                 title="View Target History"
                                                 t-on-click="() => this.onViewKpiHistory(kpi)">
-                                           <i class="fa fa-history"/>
+                                           <i class="fa fa-history text-dark"/>
                                         </button>
                                     </td>
                                     <td>
@@ -375,27 +375,27 @@
                     <table class="table table-bordered mb-0">
                         <thead class="bg-light text-center text-uppercase">
                             <tr>
-                                <th class="text-start p-3" style="width: 33.33%; vertical-align: top;">                                    
+                                <th class="text-start p-3" t-att-style="props.hasSecondary ? 'width: 33.33%;' : 'width: 50%;' + 'vertical-align: top;'">
                                     <div>Employee</div>
                                 </th>
-                                <th class="text-start p-3" style="width: 33.33%; vertical-align: top;">
+
+                                <th class="text-start p-3" t-att-style="props.hasSecondary ? 'width: 33.33%;' : 'width: 50%;' + 'vertical-align: top;'">
                                     <div>Supervisor</div>    
                                     <div class="mt-2">    
                                         <span class="badge text-dark bg-light shadow-sm"
-                                              t-if="props.kpiData.snapshot_supervisor_target and props.kpiData.snapshot_supervisor_target !== props.kpiData.snapshot_employee_target">Edited</span>
+                                            t-if="props.kpiData.snapshot_supervisor_target and props.kpiData.snapshot_supervisor_target !== props.kpiData.snapshot_employee_target">Edited</span>
                                         <span class="badge text-dark bg-light shadow-sm"
-                                              t-if="props.kpiData.snapshot_supervisor_target and props.kpiData.snapshot_supervisor_target === props.kpiData.snapshot_employee_target">Unedited</span>
+                                            t-if="props.kpiData.snapshot_supervisor_target and props.kpiData.snapshot_supervisor_target === props.kpiData.snapshot_employee_target">Unedited</span>
                                     </div>    
                                 </th>
-                                <th class="text-start p-3" style="width: 33.33%; vertical-align: top;">
+
+                                <th t-if="props.hasSecondary" class="text-start p-3" style="width: 33.33%; vertical-align: top;">
                                     <div>Secondary Supervisor</div>    
                                     <div class="mt-2">
                                         <span class="badge text-dark bg-light shadow-sm"
-                                              t-if="!props.hasSecondary">N/A</span>
+                                            t-if="props.kpiData.snapshot_secondary_target and props.kpiData.snapshot_secondary_target !== (props.kpiData.snapshot_supervisor_target or props.kpiData.snapshot_employee_target)">Edited</span>    
                                         <span class="badge text-dark bg-light shadow-sm"
-                                              t-if="props.hasSecondary and props.kpiData.snapshot_secondary_target and props.kpiData.snapshot_secondary_target !== (props.kpiData.snapshot_supervisor_target or props.kpiData.snapshot_employee_target)">Edited</span>    
-                                        <span class="badge text-dark bg-light shadow-sm"
-                                              t-if="props.hasSecondary and props.kpiData.snapshot_secondary_target and props.kpiData.snapshot_secondary_target === (props.kpiData.snapshot_supervisor_target or props.kpiData.snapshot_employee_target)">Unedited</span>    
+                                            t-if="props.kpiData.snapshot_secondary_target and props.kpiData.snapshot_secondary_target === (props.kpiData.snapshot_supervisor_target or props.kpiData.snapshot_employee_target)">Unedited</span>    
                                     </div>    
                                 </th>
                             </tr>
@@ -404,25 +404,23 @@
                             <tr>
                                 <td class="p-3 align-top">    
                                     <p class="mb-0" style="white-space: pre-wrap;"
-                                       t-esc="props.kpiData.snapshot_employee_target || '—'"/>    
+                                    t-esc="props.kpiData.snapshot_employee_target || '—'"/>    
                                 </td>    
 
                                 <td class="p-3 align-top">    
                                     <p class="mb-0 text-muted fst-italic"
-                                       t-if="!props.kpiData.snapshot_supervisor_target">Not yet reviewed</p>    
+                                    t-if="!props.kpiData.snapshot_supervisor_target">Not yet reviewed</p>    
                                     <p class="mb-0" style="white-space: pre-wrap;"
-                                       t-if="props.kpiData.snapshot_supervisor_target"
-                                       t-esc="props.kpiData.snapshot_supervisor_target"/>    
+                                    t-if="props.kpiData.snapshot_supervisor_target"
+                                    t-esc="props.kpiData.snapshot_supervisor_target"/>    
                                 </td>    
 
-                                <td class="p-3 align-top">    
+                                <td t-if="props.hasSecondary" class="p-3 align-top">        
                                     <p class="mb-0 text-muted fst-italic"
-                                       t-if="!props.hasSecondary">No secondary supervisor</p>    
-                                    <p class="mb-0 text-muted fst-italic"
-                                       t-if="props.hasSecondary and !props.kpiData.snapshot_secondary_target">Not yet reviewed</p>    
+                                    t-if="!props.kpiData.snapshot_secondary_target">Not yet reviewed</p>    
                                     <p class="mb-0" style="white-space: pre-wrap;"
-                                       t-if="props.hasSecondary and props.kpiData.snapshot_secondary_target"
-                                       t-esc="props.kpiData.snapshot_secondary_target"/>    
+                                    t-if="props.kpiData.snapshot_secondary_target"
+                                    t-esc="props.kpiData.snapshot_secondary_target"/>    
                                 </td>    
                             </tr>
                         </tbody>

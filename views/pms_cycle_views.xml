@@ -137,10 +137,10 @@
                             <field name="employee_ids" mode="list" nolabel="1" readonly="1">
                                 <list>
                                     <field name="name"/>
-                                    <field name="job_id"/>
-                                    <field name="department_id"/>
                                     <field name="evaluation_group_id"/>
                                     <field name="parent_id"/>
+                                    <field name="secondary_manager_id"/>
+                                    <field name="reviewer_id"/>
                                 </list>
                             </field>
                         </page>
