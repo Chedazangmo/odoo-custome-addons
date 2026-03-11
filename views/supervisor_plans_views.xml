@@ -81,7 +81,8 @@
                         <button class="oe_stat_button"
                                 type="object"
                                 name="action_view_plan_summary"
-                                icon="fa-list-alt">
+                                icon="fa-list-alt"
+                                target="_blank">
                             <div class="o_stat_info">
                                 <span class="o_stat_text">View Summary</span>
                             </div>

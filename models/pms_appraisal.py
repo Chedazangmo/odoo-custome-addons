@@ -814,12 +814,12 @@ class PMSAppraisal(models.Model):
             ).id
 
             return {
-                'name': f'Plan Summary — {self.employee_id.name}',
+                'name': f'Plan Summary: {self.employee_id.name}',
                 'type': 'ir.actions.act_window',
                 'res_model': 'pms.appraisal.kpi',
                 'view_mode': 'list',
                 'views': [(view_id, 'list')],
-                'target': 'new',
+                'target': 'current',
                 'domain': [
                     ('appraisal_id', '=', self.id),
                     ('is_selected', '=', True),
