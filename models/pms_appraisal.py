@@ -415,7 +415,7 @@ class PMSAppraisal(models.Model):
         # Fields the employee is permitted to change on a KPI row.
         EMPLOYEE_KPI_FIELDS = {'is_selected', 'target', 'planning_remarks', 'weightage'}
 
-        # Fields the supervisor is permitted to change on a KPI row.
+        # Fields the supervisor is permitted to change on a KPI 
         SUPERVISOR_KPI_FIELDS = {'target'} 
 
         SECONDARY_SUPERVISOR_KPI_FIELDS = {'target'} 
