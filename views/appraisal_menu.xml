@@ -7,7 +7,7 @@
               web_icon="hr_employee_evaluation,static/description/icon.png"/>
       
       <menuitem id="menu_performance_planning"
-              name="Performance Planning"
+              name="My Plan"
               parent="menu_appraisal_root"
               action="action_employee_performance_planning"
               groups="hr_employee_evaluation.group_pms_employee"

@@ -34,7 +34,7 @@ class AppraisalKRA(models.Model):
         store=True
     )
     
-    # ✅ FIX: Added compute_sudo to prevent access issues during deletion
+    # Added compute_sudo to prevent access issues during deletion
     total_score = fields.Float(
         string='Total Score', 
         compute='_compute_total_score', 

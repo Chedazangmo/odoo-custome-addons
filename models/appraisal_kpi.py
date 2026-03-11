@@ -30,20 +30,22 @@ class AppraisalKPI(models.Model):
     
     @api.constrains('name', 'description', 'criteria', 'score')
     def _check_required_fields(self):
-        for rec in self:
-            # Skip validation if we're in the middle of deletion
-            if self.env.context.get('skip_kpi_validation'):
-                continue
-                
+        for record in self:
+            # # Skip validation if we're in the middle of deletion
+            # if self.env.context.get('skip_kpi_validation'):
+            #     continue
             if (
-                not rec.name
-                or not rec.description
-                or not rec.criteria
-                or rec.score is None
+                not record.name
+                or not record.description
+                or not record.criteria
+                or record.score is None
             ):
                 raise ValidationError(
-                    "All KPI fields must be filled. Empty values are not allowed."
+                    "Please provide a name, description, criteria, and score for each KPI."
+                    "All fields are required."
                 )
 
-            if rec.score < 0:
-                raise ValidationError("KPI score cannot be negative.")
+            if record.score <= 0:
+                raise ValidationError(
+                    "KPI score cannot be negative or zero."
+                    )

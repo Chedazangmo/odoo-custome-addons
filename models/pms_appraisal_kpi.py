@@ -133,13 +133,13 @@ class PMSAppraisalKPI(models.Model):
     snapshot_supervisor_target = fields.Text(  
         string='Supervisor Target',
         readonly=True,
-        help='See supervisors edits to the employees target field.'
+        help='See supervisors edits to the employees target field'
     )
 
     snapshot_secondary_target = fields.Text(  
         string='Secondary Supervisor Target',
         readonly=True,
-        help='See supervisors edits to the employees target field.'
+        help='Captured when the secondary supervisor approves.'
     )
     
     # computed fields
