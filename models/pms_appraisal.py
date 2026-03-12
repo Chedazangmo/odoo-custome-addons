@@ -70,11 +70,19 @@ class PMSAppraisal(models.Model):
     )
 
     state = fields.Selection([
+        #planning states
         ('draft', 'Draft'),
         ('pending_supervisor', '1st Review'),
         ('pending_secondary_supervisor', '2nd Review'),
         ('pending_reviewer', 'Final Review'),
         ('approved', 'Approved'),
+
+        #appraisal states
+        ('appraisal_draft', 'Draft'),
+        ('appraisal_pending_supervisor', '1st Appraisal'),
+        ('appraisal_pending_secondary_supervisor', '2nd Appraisal'),
+        ('appraisal_pending_reviewer', 'Final Appraisal'),
+        ('appraisal_approved', 'Completed'),
     ], string='Status', default='draft', required=True, tracking=True, copy=False)
 
     submitted_date = fields.Datetime(string='Submitted Date', readonly=True, tracking=True)
@@ -138,23 +146,17 @@ class PMSAppraisal(models.Model):
              'within planning deadline, and cycle is in planning phase'
     )
 
-    can_supervisor_add_remarks = fields.Boolean(
+    can_supervisor_edit_target = fields.Boolean(
         string='Can Supervisor Add Remarks',
         compute='_compute_access_flags',
         help='True only when: current user is the supervisor, state is pending_supervisor, '
              'and cycle is in planning phase'
     )
 
-    can_secondary_supervisor_add_remarks = fields.Boolean(
+    can_secondary_supervisor_edit_target = fields.Boolean(
         string='Can Secondary Supervisor Add Remarks',
         compute='_compute_access_flags',
         help='True only when: current user is the secondary supervisor, state is pending_secondary_supervisor, '
-    )
-
-    can_reviewer_add_remarks = fields.Boolean(
-        string='Can Reviewer Add Remarks',
-        compute='_compute_access_flags',
-        help='Reviewer cant edit'
     )
 
     is_editable = fields.Boolean(
@@ -303,21 +305,19 @@ class PMSAppraisal(models.Model):
                 # pending_supervisor, pending_secondary_supervisor, pending_reviewer
                 record.can_employee_edit = False
 
-            # can_supervisor_add_remarks is True when: current user is the supervisor, plan has been
+            # can_supervisor_edit_target is True when: current user is the supervisor, plan has been
             # submitted (pending_supervisor), and the cycle is still in planning.
-            record.can_supervisor_add_remarks = bool(
+            record.can_supervisor_edit_target = bool(
                 is_sup
                 and record.state == 'pending_supervisor'
                 and cycle_in_planning
             )
 
-            record.can_secondary_supervisor_add_remarks = bool(
+            record.can_secondary_supervisor_edit_target = bool(
                 is_sec_sup
                 and record.state == 'pending_secondary_supervisor'
                 and cycle_in_planning
             )
-
-            record.can_reviewer_add_remarks = False
 
             # Backward-compat alias
             record.is_editable = record.can_employee_edit
@@ -436,7 +436,7 @@ class PMSAppraisal(models.Model):
                         'You do not have permission to modify these fields on a performance plan.'
                     )
 
-            elif record.can_supervisor_add_remarks:
+            elif record.can_supervisor_edit_target:
                 # strip everything from each KPI row except supervisor_planning_remarks
                 if 'kra_ids' in filtered_vals:
                     filtered_vals['kra_ids'] = self._filter_kra_commands(
@@ -449,7 +449,7 @@ class PMSAppraisal(models.Model):
                         'You do not have permission to modify these fields on a performance plan.'
                     )
             
-            elif record.can_secondary_supervisor_add_remarks:    
+            elif record.can_secondary_supervisor_edit_target:    
                 if 'kra_ids' in filtered_vals:
                     filtered_vals['kra_ids'] = self._filter_kra_commands(
                         filtered_vals['kra_ids'],
@@ -458,10 +458,6 @@ class PMSAppraisal(models.Model):
                 non_kra = user_facing_fields - {'kra_ids'}
                 if non_kra:
                     raise UserError('You do not have permission to modify these fields on a performance plan.')
-
-            elif record.can_reviewer_add_remarks:               
-                # Reviewer only approves/rejects and cannot edit emp target
-                raise UserError('Reviewers cannot edit KPI fields.')
 
             elif is_hr:
                 # HR path — read-only through the UI
@@ -513,8 +509,8 @@ class PMSAppraisal(models.Model):
                         elif kpi_code in (0, 2, 3):
                             # CREATE / DELETE / UNLINK on a KPI row.
                             # Supervisors are never allowed structural changes.
-                            if allowed_kpi_fields == {'supervisor_planning_remarks'}:
-                                continue  # Drop silently for supervisor
+                            if 'is_selected' not in allowed_kpi_fields:
+                                continue  # Drop silently for managers
                             filtered_kpi_commands.append(kpi_cmd)
 
                         else:

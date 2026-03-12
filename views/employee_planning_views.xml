@@ -60,17 +60,17 @@
 
                     <group>
                         <group string="Employee Information">
-                            <field name="employee_id" readonly="1"/>
-                            <field name="employee_job_id" string="Job Position" readonly="1"/>
-                            <field name="employee_department_id" string="Department" readonly="1"/>
-                            <field name="employee_evaluation_group_id" string="Evaluation Group" readonly="1"/>
+                            <field name="employee_id" readonly="1" options="{'no_open': True}"/>
+                            <field name="employee_job_id" string="Job Position" readonly="1" options="{'no_open': True}"/>
+                            <field name="employee_department_id" string="Department" readonly="1" options="{'no_open': True}"/>
+                            <field name="employee_evaluation_group_id" string="Evaluation Group" readonly="1" options="{'no_open': True}"/>
                         </group>
 
                         <group string="Plan Details">
-                            <field name="supervisor_id" string="Manager" readonly="1"/>
-                            <field name="secondary_supervisor_id" string="Secondary Manager" readonly="1"/>
-                            <field name="reviewer_id" string="Reviewer" readonly="1"/>
-                            <field name="template_id" string="Template Name" readonly="1"/>
+                            <field name="supervisor_id" string="Manager" readonly="1" options="{'no_open': True}"/>
+                            <field name="secondary_supervisor_id" string="Secondary Manager" readonly="1" options="{'no_open': True}"/>
+                            <field name="reviewer_id" string="Reviewer" readonly="1" options="{'no_open': True}"/>
+                            <field name="template_id" string="Template Name" readonly="1" options="{'no_open': True}"/>
                         </group>
                     </group>
 
@@ -107,66 +107,62 @@
                     <field name="is_editable" invisible="1"/>
                     <field name="cycle_id" invisible="1"/>
 
-                    <notebook>
-                        <page string="Performance KPIs" name="page_kpis">
 
-                            <!--
-                                employee edit during draft
-                                readonly during pending_supervisor
-                            -->
-                            <field name="kra_ids"
-                                   widget="kra_tabs_widget"
-                                   options="{'mode': 'employee'}"
-                                   readonly="not can_employee_edit"
-                                   nolabel="1"
-                                   invisible="state not in ('draft', 'pending_supervisor', 'pending_secondary_supervisor', 'pending_reviewer') and not (can_employee_edit)">
+                    <hr class="mt-4 mb-4"/>
+                    <!--
+                        employee edit during draft
+                        readonly during pending_supervisor
+                    -->
+                    <field name="kra_ids"
+                            widget="kra_tabs_widget"
+                            options="{'mode': 'employee'}"
+                            readonly="not can_employee_edit"
+                            nolabel="1"
+                            invisible="state not in ('draft', 'pending_supervisor', 'pending_secondary_supervisor', 'pending_reviewer') and not (can_employee_edit)">
+                        <list>
+                            <field name="name"/>
+                            <field name="kpi_ids">
                                 <list>
                                     <field name="name"/>
-                                    <field name="kpi_ids">
-                                        <list>
-                                            <field name="name"/>
-                                            <field name="description"/>
-                                            <field name="criteria"/>
-                                            <field name="weightage"/>
-                                            <field name="is_selected"/>
-                                            <field name="target"/>
-                                            <field name="planning_remarks"/>
-                                            <field name="is_clone" invisible="1"/>
-                                            <field name="snapshot_employee_target" invisible="1"/>  <!-- History fields -->
-                                            <field name="snapshot_supervisor_target" invisible="1"/>
-                                            <field name="snapshot_secondary_target" invisible="1"/>
-                                        </list>
-                                    </field>
+                                    <field name="description"/>
+                                    <field name="criteria"/>
+                                    <field name="weightage"/>
+                                    <field name="is_selected"/>
+                                    <field name="target"/>
+                                    <field name="planning_remarks"/>
+                                    <field name="is_clone" invisible="1"/>
+                                    <field name="snapshot_employee_target" invisible="1"/>  <!-- History fields -->
+                                    <field name="snapshot_supervisor_target" invisible="1"/>
+                                    <field name="snapshot_secondary_target" invisible="1"/>
                                 </list>
                             </field>
+                        </list>
+                    </field>
 
-                            <field name="kra_ids"
-                                   widget="kra_tabs_widget"
-                                   options="{'mode': 'supervisor'}"
-                                   readonly="1"
-                                   nolabel="1"
-                                   invisible="state not in ('approved') or (can_employee_edit)">
+                    <field name="kra_ids"
+                            widget="kra_tabs_widget"
+                            options="{'mode': 'supervisor'}"
+                            readonly="1"
+                            nolabel="1"
+                            invisible="state not in ('approved', 'appraisal_draft', 'appraisal_pending_supervisor', 'appraisal_pending_secondary_supervisor', 'appraisal_pending_reviewer', 'completed') or can_employee_edit">
+                        <list>
+                            <field name="name"/>
+                            <field name="kpi_ids">
                                 <list>
                                     <field name="name"/>
-                                    <field name="kpi_ids">
-                                        <list>
-                                            <field name="name"/>
-                                            <field name="description"/>
-                                            <field name="criteria"/>
-                                            <field name="weightage"/>
-                                            <field name="is_selected"/>
-                                            <field name="target"/>
-                                            <field name="planning_remarks"/>
-                                            <field name="snapshot_employee_target" invisible="1"/>     
-                                            <field name="snapshot_supervisor_target" invisible="1"/>     
-                                            <field name="snapshot_secondary_target" invisible="1"/>
-                                        </list>
-                                    </field>
+                                    <field name="description"/>
+                                    <field name="criteria"/>
+                                    <field name="weightage"/>
+                                    <field name="is_selected"/>
+                                    <field name="target"/>
+                                    <field name="planning_remarks"/>
+                                    <field name="snapshot_employee_target" invisible="1"/>     
+                                    <field name="snapshot_supervisor_target" invisible="1"/>     
+                                    <field name="snapshot_secondary_target" invisible="1"/>
                                 </list>
                             </field>
-
-                        </page>
-                    </notebook>
+                        </list>
+                    </field>
                 </sheet>
 
                 <chatter/>

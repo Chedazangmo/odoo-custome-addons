@@ -68,7 +68,7 @@
                             type="object"
                             class="btn-secondary"
                             groups="hr_employee_evaluation.group_pms_hr_manager"
-                            invisible="state == 'draft'"
+                            invisible="state == 'draft' or cycle_id.state not in ('planning', 'monitoring')"
                             confirm="Are you sure you want to reset this plan to draft?"/>
 
                     <field name="state"
@@ -91,17 +91,17 @@
 
                     <group>
                         <group string="Employee Information">
-                            <field name="employee_id" readonly="1"/>
-                            <field name="employee_job_id" string="Job Position" readonly="1"/>
-                            <field name="employee_department_id" string="Department" readonly="1"/>
-                            <field name="employee_evaluation_group_id" string="Evaluation Group" readonly="1"/>
+                            <field name="employee_id" readonly="1" options="{'no_open': True}"/>
+                            <field name="employee_job_id" string="Job Position" readonly="1" options="{'no_open': True}"/>
+                            <field name="employee_department_id" string="Department" readonly="1" options="{'no_open': True}"/>
+                            <field name="employee_evaluation_group_id" string="Evaluation Group" readonly="1" options="{'no_open': True}"/>
                         </group>
 
                         <group string="Plan Details">
-                            <field name="supervisor_id" string="Manager" readonly="1"/>
-                            <field name="secondary_supervisor_id" string="Secondary Manager" readonly="1"/>
-                            <field name="reviewer_id" string="Reviewer" readonly="1"/>
-                            <field name="template_id" string="Template Name" readonly="1"/>
+                            <field name="supervisor_id" string="Manager" readonly="1" options="{'no_open': True}"/>
+                            <field name="secondary_supervisor_id" string="Secondary Manager" readonly="1" options="{'no_open': True}"/>
+                            <field name="reviewer_id" string="Reviewer" readonly="1" options="{'no_open': True}"/>
+                            <field name="template_id" string="Template Name" readonly="1" options="{'no_open': True}"/>
                         </group>
                     </group>
 
@@ -135,41 +135,39 @@
                     <field name="is_supervisor_of_appraisal"             invisible="1"/>
                     <field name="is_secondary_supervisor_of_appraisal"   invisible="1"/> 
                     <field name="is_reviewer_of_appraisal"               invisible="1"/> 
-                    <field name="can_supervisor_add_remarks"              invisible="1"/>
-                    <field name="can_secondary_supervisor_add_remarks"    invisible="1"/>
-                    <field name="can_reviewer_add_remarks"                invisible="1"/>
+                    <field name="can_supervisor_edit_target"              invisible="1"/>
+                    <field name="can_secondary_supervisor_edit_target"    invisible="1"/>
                     <field name="cycle_id"                                invisible="1"/>
 
-                    <notebook>
-                        <page string="Employee Plan" name="page_kpis">
-                            <field name="kra_ids"
-                                   widget="kra_tabs_widget"
-                                   options="{'mode': 'supervisor'}"
-                                   readonly="not (can_supervisor_add_remarks or can_secondary_supervisor_add_remarks)"
-                                   nolabel="1">
+                    <hr class="mt-4 mb-4"/>
+
+                    <field name="kra_ids"
+                            widget="kra_tabs_widget"
+                            options="{'mode': 'supervisor'}"
+                            readonly="not (can_supervisor_edit_target or can_secondary_supervisor_edit_target)"
+                            nolabel="1">
+                        <list>
+                            <field name="name"/>
+                            <field name="kpi_ids">
                                 <list>
                                     <field name="name"/>
-                                    <field name="kpi_ids">
-                                        <list>
-                                            <field name="name"/>
-                                            <field name="description"/>
-                                            <field name="criteria"/>
-                                            <field name="weightage"/>
-                                            <field name="is_selected"/>
-                                            <field name="target"/>
-                                            <field name="planning_remarks"/>
-                                            <field name="snapshot_employee_target" invisible="1"/>  <!-- history fields for sup to view -->
-                                            <field name="snapshot_supervisor_target" invisible="1"/>
-                                            <field name="snapshot_secondary_target" invisible="1"/>
-                                        </list>
-                                    </field>
+                                    <field name="description"/>
+                                    <field name="criteria"/>
+                                    <field name="weightage"/>
+                                    <field name="is_selected"/>
+                                    <field name="target"/>
+                                    <field name="planning_remarks"/>
+                                    <field name="snapshot_employee_target" invisible="1"/>  <!-- history fields for sup to view -->
+                                    <field name="snapshot_supervisor_target" invisible="1"/>
+                                    <field name="snapshot_secondary_target" invisible="1"/>
                                 </list>
                             </field>
-                        </page>
-                    </notebook>
+                        </list>
+                    </field>
                 </sheet>
 
                 <chatter/>
+
             </form>
         </field>
     </record>
@@ -192,7 +190,6 @@
             </p>
             <p>
                 Employee plans will appear here once a performance cycle is activated
-                and employees submit their plans for review.
             </p>
         </field>
     </record>
