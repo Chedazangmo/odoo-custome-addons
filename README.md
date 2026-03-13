@@ -89,18 +89,23 @@ Flow of approval:
 
 Employee submits plan
 
-Manager (approves/rejects) -> secondary manager (approves/rejects) -> reviewer(approves/rejects) -> complete
+Manager (approves) -> secondary manager (approves) -> reviewer(approves) -> complete
 
 If emp doesnt have secondary manager then:
-Manager (approves/rejects) -> reviewer(approves/rejects) -> complete
+Manager (approves) -> reviewer(approves) -> complete
 
 If emp doesnt have reviewer then:
-Manager (approves/rejects) -> secondary manager (approves/rejects) -> complete
+Manager (approves) -> secondary manager (approves) -> complete
 
 If emp doesnt have secondary manager and reviwer:
-Manager (approves/rejects) -> complete
+Manager (approves) -> complete
 
 And the flow must of approval must always be
 
 Manager -> Secondary Manager -> Reviewer
+
+After final approval, if a plan needs revision, HR can set the plan to draft again.
+
+Employee follows the same flow again
+
 
