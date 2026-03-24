@@ -41,15 +41,6 @@ class AppraisalTemplate(models.Model):
         help='Sum of all KPI scores across all KRAs'
     )
     
-    state = fields.Selection(
-        [
-            ('draft', 'Draft'),
-            ('locked', 'Locked'),
-        ],
-        default='draft',
-        tracking=True,
-        required=True
-    )
     active = fields.Boolean(
         string='Active', default=True
     )

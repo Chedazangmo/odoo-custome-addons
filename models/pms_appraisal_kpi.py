@@ -125,9 +125,9 @@ class PMSAppraisalKPI(models.Model):
     is_clone = fields.Boolean(string="Is Employee Clone", default=False) #check if the KPI record is created as a clone for employee editing
 
     snapshot_employee_target = fields.Text(  
-    string='Employee Submitted Target',
-    readonly=True,
-    help='See employees target field.'
+        string='Employee Submitted Target',
+        readonly=True,
+        help='See employees target field.'
     )
 
     snapshot_supervisor_target = fields.Text(  
@@ -148,13 +148,7 @@ class PMSAppraisalKPI(models.Model):
         compute='_compute_is_planning_complete',
         store=True
     )
-    
-    final_score = fields.Float(
-        string='Final Score',
-        compute='_compute_final_score',
-        store=True,
-        help='Computed based on phase: supervisor_score or reviewer_score if available'
-    )
+
     
     @api.depends('is_selected', 'target', 'planning_remarks')
     def _compute_is_planning_complete(self):
@@ -164,25 +158,23 @@ class PMSAppraisalKPI(models.Model):
                 record.is_planning_complete = bool(record.target and record.planning_remarks)
             else:
                 record.is_planning_complete = False
-    
-    @api.depends('reviewer_score', 'supervisor_score')
-    def _compute_final_score(self):
-        """Final score is reviewer's score if available, else supervisor's"""
-        for record in self:
-            if record.reviewer_score:
-                record.final_score = record.reviewer_score
-            elif record.supervisor_score:
-                record.final_score = record.supervisor_score
-            else:
-                record.final_score = 0.0
-    
+
     # constraints
-    @api.constrains('self_score', 'supervisor_score', 'reviewer_score')
+    @api.constrains('self_score', 'supervisor_score', 'secondary_supervisor_score', 'reviewer_score', 'weightage')
     def _check_scores(self):
-        """Ensure scores are non-negative"""
+        """Ensure scores are non-negative and do not exceed weightage"""
         for record in self:
-            if record.self_score < 0 or record.supervisor_score < 0 or record.reviewer_score < 0:
-                raise ValidationError('Scores cannot be negative.')
+            scores = [
+                ('Self Score', record.self_score),
+                ('Supervisor Score', record.supervisor_score),
+                ('Secondary Supervisor Score', record.secondary_supervisor_score),
+                ('Reviewer Score', record.reviewer_score)
+            ]
+            for score_name, score_val in scores:
+                if score_val < 0:
+                    raise ValidationError(f'{score_name} cannot be negative.')
+                if score_val > record.weightage:
+                    raise ValidationError(f'{score_name} ({score_val}) cannot exceed the KPI Weightage ({record.weightage}).')
     
     @api.constrains('weightage')
     def _check_weightage(self):

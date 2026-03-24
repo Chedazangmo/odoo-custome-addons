@@ -228,14 +228,20 @@ class PMSCycle(models.Model):
                 f"The following employees are already have an active cycle:\n{names}\n"
             )
 
-        # Check Missing Supervisors
-        # Filter employees who do not have a parent_id set
+        # Check Missing Supervisors and Rreviewers
         employees_missing_supervisor = employees.filtered(lambda e: not e.parent_id)
+        employees_missing_reviewer = employees.filtered(lambda e: not e.reviewer_id)
         
         if employees_missing_supervisor:
             names = "\n".join([f"- {e.name}" for e in employees_missing_supervisor])
             error_messages.append(
                 f"The following employees do not have a Supervisor assigned:\n{names}"
+            )
+        
+        if employees_missing_reviewer:
+            names = "\n".join([f"- {e.name}" for e in employees_missing_reviewer])
+            error_messages.append(
+                f"The following employees do not have a Reviewer assigned:\n{names}"
             )
 
         # Check Missing Templates for Evaluation Groups        
@@ -418,23 +424,23 @@ class PMSCycle(models.Model):
         )
         return True
 
-    def action_move_to_appraisal(self):
-        # Move cycle from monitoring to appraisal phase 
-        self.ensure_one()
+    # def action_move_to_appraisal(self):
+    #     # Move cycle from monitoring to appraisal phase 
+    #     self.ensure_one()
 
-        if self.state != 'monitoring':
-            raise UserError('Only cycles in the Monitoring phase can be moved to Appraisal.')
+    #     if self.state != 'monitoring':
+    #         raise UserError('Only cycles in the Monitoring phase can be moved to Appraisal.')
 
-        submitted_appraisals = self.appraisal_ids.filtered(
-            lambda a: a.state == 'pending_supervisor'
-        )
+    #     submitted_appraisals = self.appraisal_ids.filtered(
+    #         lambda a: a.state == 'pending_supervisor'
+    #     )
 
-        self.write({'state': 'appraisal'})
-        self.message_post(
-            body=f"Moved to Appraisal phase. {len(submitted_appraisals)} plans submitted.",
-            message_type='notification'
-        )
-        return True
+    #     self.write({'state': 'appraisal'})
+    #     self.message_post(
+    #         body=f"Moved to Appraisal phase. {len(submitted_appraisals)} plans submitted.",
+    #         message_type='notification'
+    #     )
+    #     return True
     
     def action_complete_cycle(self):
         """Mark cycle as completed"""
@@ -481,3 +487,39 @@ class PMSCycle(models.Model):
         
         for cycle in expired_planning_cycles:
             cycle.action_move_to_monitoring()
+
+
+
+    
+    appraisal_start_date = fields.Date(
+        string='Appraisal Start Date',
+        readonly=True,
+        tracking=True,
+        help='Date when HR manually moved the cycle to the Appraisal phase.'
+    )
+
+    def action_move_to_appraisal(self):
+        # Move cycle from monitoring to appraisal phase 
+        self.ensure_one()
+
+        if self.state != 'monitoring':
+            raise UserError('Only cycles in the Monitoring phase can be moved to Appraisal.')
+
+        approved_appraisals = self.appraisal_ids.filtered(
+            lambda a: a.state == 'approved'
+        )
+
+        if approved_appraisals:
+            approved_appraisals.with_context(skip_edit_check=True).write({'state': 'appraisal_draft'})
+
+        self.write({
+            'state': 'appraisal',
+            'appraisal_start_date': fields.Date.today()
+        })
+        
+        self.message_post(
+            body=f"Moved to Appraisal phase. {len(approved_appraisals)} plans unlocked for employee self-rating.",
+            message_type='notification'
+        )
+        return True
+

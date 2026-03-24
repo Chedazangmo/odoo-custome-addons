@@ -56,6 +56,18 @@ class KpiHistoryDialog extends Component {
     };     
 }
 
+class AppraisalExpandDialog extends Component {
+    static template = "hr_employee_evaluation.AppraisalExpandDialog";
+    static components = { Dialog };
+    static props = {
+        close:         Function,
+        kraName:       String,
+        kpis:          Array,
+        record:        Object,
+        onFieldChange: Function,
+    };
+}
+
 export class KraTabs extends Component {
     static template = "hr_employee_evaluation.KraTabs";
     static props = {
@@ -162,6 +174,15 @@ export class KraTabs extends Component {
         return this.mode === 'supervisor';
     }
 
+    // Appraisal modes
+    get isAppraisalEmployeeMode() {
+        return this.mode === 'appraisal_employee';
+    }
+
+    get isAppraisalSupervisorMode() {
+        return this.mode === 'appraisal_supervisor';
+    }
+
     isVirtualId(id) {
         return typeof id === 'string' || id < 0;
     }
@@ -209,7 +230,16 @@ export class KraTabs extends Component {
             kpiData: kpiRecord.data,     
             hasSecondary: !!this.props.record.data.secondary_supervisor_id,     
         });     
-    } 
+    }
+    
+    onExpandAppraisal() {
+        this.dialog.add(AppraisalExpandDialog, {
+            kraName:      this.activeKRA?.data.name || 'KRA',
+            kpis:         this.activeKPIs,
+            record:       this.props.record,
+            onFieldChange: (kpi, field, ev) => this.onKPIFieldChange(kpi, field, ev),
+        });
+    }
 
     async onAddKRA() {
         if (this.props.readonly) return;
@@ -357,7 +387,8 @@ export class KraTabs extends Component {
         if (this.props.readonly) return;
         
         let value = event.target.value;
-        if (fieldName === "score" || fieldName === "weightage") {
+        // CHANGED: added appraisal score fields to numeric parse list
+        if (["score", "weightage", "self_score", "supervisor_score", "secondary_supervisor_score", "reviewer_score"].includes(fieldName)) {
             value = parseFloat(value) || 0.0;
         }
         

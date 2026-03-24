@@ -5,3 +5,4 @@ from . import pms_cycle
 from . import pms_appraisal
 from . import pms_appraisal_kra
 from . import pms_appraisal_kpi
+from . import pms_score_engine

@@ -144,7 +144,7 @@
                             options="{'mode': 'supervisor'}"
                             readonly="1"
                             nolabel="1"
-                            invisible="state not in ('approved', 'appraisal_draft', 'appraisal_pending_supervisor', 'appraisal_pending_secondary_supervisor', 'appraisal_pending_reviewer', 'completed') or can_employee_edit">
+                            invisible="state not in ('approved', 'appraisal_draft', 'appraisal_pending_supervisor', 'appraisal_pending_secondary_supervisor', 'appraisal_pending_reviewer', 'appraisal_approved') or can_employee_edit">
                         <list>
                             <field name="name"/>
                             <field name="kpi_ids">

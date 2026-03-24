@@ -9,7 +9,6 @@
                 <field name="name"/>
                 <field name="evaluation_group_id"/>
                 <field name="total_kpi_score"/>
-                <field name="state"/>
             </list>
         </field>
     </record>
@@ -29,13 +28,13 @@
                     <group>
                         <group>
                             <field name="name" placeholder="e.g., Druksmart Template" 
-                                   readonly="state != 'draft'"/> 
+                                   /> 
                             <field name="evaluation_group_id" options="{'no_create': True}" 
-                                   readonly="state != 'draft'"/>
+                                   />
                         </group>
                         <group>
                             <field name="competency_group" placeholder="Link to competency template (future)" 
-                                   readonly="state != 'draft'"/>
+                                   />
                             <field name="total_kpi_score" string="Total KPI Score" readonly="1"/>
                         </group>
                     </group>

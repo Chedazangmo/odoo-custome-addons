@@ -68,7 +68,7 @@
                             type="object"
                             class="btn-secondary"
                             groups="hr_employee_evaluation.group_pms_hr_manager"
-                            invisible="state == 'draft' or cycle_id.state not in ('planning', 'monitoring')"
+                            invisible="state == 'draft' or cycle_state not in ('planning', 'monitoring')"
                             confirm="Are you sure you want to reset this plan to draft?"/>
 
                     <field name="state"

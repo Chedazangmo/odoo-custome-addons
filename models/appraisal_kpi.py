@@ -49,3 +49,6 @@ class AppraisalKPI(models.Model):
                 raise ValidationError(
                     "KPI score cannot be negative or zero."
                     )
+
+    
+    
