@@ -6,7 +6,7 @@
     'description': 'Dynamic Performance Management System (PMS)',
     'author': 'Druksmart',
     'website': 'https://www.yourcompany.com',
-    'depends': ['base', 'hr', 'mail', 'web', 'employee_pms'],
+    'depends': ['base', 'hr', 'mail', 'web', 'employee_pms', 'competency_exact'],
     'data': [
         'security/pms_security.xml',
         'security/ir.model.access.csv',
