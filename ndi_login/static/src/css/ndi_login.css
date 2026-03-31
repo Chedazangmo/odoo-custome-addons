@@ -1,0 +1,887 @@
+/* ================================================================
+   DRUKSMART PMS — NDI LOGIN PAGE  FINAL
+   Updated: Hide Discuss/home-menu, root redirect safe styles
+================================================================ */
+
+
+/* ── 1. HIDE WEBSITE CHROME & APP SWITCHER (ALL STATES) ──────── */
+#wrapwrap > header,
+#wrapwrap > footer,
+#o_shared_blocks,
+
+/* Odoo backend nav / home menu leaking onto login */
+.o_home_menu,
+.o_home_menu_sidebar,
+.o_main_navbar,
+nav.o_main_navbar,
+.o_navbar,
+.o_menu_sections,
+.o_menu_brand,
+.o_nav_entry,
+.o_app_icon,
+.o_web_client > nav,
+.o_action_manager ~ nav,
+[class*="home_menu"],
+
+/* Discuss-specific elements */
+.o_discuss_icon,
+.o_home_menu_discuss,
+.o_menu_discuss,
+
+/* Top systray / user menu */
+.o_systray,
+.o_main_navbar .o_menu_toggle,
+
+/* Any nav rendered above the login card */
+body > nav,
+body > header {
+    display: none !important;
+}
+
+
+/* ── 2. PAGE BACKGROUND ───────────────────────────────────────── */
+body,
+#wrapwrap,
+main {
+    background: #f0f4f8 !important;
+    min-height: 100vh !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-sizing: border-box !important;
+}
+
+/* ── 2a. BACKGROUND BLOBS & SQUARES ──────────────────────────── */
+
+body::before {
+    content: "" !important;
+    position: fixed !important;
+    width: 520px !important;
+    height: 520px !important;
+    border-radius: 50% !important;
+    background: rgba(21, 101, 192, 0.07) !important;
+    top: -140px !important;
+    left: -100px !important;
+    pointer-events: none !important;
+    z-index: 0 !important;
+}
+
+body::after {
+    content: "" !important;
+    position: fixed !important;
+    width: 380px !important;
+    height: 380px !important;
+    border-radius: 50% !important;
+    background: rgba(21, 101, 192, 0.06) !important;
+    bottom: -110px !important;
+    right: -70px !important;
+    pointer-events: none !important;
+    z-index: 0 !important;
+}
+
+#wrapwrap::before {
+    content: "" !important;
+    position: fixed !important;
+    width: 200px !important;
+    height: 200px !important;
+    border-radius: 50% !important;
+    background: rgba(56, 142, 240, 0.05) !important;
+    top: 42% !important;
+    right: 7% !important;
+    pointer-events: none !important;
+    z-index: 0 !important;
+}
+
+#wrapwrap::after {
+    content: "" !important;
+    position: fixed !important;
+    width: 110px !important;
+    height: 110px !important;
+    border-radius: 50% !important;
+    background: rgba(21, 101, 192, 0.06) !important;
+    top: 7% !important;
+    right: 24% !important;
+    pointer-events: none !important;
+    z-index: 0 !important;
+}
+
+main::before {
+    content: "" !important;
+    position: fixed !important;
+    width: 64px !important;
+    height: 64px !important;
+    background: rgba(21, 101, 192, 0.06) !important;
+    border-radius: 8px !important;
+    transform: rotate(20deg) !important;
+    top: 14% !important;
+    right: 10% !important;
+    pointer-events: none !important;
+    z-index: 0 !important;
+}
+
+main::after {
+    content: "" !important;
+    position: fixed !important;
+    width: 40px !important;
+    height: 40px !important;
+    background: rgba(21, 101, 192, 0.07) !important;
+    border-radius: 6px !important;
+    transform: rotate(35deg) !important;
+    bottom: 18% !important;
+    left: 12% !important;
+    pointer-events: none !important;
+    z-index: 0 !important;
+}
+
+main {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 40px 16px !important;
+    box-sizing: border-box !important;
+    position: relative !important;
+}
+
+
+/* ── 3. OUTER CONTAINER ───────────────────────────────────────── */
+.oe_website_login_container {
+    width: 100% !important;
+    max-width: 400px !important;
+    margin: 0 auto !important;
+    padding: 0 !important;
+    box-sizing: border-box !important;
+    display: block !important;
+    position: relative !important;
+    z-index: 1 !important;
+}
+
+.oe_website_login_container .row,
+.oe_website_login_container .col,
+.oe_website_login_container [class*="col-"] {
+    width: 100% !important;
+    max-width: 100% !important;
+    flex: 0 0 100% !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    margin: 0 !important;
+    box-sizing: border-box !important;
+}
+
+
+/* ── 4. CARD ──────────────────────────────────────────────────── */
+.oe_website_login_container .card {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 1.5px solid #d0d5dd !important;
+    border-radius: 14px !important;
+    overflow: visible !important;
+    background: #ffffff !important;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05), 0 10px 30px rgba(0, 0, 0, 0.10) !important;
+    box-sizing: border-box !important;
+    display: block !important;
+}
+
+.oe_website_login_container .card-body {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    background: #ffffff !important;
+    box-sizing: border-box !important;
+    display: block !important;
+    overflow: visible !important;
+}
+
+.oe_website_login_container .card-body > * {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+/* Hide Odoo default logo row */
+.oe_website_login_container .card-body > .text-center.pb-3,
+.oe_website_login_container .card-body > .text-center.border-bottom,
+.oe_website_login_container .card-body > div.text-center:first-child,
+.oe_website_login_container .oe_structure {
+    display: none !important;
+}
+
+
+/* ── 5. BLUE HEADER ───────────────────────────────────────────── */
+.oe_website_login_container .ndi-login-header {
+    background: #0b3b8c !important;
+    width: 100% !important;
+    padding: 36px 28px 30px !important;
+    box-sizing: border-box !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    text-align: center !important;
+    margin: 0 !important;
+    border-radius: 12px 12px 0 0 !important;
+}
+
+.oe_website_login_container .ndi-login-header-icon {
+    width: 56px !important;
+    height: 56px !important;
+    background: rgba(255, 255, 255, 0.15) !important;
+    border: 1.5px solid rgba(255, 255, 255, 0.28) !important;
+    border-radius: 50% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    margin: 0 auto 14px !important;
+    box-sizing: border-box !important;
+}
+
+.oe_website_login_container .ndi-login-header-title {
+    color: #ffffff !important;
+    font-size: 20px !important;
+    font-weight: 700 !important;
+    margin: 0 0 5px !important;
+    line-height: 1.3 !important;
+}
+
+.oe_website_login_container .ndi-login-header-sub {
+    color: rgba(255, 255, 255, 0.65) !important;
+    font-size: 13px !important;
+    margin: 0 !important;
+}
+
+
+/* ── 6. OWL-COMPONENT "Choose a user" ────────────────────────── */
+.oe_website_login_container owl-component[name="web.user_switch"] {
+    display: block !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    padding: 20px 28px 16px 28px !important;
+    margin: 0 !important;
+    background: #ffffff !important;
+    border-bottom: 1px solid #e4e7ec !important;
+    position: static !important;
+}
+
+.oe_website_login_container owl-component[name="web.user_switch"] owl-root {
+    display: block !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+.oe_website_login_container owl-component[name="web.user_switch"] owl-root > div,
+.oe_website_login_container owl-component[name="web.user_switch"] owl-root > * {
+    display: block !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+.oe_website_login_container owl-component[name="web.user_switch"] owl-root .fw-bold,
+.oe_website_login_container owl-component[name="web.user_switch"] owl-root h5,
+.oe_website_login_container owl-component[name="web.user_switch"] owl-root h6,
+.oe_website_login_container owl-component[name="web.user_switch"] owl-root .o_user_switch_title {
+    display: block !important;
+    width: 100% !important;
+    font-size: 10px !important;
+    font-weight: 700 !important;
+    color: #344054 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.8px !important;
+    margin: 0 0 10px 0 !important;
+    padding: 0 !important;
+    box-sizing: border-box !important;
+}
+
+.oe_website_login_container owl-component[name="web.user_switch"] owl-root ul,
+.oe_website_login_container owl-component[name="web.user_switch"] owl-root ol,
+.oe_website_login_container owl-component[name="web.user_switch"] owl-root [role="menu"] {
+    display: block !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    list-style: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: none !important;
+    background: transparent !important;
+}
+
+.oe_website_login_container owl-component[name="web.user_switch"] owl-root li,
+.oe_website_login_container owl-component[name="web.user_switch"] owl-root [role="menuitem"],
+.oe_website_login_container owl-component[name="web.user_switch"] owl-root .dropdown-item {
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    width: 100% !important;
+    min-height: 44px !important;
+    box-sizing: border-box !important;
+    padding: 8px 12px !important;
+    margin: 2px 0 !important;
+    border-radius: 8px !important;
+    border: 1px solid transparent !important;
+    background: #ffffff !important;
+    color: #101828 !important;
+    font-size: 13.5px !important;
+    font-weight: 500 !important;
+    cursor: pointer !important;
+    text-decoration: none !important;
+    transition: background 0.15s, border-color 0.15s, color 0.15s !important;
+    list-style: none !important;
+}
+
+.oe_website_login_container owl-component[name="web.user_switch"] owl-root li:hover,
+.oe_website_login_container owl-component[name="web.user_switch"] owl-root [role="menuitem"]:hover,
+.oe_website_login_container owl-component[name="web.user_switch"] owl-root .dropdown-item:hover {
+    background: #f5f8ff !important;
+    border-color: #d0d5dd !important;
+    color: #0b3b8c !important;
+}
+
+.oe_website_login_container owl-component[name="web.user_switch"] owl-root li a,
+.oe_website_login_container owl-component[name="web.user_switch"] owl-root li button,
+.oe_website_login_container owl-component[name="web.user_switch"] owl-root li span {
+    font-size: 13.5px !important;
+    font-weight: 500 !important;
+    color: inherit !important;
+    text-decoration: none !important;
+    background: transparent !important;
+    border: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    cursor: pointer !important;
+    line-height: 1.4 !important;
+    font-family: inherit !important;
+    box-shadow: none !important;
+    white-space: nowrap !important;
+    -webkit-appearance: none !important;
+    appearance: none !important;
+    display: inline !important;
+}
+
+.oe_website_login_container owl-component[name="web.user_switch"] owl-root .o_use_another_user,
+.oe_website_login_container owl-component[name="web.user_switch"] owl-root a.o_use_another_user {
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    font-size: 12px !important;
+    font-weight: 500 !important;
+    color: #0b3b8c !important;
+    text-decoration: none !important;
+    margin-top: 10px !important;
+    padding: 4px 0 !important;
+    border: none !important;
+    background: transparent !important;
+    cursor: pointer !important;
+    width: 100% !important;
+}
+
+.oe_website_login_container owl-component[name="web.user_switch"] owl-root a.o_use_another_user:hover {
+    text-decoration: underline !important;
+    color: #0b3b8c !important;
+}
+
+
+/* ── 7. FORM ──────────────────────────────────────────────────── */
+.oe_website_login_container .oe_login_form {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    background: #ffffff !important;
+    border: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    padding: 28px 28px 8px !important;
+    margin: 0 !important;
+    display: block !important;
+}
+
+
+/* ── 8. FIELD ROWS (.mb-3) ────────────────────────────────────── */
+.oe_website_login_container .oe_login_form .mb-3 {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: wrap !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    margin-bottom: 16px !important;
+    gap: 0 !important;
+}
+
+.oe_website_login_container .oe_login_form label,
+.oe_website_login_container .oe_login_form .form-label,
+.oe_website_login_container .oe_login_form .col-form-label {
+    font-size: 10px !important;
+    font-weight: 700 !important;
+    color: #344054 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.8px !important;
+    line-height: 1 !important;
+    margin-bottom: 7px !important;
+    box-sizing: border-box !important;
+    padding: 0 !important;
+    align-items: center !important;
+}
+
+.oe_website_login_container .oe_login_form label[for="login"] {
+    width: 100% !important;
+    flex: 0 0 100% !important;
+    display: flex !important;
+    justify-content: space-between !important;
+}
+
+.oe_website_login_container .oe_login_form label[for="password"] {
+    width: auto !important;
+    flex-shrink: 0 !important;
+    white-space: nowrap !important;
+}
+
+.oe_website_login_container .oe_login_form .mb-3 > a,
+.oe_website_login_container .oe_login_form label > a {
+    font-size: 11px !important;
+    font-weight: 500 !important;
+    color: #0b3b8c !important;
+    text-transform: none !important;
+    letter-spacing: 0 !important;
+    text-decoration: none !important;
+    white-space: nowrap !important;
+    line-height: 1 !important;
+    flex-shrink: 0 !important;
+    margin-bottom: 7px !important;
+}
+
+.oe_website_login_container .oe_login_form .mb-3 > a:hover,
+.oe_website_login_container .oe_login_form label > a:hover {
+    text-decoration: underline !important;
+    color: #0b3b8c !important;
+}
+
+.oe_website_login_container .oe_login_form .mb-3 > .form-control,
+.oe_website_login_container .oe_login_form .mb-3 > .input-group {
+    flex: 0 0 100% !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+
+/* ── 9. INPUTS ────────────────────────────────────────────────── */
+.oe_website_login_container .oe_login_form .form-control {
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    height: 44px !important;
+    border: 1.5px solid #d0d5dd !important;
+    border-radius: 8px !important;
+    padding: 0 12px 0 36px !important;
+    font-size: 13.5px !important;
+    color: #101828 !important;
+    background: #ffffff !important;
+    box-shadow: none !important;
+    transition: border-color 0.15s, box-shadow 0.15s !important;
+}
+
+.oe_website_login_container .oe_login_form .form-control:focus {
+    border-color: #0b3b8c !important;
+    box-shadow: 0 0 0 3px rgba(11, 59, 140, 0.10) !important;
+    outline: none !important;
+}
+
+.oe_website_login_container .oe_login_form .form-control::placeholder {
+    color: #b0b8c8 !important;
+}
+
+.oe_website_login_container .oe_login_form #login {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='15' height='15' viewBox='0 0 24 24' fill='none' stroke='%239aa4b2' stroke-width='2'%3E%3Ccircle cx='12' cy='8' r='4'/%3E%3Cpath d='M4 20c0-4 3.5-7 8-7s8 3 8 7'/%3E%3C/svg%3E") !important;
+    background-repeat: no-repeat !important;
+    background-position: 11px center !important;
+    background-size: 15px !important;
+}
+
+.oe_website_login_container .oe_login_form #password {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='15' height='15' viewBox='0 0 24 24' fill='none' stroke='%239aa4b2' stroke-width='2'%3E%3Crect x='3' y='11' width='18' height='11' rx='2'/%3E%3Cpath d='M7 11V7a5 5 0 0 1 10 0v4'/%3E%3C/svg%3E") !important;
+    background-repeat: no-repeat !important;
+    background-position: 11px center !important;
+    background-size: 15px !important;
+}
+
+.oe_website_login_container .oe_login_form .input-group {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+.oe_website_login_container .oe_login_form .input-group .form-control {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    border-right: none !important;
+    border-radius: 8px 0 0 8px !important;
+}
+
+.oe_website_login_container .oe_login_form .o_show_password,
+.oe_website_login_container .oe_login_form .input-group > .btn {
+    flex: 0 0 44px !important;
+    width: 44px !important;
+    height: 44px !important;
+    border: 1.5px solid #d0d5dd !important;
+    border-left: none !important;
+    border-radius: 0 8px 8px 0 !important;
+    background: #ffffff !important;
+    color: #9aa4b2 !important;
+    padding: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    box-shadow: none !important;
+    cursor: pointer !important;
+    transition: color 0.15s !important;
+    box-sizing: border-box !important;
+}
+
+.oe_website_login_container .oe_login_form .input-group > .btn:hover {
+    color: #0b3b8c !important;
+    background: #f5f8ff !important;
+}
+
+
+/* ── 10. LOG IN BUTTON ────────────────────────────────────────── */
+.oe_website_login_container .oe_login_buttons {
+    width: 100% !important;
+    box-sizing: border-box !important;
+    padding: 0 28px 8px !important;
+    margin: 0 !important;
+    background: #ffffff !important;
+}
+
+.oe_website_login_container .oe_login_buttons .btn-primary {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 100% !important;
+    height: 44px !important;
+    box-sizing: border-box !important;
+    background: #0b3b8c !important;
+    border: none !important;
+    color: #ffffff !important;
+    border-radius: 8px !important;
+    font-size: 14.5px !important;
+    font-weight: 700 !important;
+    cursor: pointer !important;
+    transition: background 0.15s !important;
+    text-decoration: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+.oe_website_login_container .oe_login_buttons .btn-primary:hover {
+    background: #082d6c !important;
+}
+
+.oe_website_login_container .oe_login_buttons .btn-link {
+    display: block !important;
+    width: 100% !important;
+    text-align: center !important;
+    color: #b0b8c8 !important;
+    font-size: 12px !important;
+    padding: 8px 0 2px !important;
+    text-decoration: none !important;
+    background: none !important;
+    border: none !important;
+    cursor: pointer !important;
+}
+
+.oe_website_login_container .oe_login_buttons .btn-link:hover {
+    color: #0b3b8c !important;
+    text-decoration: underline !important;
+}
+
+
+/* ── 11. PASSKEY ──────────────────────────────────────────────── */
+.oe_website_login_container .o_login_auth {
+    width: 100% !important;
+    box-sizing: border-box !important;
+    padding: 0 28px 8px !important;
+    margin: 0 !important;
+    background: #ffffff !important;
+    display: block !important;
+}
+
+.oe_website_login_container .o_login_auth em {
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    font-size: 10px !important;
+    font-weight: 600 !important;
+    color: #b0b8c8 !important;
+    letter-spacing: 1px !important;
+    text-transform: uppercase !important;
+    font-style: normal !important;
+    margin: 10px 0 !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+.oe_website_login_container .o_login_auth em::before,
+.oe_website_login_container .o_login_auth em::after {
+    content: "" !important;
+    flex: 1 !important;
+    height: 1px !important;
+    background: #e4e7ec !important;
+}
+
+.oe_website_login_container .o_login_auth .list-group,
+.oe_website_login_container .o_login_auth .list-group-flush,
+.oe_website_login_container .o_login_auth ul,
+.oe_website_login_container .o_login_auth ol {
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: none !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-sizing: border-box !important;
+    list-style: none !important;
+    flex: unset !important;
+    flex-direction: unset !important;
+}
+
+.oe_website_login_container .o_login_auth .list-group-item,
+.oe_website_login_container .o_login_auth ul > li,
+.oe_website_login_container .o_login_auth ol > li {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 8px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    height: 44px !important;
+    border: 1.5px solid #d0d5dd !important;
+    border-radius: 8px !important;
+    background: #ffffff !important;
+    color: #344054 !important;
+    font-size: 14px !important;
+    font-weight: 500 !important;
+    text-decoration: none !important;
+    cursor: pointer !important;
+    padding: 0 16px !important;
+    margin: 0 !important;
+    box-sizing: border-box !important;
+    position: static !important;
+    flex: none !important;
+    transition: border-color 0.15s, color 0.15s, background 0.15s !important;
+}
+
+.oe_website_login_container .o_login_auth .list-group-item:hover,
+.oe_website_login_container .o_login_auth ul > li:hover {
+    border-color: #0b3b8c !important;
+    color: #0b3b8c !important;
+    background: #f5f8ff !important;
+}
+
+
+/* ── 12. NDI OR DIVIDER ───────────────────────────────────────── */
+.oe_website_login_container .ndi-or-divider {
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    padding: 8px 28px 0 !important;
+    margin: 0 !important;
+    background: #ffffff !important;
+}
+
+.oe_website_login_container .ndi-or-divider hr {
+    flex: 1 !important;
+    border: none !important;
+    border-top: 1px solid #e4e7ec !important;
+    margin: 0 !important;
+    opacity: 1 !important;
+}
+
+.oe_website_login_container .ndi-or-divider span {
+    font-size: 10px !important;
+    font-weight: 600 !important;
+    color: #b0b8c8 !important;
+    letter-spacing: 1px !important;
+    text-transform: uppercase !important;
+    white-space: nowrap !important;
+}
+
+
+/* ── 13. NDI BUTTON ───────────────────────────────────────────── */
+.oe_website_login_container .ndi-or-divider,
+.oe_website_login_container p.ndi-btn-hint {
+    width: 100% !important;
+    box-sizing: border-box !important;
+    padding-left: 28px !important;
+    padding-right: 28px !important;
+    background: #ffffff !important;
+}
+
+.oe_website_login_container a.btn-ndi {
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 10px !important;
+    width: calc(100% - 56px) !important;
+    height: 44px !important;
+    box-sizing: border-box !important;
+    margin: 10px 28px 0 28px !important;
+    background: #0b3b8c !important;
+    color: #ffffff !important;
+    border: none !important;
+    border-radius: 8px !important;
+    font-size: 14.5px !important;
+    font-weight: 700 !important;
+    text-decoration: none !important;
+    white-space: nowrap !important;
+    cursor: pointer !important;
+    transition: background 0.15s !important;
+}
+
+.oe_website_login_container a.btn-ndi:hover {
+    background: #082d6c !important;
+    color: #ffffff !important;
+    text-decoration: none !important;
+}
+
+
+/* ── 14. NDI HINT ─────────────────────────────────────────────── */
+.oe_website_login_container p.ndi-btn-hint {
+    text-align: center !important;
+    font-size: 11.5px !important;
+    color: #b0b8c8 !important;
+    margin: 0 !important;
+    padding: 8px 28px 24px !important;
+    background: #ffffff !important;
+    line-height: 1.5 !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    white-space: nowrap !important;
+}
+
+
+/* ── 15. FOOTER ───────────────────────────────────────────────── */
+.oe_website_login_container .card-body > .text-center.small {
+    background: #f9fafb !important;
+    border-top: 1px solid #e4e7ec !important;
+    padding: 14px 28px !important;
+    margin: 0 !important;
+    text-align: center !important;
+    font-size: 11.5px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    border-radius: 0 0 12px 12px !important;
+}
+
+.oe_website_login_container .card-body > .text-center.small a {
+    color: #98a2b3 !important;
+    text-decoration: none !important;
+}
+
+.oe_website_login_container .card-body > .text-center.small a:hover {
+    color: #0b3b8c !important;
+    text-decoration: underline !important;
+}
+
+
+/* ── 16. ALERT MESSAGES (NDI errors) ─────────────────────────── */
+.oe_website_login_container .alert {
+    width: 100% !important;
+    box-sizing: border-box !important;
+    margin: 0 !important;
+    padding: 12px 28px !important;
+    font-size: 13px !important;
+    border-radius: 0 !important;
+    border-left: none !important;
+    border-right: none !important;
+}
+
+.oe_website_login_container .alert-danger {
+    background: #fef2f2 !important;
+    border-color: #fecaca !important;
+    color: #991b1b !important;
+}
+
+.oe_website_login_container .alert-warning {
+    background: #fffbeb !important;
+    border-color: #fde68a !important;
+    color: #92400e !important;
+}
+
+
+/* ── 17. RESPONSIVE ───────────────────────────────────────────── */
+@media (max-width: 480px) {
+    main {
+        padding: 20px 12px !important;
+        align-items: flex-start !important;
+    }
+
+    .oe_website_login_container {
+        max-width: 100% !important;
+    }
+
+    .oe_website_login_container p.ndi-btn-hint {
+        white-space: normal !important;
+    }
+
+    main::before,
+    main::after {
+        display: none !important;
+    }
+}
+
+
+/* ══════════════════════════════════════════════════════════════
+   NUCLEAR OVERRIDES — last resort, highest specificity
+══════════════════════════════════════════════════════════════ */
+
+.oe_website_login_container .oe_login_form,
+.oe_website_login_container .oe_login_buttons,
+.oe_website_login_container .o_login_auth,
+.oe_website_login_container .ndi-or-divider,
+.oe_website_login_container p.ndi-btn-hint {
+    padding-left: 28px !important;
+    padding-right: 28px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+.oe_website_login_container .oe_login_form .form-control,
+.oe_website_login_container .oe_login_buttons .btn-primary,
+.oe_website_login_container .o_login_auth .list-group-item,
+.oe_website_login_container .o_login_auth ul > li {
+    width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+.oe_website_login_container .oe_login_buttons .btn-primary,
+.oe_website_login_container .o_login_auth .list-group-item,
+.oe_website_login_container .o_login_auth ul > li {
+    height: 44px !important;
+}
+
+.oe_website_login_container a.btn-ndi {
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    width: calc(100% - 56px) !important;
+    margin: 10px 28px 0 28px !important;
+    height: 44px !important;
+    background: #0b3b8c !important;
+    color: #ffffff !important;
+}
+
+.oe_website_login_container .ndi-login-header + * {
+    margin-top: 0 !important;
+}
