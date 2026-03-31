@@ -95,7 +95,7 @@
                     
                     <div class="oe_title">
                         <h1>
-                            <field name="name" readonly="1"/>
+                            <field name="name" readonly="state != 'draft'" placeholder="e.g. Annual Operations Cycle"/>
                         </h1>
                     </div>
                     
@@ -111,6 +111,7 @@
                             <field name="planning_duration" readonly="state != 'draft'"/>
                             <field name="planning_deadline"/>
                             <field name="resubmission_days"/>
+                            <field name="final_score_selection" widget="radio" readonly="state != 'draft'"/>
                         </group>
                     </group>
                     

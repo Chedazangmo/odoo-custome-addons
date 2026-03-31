@@ -24,10 +24,10 @@
         <menuitem id="menu_employee_plans"
                 name="Employee Plans"
                 parent="menu_performance_planning"
-                action="action_employee_plans_all"
+                action="action_manager_planning_cycles"
                 groups="hr_employee_evaluation.group_pms_supervisor"
                 sequence="2"/>
-
+        
         <!-- Appraisal menus -->
         <menuitem
                 id="menu_performance_appraisal"
@@ -46,7 +46,7 @@
         <menuitem id="menu_employee_appraisals"
                 name="Employee Appraisals"
                 parent="menu_performance_appraisal"
-                action="action_employee_appraisals_all"
+                action="action_manager_appraisal_cycles"
                 groups="hr_employee_evaluation.group_pms_supervisor"
                 sequence="2"/>
 

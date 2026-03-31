@@ -1,3 +1,10 @@
+.pms_rounded_kanban {
+    .o_kanban_record {
+        border-radius: .75rem !important; 
+        overflow: hidden; 
+    }
+}
+
 .o_kra_tabs_container {
     font-family: inherit;
     background: #fff;

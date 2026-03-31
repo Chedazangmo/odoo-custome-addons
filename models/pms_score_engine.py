@@ -48,10 +48,6 @@ class PMSScoringEngine(models.Model):
         help='Highest score covered by this engine'
     )
 
-    # ------------------------------------------------------------------
-    # Compute
-    # ------------------------------------------------------------------
-
     @api.depends('line_ids')
     def _compute_line_count(self):
         for record in self:
@@ -67,13 +63,9 @@ class PMSScoringEngine(models.Model):
                 record.score_min = 0.0
                 record.score_max = 0.0
 
-    # ------------------------------------------------------------------
-    # Constraints
-    # ------------------------------------------------------------------
-
     @api.constrains('is_default', 'company_id')
     def _check_single_default(self):
-        # Only one engine can be default per company at a time.
+        # ensuring one engine can be default per company at a time.
         for record in self:
             if record.is_default:
                 existing = self.search([
@@ -87,14 +79,9 @@ class PMSScoringEngine(models.Model):
                         f'Please unset it first before setting a new default.'
                     )
 
-    # ------------------------------------------------------------------
-    # ORM
-    # ------------------------------------------------------------------
 
     def write(self, vals):
         result = super().write(vals)
-        # When setting is_default=True via the toggle button, auto-unset others
-        # in the same company so HR does not have to manually unset the old one.
         if vals.get('is_default'):
             for record in self:
                 self.search([
@@ -103,10 +90,6 @@ class PMSScoringEngine(models.Model):
                     ('id', '!=', record.id),
                 ]).write({'is_default': False})
         return result
-
-    # ------------------------------------------------------------------
-    # Business Logic
-    # ------------------------------------------------------------------
 
     def get_rating_for_score(self, score):
         """
@@ -118,7 +101,6 @@ class PMSScoringEngine(models.Model):
         line = self.line_ids.filtered(
             lambda l: l.min_score <= score <= l.max_score
         )
-        # If multiple somehow match (should be blocked by constraints), take highest min
         if len(line) > 1:
             line = line.sorted('min_score', reverse=True)[0]
         return line.rating if line else False
@@ -190,18 +172,11 @@ class PMSScoringEngineLine(models.Model):
         help='Human-readable display of the score range'
     )
 
-    # ------------------------------------------------------------------
-    # Compute
-    # ------------------------------------------------------------------
-
     @api.depends('min_score', 'max_score')
     def _compute_range_display(self):
         for record in self:
             record.range_display = f'{record.min_score:.1f} – {record.max_score:.1f}'
 
-    # ------------------------------------------------------------------
-    # Constraints
-    # ------------------------------------------------------------------
 
     @api.constrains('min_score', 'max_score')
     def _check_min_less_than_max(self):
@@ -223,7 +198,6 @@ class PMSScoringEngineLine(models.Model):
     @api.constrains('min_score', 'max_score', 'engine_id')
     def _check_no_overlap(self):
         # For each line, check no other line in the same engine overlaps its range.
-        # Two ranges [a,b] and [c,d] overlap if a < d and c < b.
         for record in self:
             overlapping = self.search([
                 ('engine_id', '=', record.engine_id.id),

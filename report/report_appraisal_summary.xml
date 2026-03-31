@@ -61,18 +61,30 @@
                                 </table>
                             </t>
                         </t>
-
                         <div class="mt-5 pt-4">
-                            <h4>
-                                <strong>Total Scores</strong>
-                            </h4>
+                            
+                            <div class="d-flex justify-content-between align-items-end">
+                                <h4 class="mb-0">
+                                    <strong>Total Scores</strong>
+                                </h4>
+                                <div class="fs-6 fw-bold text-muted">
+                                    Final Score: 
+                                    <span class="text-dark">
+                                        <t t-if="doc.cycle_id.final_score_selection == 'average'">Average Score</t>
+                                        <t t-elif="doc.cycle_id.final_score_selection == 'reviewer'">Reviewer Score</t>
+                                        <t t-else="">Not Set</t>
+                                    </span>
+                                </div>
+                            </div>
+
                             <table class="table table-bordered mt-3 shadow-sm">
                                 <thead class="bg-light text-uppercase" style="font-size: 13px;">
                                     <tr>
                                         <th class="text-center p-3">Employee Total</th>
                                         <th class="text-center p-3">Supervisor Total</th>
                                         <th class="text-center p-3" t-if="doc.secondary_supervisor_id">2nd Sup Total</th>
-                                        <th class="text-center text-white p-3" t-if="doc.reviewer_id">Reviewer Total</th>
+                                        <th class="text-center p-3" t-if="doc.reviewer_id">Reviewer Total</th>
+                                        <th class="text-center p-3">Final Score</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -80,7 +92,12 @@
                                         <td class="text-center fs-5 p-3"><t t-esc="doc.total_self_score"/></td>
                                         <td class="text-center fs-5 p-3"><t t-esc="doc.total_supervisor_score"/></td>
                                         <td class="text-center fs-5 p-3" t-if="doc.secondary_supervisor_id"><t t-esc="doc.total_secondary_score"/></td>
-                                        <td class="text-center fs-4 fw-bold text-white p-3" t-if="doc.reviewer_id">
+                                        
+                                        <td class="text-center fs-5 p-3" t-if="doc.reviewer_id">
+                                            <t t-esc="doc.total_reviewer_score"/>
+                                        </td>
+                                        
+                                        <td class="text-center fs-4 fw-bold p-3">
                                             <t t-esc="doc.final_appraisal_score"/>
                                         </td>
                                     </tr>

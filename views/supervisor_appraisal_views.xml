@@ -81,7 +81,7 @@
                             </div>
                         </button>
                     </div>
-                    
+
                     <div class="alert alert-warning"
                          invisible="state != 'appraisal_pending_supervisor' or not is_supervisor_of_appraisal or not supervisor_has_zero_scores">
                         <i class="fa fa-exclamation-triangle me-1"/>
@@ -192,7 +192,7 @@
         </field>
     </record>
 
-    <record id="action_employee_appraisals_all" model="ir.actions.act_window">
+    <!-- <record id="action_employee_appraisals_all" model="ir.actions.act_window">
         <field name="name">Employee Appraisals</field>
         <field name="res_model">pms.appraisal</field>
         <field name="view_mode">list,form</field>
@@ -212,6 +212,6 @@
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">No employee appraisals found</p>
         </field>
-    </record>
+    </record> -->
 
 </odoo>

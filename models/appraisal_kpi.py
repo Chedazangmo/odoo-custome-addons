@@ -32,8 +32,7 @@ class AppraisalKPI(models.Model):
     def _check_required_fields(self):
         for record in self:
             # # Skip validation if we're in the middle of deletion
-            # if self.env.context.get('skip_kpi_validation'):
-            #     continue
+ 
             if (
                 not record.name
                 or not record.description

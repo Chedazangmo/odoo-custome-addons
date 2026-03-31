@@ -532,7 +532,7 @@ class PMSAppraisal(models.Model):
             cmd_code = cmd[0]
 
             if cmd_code == 1:
-                # UPDATE existing KRA — inspect nested kpi_ids commands.
+                # Update existing KRA 
                 kra_vals = dict(cmd[2]) if cmd[2] else {}
 
                 if 'kpi_ids' in kra_vals:
@@ -541,7 +541,7 @@ class PMSAppraisal(models.Model):
                         kpi_code = kpi_cmd[0]
 
                         if kpi_code == 1:
-                            # UPDATE existing KPI — keep only the allowed fields.
+                            # Update existing KPI 
                             raw_kpi_vals = kpi_cmd[2] or {}
                             safe_kpi_vals = {
                                 k: v for k, v in raw_kpi_vals.items()
@@ -552,10 +552,10 @@ class PMSAppraisal(models.Model):
                                 filtered_kpi_commands.append((1, kpi_cmd[1], safe_kpi_vals))
 
                         elif kpi_code in (0, 2, 3):
-                            # CREATE / DELETE / UNLINK on a KPI row.
-                            # Supervisors are never allowed structural changes.
+                            # CREATE / DELETE / UNLINK KPI
+                            # Supervisors are never allowed structural changes
                             if 'is_selected' not in allowed_kpi_fields:
-                                continue  # Drop silently for managers
+                                continue  
                             filtered_kpi_commands.append(kpi_cmd)
 
                         else:
@@ -566,11 +566,11 @@ class PMSAppraisal(models.Model):
                 filtered_kra_commands.append((1, cmd[1], kra_vals))
 
             elif cmd_code == 0:
-                # CREATE a new KRA — only valid in template mode; pass through.
+                # CREATE a new KRA 
                 filtered_kra_commands.append(cmd)
 
             else:
-                # All other KRA-level commands — pass through.
+                # All other KRA-level commands 
                 filtered_kra_commands.append(cmd)
 
         return filtered_kra_commands
@@ -651,7 +651,7 @@ class PMSAppraisal(models.Model):
         if any(k.weightage <= 0 for k in selected_kpis):
             raise UserError('All selected KPIs must have a weightage greater than zero.')
 
-        incomplete_kpis = selected_kpis.filtered(lambda k: not k.target) #(lambda k: not k.target or not k.planning_remarks) incase remarks is required
+        incomplete_kpis = selected_kpis.filtered(lambda k: not k.target) 
         if incomplete_kpis:
             raise UserError('All selected KPIs must have Target filled.')
 
@@ -758,7 +758,7 @@ class PMSAppraisal(models.Model):
             'reviewer_approval_date': fields.Datetime.now(),
         })
 
-        self._notify_next_approver('approved')  # notifies the employee
+        self._notify_next_approver('approved')  
 
         self.message_post(
             body=f"Plan fully approved by reviewer {self.reviewer_id.name}. Planning phase complete.",
@@ -951,6 +951,7 @@ class PMSAppraisal(models.Model):
         'kra_ids.kpi_ids.secondary_supervisor_score', 'kra_ids.kpi_ids.reviewer_score',
         'kra_ids.kpi_ids.is_selected'
     )
+
     def _compute_total_scores(self):
         for record in self:
             selected_kpis = record.kra_ids.mapped('kpi_ids').filtered(lambda k: k.is_selected)
@@ -1145,11 +1146,32 @@ class PMSAppraisal(models.Model):
         )
         return True
 
-    @api.depends('kra_ids.kpi_ids.reviewer_score', 'kra_ids.kpi_ids.is_selected')
+        
+    @api.depends('total_reviewer_score', 'total_supervisor_score', 'total_secondary_score', 'cycle_id.final_score_selection')
     def _compute_final_appraisal_score(self):
-        for record in self:
-            selected_kpis = record.kra_ids.mapped('kpi_ids').filtered(lambda k: k.is_selected)
-            record.final_appraisal_score = sum(selected_kpis.mapped('reviewer_score'))
+        for appraisal in self:
+            if appraisal.cycle_id.final_score_selection == 'reviewer':
+                appraisal.final_appraisal_score = appraisal.total_reviewer_score
+                
+            elif appraisal.cycle_id.final_score_selection == 'average':
+                scores = []
+                
+                if appraisal.total_supervisor_score:
+                    scores.append(appraisal.total_supervisor_score)
+                    
+                if appraisal.total_secondary_score:
+                    scores.append(appraisal.total_secondary_score)
+                    
+                if appraisal.total_reviewer_score:
+                    scores.append(appraisal.total_reviewer_score)
+                    
+                if scores:
+                    appraisal.final_appraisal_score = sum(scores) / len(scores)
+                else:
+                    appraisal.final_appraisal_score = 0.0
+            else:
+                appraisal.final_appraisal_score = 0.0
+
 
     def action_hr_reset_appraisal_to_draft(self):
         self.ensure_one()

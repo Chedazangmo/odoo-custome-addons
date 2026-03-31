@@ -22,6 +22,7 @@
         'views/scoring_engine_view.xml',
         'report/report_plan_summary.xml',
         'report/report_appraisal_summary.xml',
+        'views/supervisor_cycle_views.xml',
         'views/appraisal_menu.xml',
     ],
     'assets': {

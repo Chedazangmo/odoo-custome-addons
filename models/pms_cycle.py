@@ -11,10 +11,10 @@ class PMSCycle(models.Model):
     
     name = fields.Char(
         string='Cycle Name',
-        compute='_compute_name',
         store=True,
         readonly=True
     )
+
     sequence = fields.Char(
         string='Sequence',
         required=True,
@@ -88,6 +88,12 @@ class PMSCycle(models.Model):
         compute='_compute_appraisal_count',
         store=True
     )
+
+    final_score_selection = fields.Selection([
+        ('reviewer', 'Reviewer Score'), #takes reviewer score as the final one
+        ('average', 'Average') #takes the average of sup + sec sup (if exists) + rev
+    ], string='Final Score', required=True, default='reviewer', tracking=True,
+       help="Determines how the final appraisal score is calculated for employees in this cycle.")
     
     state = fields.Selection([
         ('draft', 'Draft'),
@@ -105,17 +111,107 @@ class PMSCycle(models.Model):
         string='Company',
         default=lambda self: self.env.company
     )
-    
-    @api.depends('sequence', 'cycle_type', 'start_date')
-    def _compute_name(self):
-        # auto-generate name using sequence
-        for record in self:
-            if record.sequence and record.sequence != 'New':
-                # cycle_type_label = dict(record._fields['cycle_type'].selection).get(record.cycle_type, '') look into this as now sequence is incremental and not based on cycle type, we can just use sequence as name and remove cycle type from name
-                if record.start_date:
-                    record.name = f"{record.sequence}"
+
+    # To check employees for different cycles
+
+    is_manager_in_cycle = fields.Boolean(
+        string='Is Manager',
+        compute='_compute_is_manager_in_cycle',
+        search='_search_is_manager_in_cycle'
+    )
+
+    def _compute_is_manager_in_cycle(self):
+        is_hr = self.env.user.has_group('hr_employee_evaluation.group_pms_hr_manager')
+        appraisals = self.env['pms.appraisal'].search([
+            ('cycle_id', 'in', self.ids),
+            '|', '|',
+            ('supervisor_id.user_id', '=', self.env.uid),
+            ('secondary_supervisor_id.user_id', '=', self.env.uid),
+            ('reviewer_id.user_id', '=', self.env.uid),
+        ])
+        involved_cycle_ids = set(appraisals.mapped('cycle_id').ids)
+        
+        for cycle in self:
+            if is_hr:
+                cycle.is_manager_in_cycle = True
             else:
-                record.name = 'New Cycle'
+                cycle.is_manager_in_cycle = cycle.id in involved_cycle_ids
+
+    def _search_is_manager_in_cycle(self, operator, value):
+        if self.env.user.has_group('hr_employee_evaluation.group_pms_hr_manager'):
+            return [('id', '!=', False)]  # God Mode for. All cycles to appear
+            
+        appraisals = self.env['pms.appraisal'].search([
+            '|', '|',
+            ('supervisor_id.user_id', '=', self.env.uid),
+            ('secondary_supervisor_id.user_id', '=', self.env.uid),
+            ('reviewer_id.user_id', '=', self.env.uid),
+        ])
+        
+        if not appraisals:
+            return [('id', '=', -1)]  # Forces absolute zero records (No ghost cycles)
+            
+        return [('id', 'in', appraisals.mapped('cycle_id').ids)]
+
+    def action_open_subordinate_plans(self):
+        self.ensure_one()
+        is_hr = self.env.user.has_group('hr_employee_evaluation.group_pms_hr_manager')
+        domain = [('cycle_id', '=', self.id)]
+        
+        if not is_hr:
+            domain.extend([
+                '|', '|',
+                ('supervisor_id.user_id', '=', self.env.uid),
+                ('secondary_supervisor_id.user_id', '=', self.env.uid),
+                ('reviewer_id.user_id', '=', self.env.uid),
+            ])
+
+        return {
+            'name': f'Employee Plans — {self.name}',
+            'type': 'ir.actions.act_window',
+            'res_model': 'pms.appraisal',
+            'view_mode': 'list,form',
+            'views': [
+                (self.env.ref('hr_employee_evaluation.view_employee_plans_all_list').id, 'list'),
+                (self.env.ref('hr_employee_evaluation.view_employee_plans_supervisor_form').id, 'form'),
+            ],
+            'domain': domain,
+            'context': {'create': False, 'delete': False},
+        }
+
+    def action_open_subordinate_appraisals(self):
+        self.ensure_one()
+        is_hr = self.env.user.has_group('hr_employee_evaluation.group_pms_hr_manager')
+        domain = [
+            ('cycle_id', '=', self.id),
+            ('state', 'in', [
+                'appraisal_draft', 'appraisal_pending_supervisor',
+                'appraisal_pending_secondary_supervisor',
+                'appraisal_pending_reviewer', 'appraisal_approved',
+            ])
+        ]
+        
+        if not is_hr:
+            domain.extend([
+                '|', '|',
+                ('supervisor_id.user_id', '=', self.env.uid),
+                ('secondary_supervisor_id.user_id', '=', self.env.uid),
+                ('reviewer_id.user_id', '=', self.env.uid),
+            ])
+
+        return {
+            'name': f'Employee Appraisals — {self.name}',
+            'type': 'ir.actions.act_window',
+            'res_model': 'pms.appraisal',
+            'view_mode': 'list,form',
+            'views': [
+                (self.env.ref('hr_employee_evaluation.view_employee_appraisals_all_list').id, 'list'),
+                (self.env.ref('hr_employee_evaluation.view_employee_appraisals_supervisor_form').id, 'form'),
+            ],
+            'domain': domain,
+            'context': {'create': False, 'delete': False},
+        }
+
     
     @api.depends('cycle_type', 'start_date')
     def _compute_end_date(self):
@@ -165,17 +261,50 @@ class PMSCycle(models.Model):
             if record.apply_to == 'selected' and not record.employee_ids:
                 raise ValidationError('Please select at least one employee.')
     
+    
+    # @api.model_create_multi
+    # def create(self, vals_list):
+    #     for vals in vals_list:
+    #         if vals.get('sequence', 'New') == 'New':
+    #             vals['sequence'] = self.env['ir.sequence'].next_by_code('pms.cycle') or 'New'
+            
+    #         if vals.get('name'):
+    #             if vals.get('start_date'):
+    #                 cycle_year = vals['start_date'][:4]
+    #             else:
+    #                 cycle_year = fields.Date.today().year
+                
+    #             vals['name'] = f"{vals['name']} - {cycle_year}"
+                
+    #     return super().create(vals_list)
+    
+    @api.onchange('name', 'start_date')
+    def _onchange_name_date(self):
+        for record in self:
+            if record.name and record.start_date:
+                year = str(record.start_date.year)
+                base_name = re.sub(r' - \d{4}$', '', record.name).strip()
+                record.name = f"{base_name} - {year}"
+
     @api.model_create_multi
     def create(self, vals_list):
-        # Generate sequence on create
         for vals in vals_list:
             if vals.get('sequence', 'New') == 'New':
                 vals['sequence'] = self.env['ir.sequence'].next_by_code('pms.cycle') or 'New'
+            
+            if vals.get('name') and vals.get('start_date'):
+                year = str(vals['start_date'])[:4]
+                base_name = re.sub(r' - \d{4}$', '', vals['name']).strip()
+                vals['name'] = f"{base_name} - {year}"
+                
         return super().create(vals_list)
     
     def write(self, vals):
         # Prevent editing fields when not in draft
-        protected_fields = ['cycle_type', 'start_date', 'apply_to', 'employee_ids']
+        protected_fields = [
+            'cycle_type', 'start_date', 'apply_to', 
+            'employee_ids', 'final_score_selection' 
+        ]
         if any(field in vals for field in protected_fields):
             for record in self:
                 if record.state != 'draft':
@@ -424,24 +553,7 @@ class PMSCycle(models.Model):
         )
         return True
 
-    # def action_move_to_appraisal(self):
-    #     # Move cycle from monitoring to appraisal phase 
-    #     self.ensure_one()
 
-    #     if self.state != 'monitoring':
-    #         raise UserError('Only cycles in the Monitoring phase can be moved to Appraisal.')
-
-    #     submitted_appraisals = self.appraisal_ids.filtered(
-    #         lambda a: a.state == 'pending_supervisor'
-    #     )
-
-    #     self.write({'state': 'appraisal'})
-    #     self.message_post(
-    #         body=f"Moved to Appraisal phase. {len(submitted_appraisals)} plans submitted.",
-    #         message_type='notification'
-    #     )
-    #     return True
-    
     def action_complete_cycle(self):
         """Mark cycle as completed"""
         self.ensure_one()

@@ -29,7 +29,6 @@
         <field name="sequence">40</field> </record>
 
     
-
     <record id="group_pms_employee" model="res.groups">
         <field name="name">Employee: Own Appraisals</field>
         <field name="privilege_id" ref="privilege_pms_employee"/>
@@ -45,17 +44,22 @@
     <record id="group_pms_reviewer" model="res.groups">
         <field name="name">Reviewer: Final Approval</field>
         <field name="privilege_id" ref="privilege_pms_reviewer"/>
-        <field name="implied_ids" eval="[(4, ref('group_pms_supervisor'))]"/>
+        <!-- Reviewer is parallel to Supervisor, not above them.
+             Implies employee only — supervisor access is NOT inherited.
+             HR explicitly grants both separately below. -->
+        <field name="implied_ids" eval="[(4, ref('group_pms_employee'))]"/>
     </record>
 
     <record id="group_pms_hr_manager" model="res.groups">
         <field name="name">HR Manager: Full Access</field>
         <field name="privilege_id" ref="privilege_pms_hr_manager"/>
+        <!-- HR explicitly implies supervisor AND reviewer as separate parallel roles.
+             This gives HR all permissions without relying on the reviewer→supervisor chain. -->
         <field name="implied_ids" eval="[
-            (4, ref('group_pms_reviewer')), 
+            (4, ref('group_pms_supervisor')),
+            (4, ref('group_pms_reviewer')),
             (4, ref('hr.group_hr_manager')),
         ]"/>
     </record>
 
 </odoo>
-
