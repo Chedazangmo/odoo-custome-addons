@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="0">
+
+        <!-- Security Category -->
+        <record id="module_category_pms_360" model="ir.module.category">
+            <field name="name">PMS 360 Feedback</field>
+            <field name="description">Access control for 360-degree feedback system</field>
+            <field name="sequence">100</field>
+        </record>
+
+        <!-- Group: PMS 360 HR Admin (template management) -->
+        <record id="group_pms_360_hr_admin" model="res.groups">
+            <field name="name">360 Feedback: HR Admin</field>
+            <field name="category_id" ref="module_category_pms_360"/>
+            <field name="implied_ids" eval="[(4, ref('group_pms_360_user'))]"/>
+            <field name="comment">
+                Full access: create/edit templates, manage sessions, view all responses.
+            </field>
+        </record>
+
+        <!-- Group: PMS 360 User (submit feedback, view received feedback) -->
+        <record id="group_pms_360_user" model="res.groups">
+            <field name="name">360 Feedback: Employee</field>
+            <field name="category_id" ref="module_category_pms_360"/>
+            <field name="comment">
+                Can submit assigned feedback and view feedback received about themselves.
+            </field>
+        </record>
+
+    </data>
+</odoo>

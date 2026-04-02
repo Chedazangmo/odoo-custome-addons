@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <menuitem id="menu_pms_360_root"
+              name="360° Feedback"
+              sequence="90"/>
+
+    <menuitem id="menu_pms_360_admin"
+              name="Administration"
+              parent="menu_pms_360_root"
+              sequence="10"
+              groups="pms_360_feedback.group_pms_hr_admin"/>
+
+    <menuitem id="menu_pms_360_templates"
+              name="Question Templates"
+              parent="menu_pms_360_admin"
+              action="action_feedback_template"
+              sequence="10"
+              groups="pms_360_feedback.group_pms_hr_admin"/>
+
+    <menuitem id="menu_pms_360_sessions_admin"
+              name="Feedback Sessions"
+              parent="menu_pms_360_admin"
+              action="action_feedback_session_admin"
+              sequence="20"
+              groups="pms_360_feedback.group_pms_hr_admin"/>
+
+    <menuitem id="menu_pms_360_responses_admin"
+              name="All Responses"
+              parent="menu_pms_360_admin"
+              action="action_feedback_response_admin"
+              sequence="30"
+              groups="pms_360_feedback.group_pms_hr_admin"/>
+
+    <menuitem id="menu_pms_360_employee"
+              name="My Feedback"
+              parent="menu_pms_360_root"
+              sequence="20"
+              groups="pms_360_feedback.group_pms_employee"/>
+
+    <menuitem id="menu_pms_360_active_sessions"
+              name="Active Sessions"
+              parent="menu_pms_360_employee"
+              action="action_feedback_session_employee"
+              sequence="10"
+              groups="pms_360_feedback.group_pms_employee"/>
+
+    <menuitem id="menu_pms_360_give_feedback"
+              name="Feedback I Gave"
+              parent="menu_pms_360_employee"
+              action="action_feedback_response_give"
+              sequence="20"
+              groups="pms_360_feedback.group_pms_employee"/>
+
+    <menuitem id="menu_pms_360_received_feedback"
+              name="Feedback I Received"
+              parent="menu_pms_360_employee"
+              action="action_feedback_received"
+              sequence="30"
+              groups="pms_360_feedback.group_pms_employee"/>
+
+    <record id="action_feedback_dashboard" model="ir.actions.client">
+        <field name="name">My Feedback Dashboard</field>
+        <field name="tag">pms_feedback_dashboard</field>
+    </record>
+
+    <menuitem id="menu_pms_360_dashboard"
+              name="My Feedback Dashboard"
+              parent="menu_pms_360_employee"
+              action="action_feedback_dashboard"
+              sequence="40"
+              groups="pms_360_feedback.group_pms_employee"/>
+
+</odoo>

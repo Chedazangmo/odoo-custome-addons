@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="seq_feedback_session" model="ir.sequence">
+        <field name="name">360 Feedback Session</field>
+        <field name="code">pms.feedback.session</field>
+        <field name="prefix">FB/%(year)s/</field>
+        <field name="padding">4</field>
+        <field name="company_id" eval="False"/>
+    </record>
+</odoo>
