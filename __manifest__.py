@@ -28,6 +28,8 @@
     'assets': {
         'web.assets_backend': [
             'hr_employee_evaluation/static/src/kra_tabs/kra_tabs.*',
+            'hr_employee_evaluation/static/src/chatter/chatter_toggle.js',
+            'hr_employee_evaluation/static/src/chatter/chatter_toggle.css',
             'hr_employee_evaluation/static/img/expand_icon.svg'
         ],
     },

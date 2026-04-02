@@ -67,11 +67,12 @@
                             </button>
                         </div>
 
-                        <button class="btn btn-outline-secondary  btn-sm bg-white d-flex align-items-center justify-content-center p-0" 
+                        <button class="btn btn-outline-secondary btn-sm bg-white d-flex align-items-center justify-content-center p-0 d-xl-none" 
                             title="Expand Table View"
                             t-if="isAppraisalEmployeeMode or isAppraisalSupervisorMode"
                             t-on-click="onExpandAppraisal">
-                                <img src="\hr_employee_evaluation\static\img\expand_icon.svg" 
+                                
+                                <img src="/hr_employee_evaluation/static/img/expand_icon.svg" 
                                     style="width: 22px; height: 22px; vertical-align: middle;" 
                                     alt="Expand"/> 
                         </button>
@@ -416,10 +417,8 @@
                                             <td class="col-mrm"><textarea class="form-control" rows="1" readonly="1" oninput="this.style.height = ''; this.style.height = this.scrollHeight + 'px'" t-esc="kpi.data.secondary_supervisor_score_remarks"/></td>
                                         </t>
                                         
-                                        <t t-if="props.record.data.reviewer_id">
-                                            <td class="col-msc"><input type="number" class="form-control text-end" t-att-value="kpi.data.reviewer_score" readonly="1"/></td>
-                                            <td class="col-mrm"><textarea class="form-control" rows="1" readonly="1" oninput="this.style.height = ''; this.style.height = this.scrollHeight + 'px'" t-esc="kpi.data.reviewer_remarks"/></td>
-                                        </t>
+                                        <td class="col-msc"><input type="number" class="form-control text-end" t-att-value="kpi.data.reviewer_score" readonly="1"/></td>
+                                        <td class="col-mrm"><textarea class="form-control" rows="1" readonly="1" oninput="this.style.height = ''; this.style.height = this.scrollHeight + 'px'" t-esc="kpi.data.reviewer_remarks"/></td>
                                     </tr>
                                 </t>
                             </tbody>
@@ -482,16 +481,14 @@
                                             </td>
                                         </t>
                                         
-                                        <t t-if="props.record.data.reviewer_id">
-                                            <td class="col-msc">
-                                                <input t-if="!props.readonly and props.record.data.can_reviewer_rate" type="number" min="0" t-att-max="kpi.data.weightage" class="form-control text-end" t-att-value="kpi.data.reviewer_score" t-on-change="(ev) => this.onKPIFieldChange(kpi, 'reviewer_score', ev)"/>
-                                                <input t-else="" type="number" class="form-control text-end" t-att-value="kpi.data.reviewer_score" readonly="1"/>
-                                            </td>
-                                            <td class="col-mrm">
-                                                <textarea t-if="!props.readonly and props.record.data.can_reviewer_rate" class="form-control" rows="1" oninput="this.style.height = ''; this.style.height = this.scrollHeight + 'px'" t-att-value="kpi.data.reviewer_remarks" t-on-change="(ev) => this.onKPIFieldChange(kpi, 'reviewer_remarks', ev)"/>
-                                                <textarea t-else="" class="form-control" rows="1" readonly="1" oninput="this.style.height = ''; this.style.height = this.scrollHeight + 'px'" t-esc="kpi.data.reviewer_remarks"/>
-                                            </td>
-                                        </t>
+                                        <td class="col-msc">
+                                            <input t-if="!props.readonly and props.record.data.can_reviewer_rate" type="number" min="0" t-att-max="kpi.data.weightage" class="form-control text-end" t-att-value="kpi.data.reviewer_score" t-on-change="(ev) => this.onKPIFieldChange(kpi, 'reviewer_score', ev)"/>
+                                            <input t-else="" type="number" class="form-control text-end" t-att-value="kpi.data.reviewer_score" readonly="1"/>
+                                        </td>
+                                        <td class="col-mrm">
+                                            <textarea t-if="!props.readonly and props.record.data.can_reviewer_rate" class="form-control" rows="1" oninput="this.style.height = ''; this.style.height = this.scrollHeight + 'px'" t-att-value="kpi.data.reviewer_remarks" t-on-change="(ev) => this.onKPIFieldChange(kpi, 'reviewer_remarks', ev)"/>
+                                            <textarea t-else="" class="form-control" rows="1" readonly="1" oninput="this.style.height = ''; this.style.height = this.scrollHeight + 'px'" t-esc="kpi.data.reviewer_remarks"/>
+                                        </td>
                                     </tr>
                                 </t>
                             </tbody>

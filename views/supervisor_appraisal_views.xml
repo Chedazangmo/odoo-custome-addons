@@ -68,7 +68,7 @@
                            statusbar_visible="appraisal_draft,appraisal_pending_supervisor,appraisal_pending_secondary_supervisor,appraisal_pending_reviewer,appraisal_approved"/>
                 </header>
 
-                <sheet>
+                <sheet style="max-width: 100% !important; width: 100% !important;"> 
 
                    <div class="oe_button_box" name="button_box">
                         <button class="oe_stat_button"
@@ -80,6 +80,16 @@
                                 <span class="o_stat_text">View Summary</span>
                             </div>
                         </button>
+
+                    <button type="button" 
+                            class="oe_stat_button pms-chatter-toggle-btn"
+                            icon="fa-comments"
+                            title="Toggle Chatter">
+                        <div class="o_stat_info">
+                            <span class="o_stat_text">Chatter</span>
+                        </div>
+                    </button>
+                        
                     </div>
 
                     <div class="alert alert-warning"
