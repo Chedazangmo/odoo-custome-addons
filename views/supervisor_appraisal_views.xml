@@ -1,0 +1,227 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_employee_appraisals_all_list" model="ir.ui.view">
+        <field name="name">pms.appraisal.supervisor.appraisal.list</field>
+        <field name="model">pms.appraisal</field>
+        <field name="arch" type="xml">
+            <list string="Employee Appraisals" create="false" delete="false">
+                <field name="employee_id" string="Employee Name"/>
+                <field name="employee_evaluation_group_id" string="Evaluation Group"/>
+                <field name="supervisor_id" string="Manager"/>
+                <field name="secondary_supervisor_id" string="Secondary Manager"/>
+                <field name="reviewer_id" string="Reviewer"/>
+                <field name="state"
+                       widget="badge"
+                       decoration-info="state == 'appraisal_draft'"
+                       decoration-warning="state in ('appraisal_pending_supervisor', 'appraisal_pending_secondary_supervisor', 'appraisal_pending_reviewer')"
+                       decoration-success="state == 'appraisal_approved'"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_employee_appraisals_supervisor_form" model="ir.ui.view">
+        <field name="name">pms.appraisal.supervisor.appraisal.form</field>
+        <field name="model">pms.appraisal</field>
+        <field name="arch" type="xml">
+            <form string="Employee Appraisal" create="false" delete="false">
+                <header>
+                    <div class="alert alert-info" role="alert"
+                         invisible="state != 'appraisal_draft'">
+                        <strong>Waiting:</strong> Employee has not submitted their self-rating yet.
+                    </div>
+
+                    <button name="action_supervisor_submit_rating"
+                            string="Submit"
+                            type="object"
+                            class="btn-primary"
+                            invisible="state != 'appraisal_pending_supervisor' or not is_supervisor_of_appraisal"
+                            groups="hr_employee_evaluation.group_pms_supervisor"
+                            confirm="Are you sure you want to submit your rating? One or more KPIs may have a score of 0. You will not be able to edit it after submission."/>
+
+                    <button name="action_secondary_supervisor_submit_rating"
+                            string="Submit"
+                            type="object"
+                            class="btn-primary"
+                            invisible="state != 'appraisal_pending_secondary_supervisor' or not is_secondary_supervisor_of_appraisal"
+                            groups="hr_employee_evaluation.group_pms_supervisor"
+                            confirm="Are you sure you want to submit your rating? One or more KPIs may have a score of 0. You will not be able to edit it after submission."/>
+
+                    <button name="action_reviewer_submit_rating"
+                            string="Submit"
+                            type="object"
+                            class="btn-primary"
+                            invisible="state != 'appraisal_pending_reviewer' or not is_reviewer_of_appraisal"
+                            groups="hr_employee_evaluation.group_pms_reviewer"
+                            confirm="Are you sure you want to submit the final rating? One or more KPIs may have a score of 0. You will not be able to edit it after submission."/>
+
+                    <button name="action_hr_reset_appraisal_to_draft"
+                            string="Reset to Draft"
+                            type="object"
+                            class="btn-secondary"
+                            groups="hr_employee_evaluation.group_pms_hr_manager"
+                            invisible="state not in ('appraisal_pending_supervisor', 'appraisal_pending_secondary_supervisor', 'appraisal_pending_reviewer', 'appraisal_approved')"
+                            confirm="This will clear all appraisal scores and reset to draft. Continue?"/>
+
+                    <field name="state"
+                           widget="statusbar"
+                           statusbar_visible="appraisal_draft,appraisal_pending_supervisor,appraisal_pending_secondary_supervisor,appraisal_pending_reviewer,appraisal_approved"/>
+                </header>
+
+                <sheet style="max-width: 100% !important; width: 100% !important;"> 
+
+                   <div class="oe_button_box" name="button_box">
+                        <button class="oe_stat_button"
+                                type="object"
+                                name="action_view_appraisal_summary"
+                                icon="fa-list-alt"
+                                target="_blank">
+                            <div class="o_stat_info">
+                                <span class="o_stat_text">View Summary</span>
+                            </div>
+                        </button>
+
+                    <button type="button" 
+                            class="oe_stat_button pms-chatter-toggle-btn"
+                            icon="fa-comments"
+                            title="Toggle Chatter">
+                        <div class="o_stat_info">
+                            <span class="o_stat_text">Chatter</span>
+                        </div>
+                    </button>
+                        
+                    </div>
+
+                    <div class="alert alert-warning"
+                         invisible="state != 'appraisal_pending_supervisor' or not is_supervisor_of_appraisal or not supervisor_has_zero_scores">
+                        <i class="fa fa-exclamation-triangle me-1"/>
+                        <strong>Warning:</strong> One or more KPIs have a score of 0. 
+                    </div>
+
+                    <div class="alert alert-warning"
+                         invisible="state != 'appraisal_pending_secondary_supervisor' or not is_secondary_supervisor_of_appraisal or not secondary_supervisor_has_zero_scores">
+                        <i class="fa fa-exclamation-triangle me-1"/>
+                        <strong>Warning:</strong> One or more KPIs have a score of 0. 
+                    </div>
+
+                    <div class="alert alert-warning"
+                         invisible="state != 'appraisal_pending_reviewer' or not is_reviewer_of_appraisal or not reviewer_has_zero_scores">
+                        <i class="fa fa-exclamation-triangle me-1"/>
+                        <strong>Warning:</strong> One or more KPIs have a score of 0.
+                    </div>
+
+                    <group>
+                        <group string="Employee Information">
+                            <field name="employee_id" readonly="1"/>
+                            <field name="employee_job_id" string="Job Position" readonly="1"/>
+                            <field name="employee_department_id" string="Department" readonly="1"/>
+                            <field name="employee_evaluation_group_id" string="Evaluation Group" readonly="1"/>
+                        </group>
+
+                        <group string="Plan Details">
+                            <field name="supervisor_id" string="Manager" readonly="1"/>
+                            <field name="secondary_supervisor_id" string="Secondary Manager" readonly="1"/>
+                            <field name="reviewer_id" string="Reviewer" readonly="1"/>
+                            <field name="template_id" string="Template Name" readonly="1"/>
+                        </group>
+                    </group>
+
+                    <group>
+                        <group string="Appraisal Period">
+                            <field name="appraisal_start_date_display" string="Appraisal Start" readonly="1"/>
+                            <field name="appraisal_end_date_display" string="Appraisal End" readonly="1"/>
+                            <field name="appraisal_reset_date" string="Last Reset By HR" readonly="1"
+                                   invisible="not appraisal_reset_date"/>
+                        </group>
+
+                        <group string="Score Summary">
+                            <field name="template_total_score"
+                                   string="Total Allocated Score"
+                                   widget="float"
+                                   readonly="1"
+                                   class="fw-bold text-primary"/>
+                            <field name="current_total_score"
+                                   string="Current Total"
+                                   widget="float"
+                                   readonly="1"
+                                   class="fw-bold"/>
+                            <field name="final_appraisal_score"
+                                   string="Final Appraisal Score"
+                                   widget="float"
+                                   readonly="1"
+                                   class="fw-bold text-primary"
+                                   invisible="state != 'appraisal_approved'"/>
+                        </group>
+                    </group>
+
+                    <!-- Access control flags -->
+                    <field name="is_supervisor_of_appraisal"              invisible="1"/>
+                    <field name="is_secondary_supervisor_of_appraisal"    invisible="1"/>
+                    <field name="is_reviewer_of_appraisal"                invisible="1"/>
+                    <field name="can_supervisor_rate"                      invisible="1"/>
+                    <field name="can_secondary_supervisor_rate"            invisible="1"/>
+                    <field name="can_reviewer_rate"                        invisible="1"/>
+                    <field name="supervisor_has_zero_scores"               invisible="1"/>
+                    <field name="secondary_supervisor_has_zero_scores"     invisible="1"/>
+                    <field name="reviewer_has_zero_scores"                 invisible="1"/>
+                    <field name="cycle_id"                                 invisible="1"/>
+
+
+                    <field name="kra_ids"
+                            widget="kra_tabs_widget"
+                            options="{'mode': 'appraisal_supervisor'}"
+                            readonly="not (can_supervisor_rate or can_secondary_supervisor_rate or can_reviewer_rate)"
+                            nolabel="1">
+                        <list>
+                            <field name="name"/>
+                            <field name="kpi_ids">
+                                <list>
+                                    <field name="name"/>
+                                    <field name="description"/>
+                                    <field name="criteria"/>
+                                    <field name="weightage"/>
+                                    <field name="target"/>
+                                    <field name="is_selected"/>
+                                    <field name="self_score"/>
+                                    <field name="self_remarks"/>
+                                    <field name="supervisor_score"/>
+                                    <field name="supervisor_remarks"/>
+                                    <field name="secondary_supervisor_score"/>
+                                    <field name="secondary_supervisor_score_remarks"/>
+                                    <field name="reviewer_score"/>
+                                    <field name="reviewer_remarks"/>
+                                </list>
+                            </field>
+                        </list>
+                    </field>
+                        
+                </sheet>
+
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <!-- <record id="action_employee_appraisals_all" model="ir.actions.act_window">
+        <field name="name">Employee Appraisals</field>
+        <field name="res_model">pms.appraisal</field>
+        <field name="view_mode">list,form</field>
+        <field name="view_ids" eval="[(5, 0, 0),
+            (0, 0, {'view_mode': 'list', 'view_id': ref('view_employee_appraisals_all_list')}),
+            (0, 0, {'view_mode': 'form', 'view_id': ref('view_employee_appraisals_supervisor_form')})]"/>
+        <field name="domain">[
+            ('cycle_id.state', 'in', ['appraisal', 'completed']),
+            ('state', 'in', ['appraisal_draft', 'appraisal_pending_supervisor',
+                             'appraisal_pending_secondary_supervisor',
+                             'appraisal_pending_reviewer', 'appraisal_approved'])
+        ]</field>
+        <field name="context">{
+            'create': False,
+            'delete': False,
+        }</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">No employee appraisals found</p>
+        </field>
+    </record> -->
+
+</odoo>
