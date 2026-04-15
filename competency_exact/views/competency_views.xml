@@ -12,8 +12,6 @@
             <form string="Competency Group">
                 <sheet>
 
-
-                    <!-- Three plain fields, same as original -->
                     <group>
                         <field name="name" string="Competency" />
                         <field name="description" string="Define Competency Targets" />
@@ -138,16 +136,14 @@
                 decoration-danger="points_status == 'over'"
                 decoration-success="points_status == 'exact'">
 
-                <!-- Template name — fluid, takes all remaining space -->
                 <field name="name"
                     string="Template Name"
                     class="o_tmpl_col_name" />
 
-                <!-- width= prevents Odoo from truncating the header label -->
-                <field name="total_hr_points"
-                    string="Total HR Points"
+                <field name="total_group_points"
+                    string="Assigned Points"
                     class="o_tmpl_col_pts"
-                    width="180px"
+                    width="160px"
                     readonly="1" />
 
                 <field name="group_count"
@@ -210,9 +206,20 @@
                                 placeholder="Optional description" />
                         </group>
                         <group string="HR Points Definition">
+                            <!--
+                                total_hr_points is now a computed constant (16).
+                                Displayed read-only so users can see the target.
+                            -->
                             <field name="total_hr_points"
-                                string="Total HR Points"
-                                help="Total points defined by HR. Sum of all group points must equal this." />
+                                string="Total HR Points (Fixed)"
+                                readonly="1"
+                                help="System-defined maximum: all group points must sum to exactly 16." />
+                            <field name="total_group_points"
+                                string="Assigned Points"
+                                readonly="1" />
+                            <field name="remaining_hr_points"
+                                string="Remaining Points"
+                                readonly="1" />
                             <field name="group_count"
                                 string="No. of Groups" readonly="1" />
                             <field name="points_status"
@@ -231,9 +238,9 @@
                         <i class="fa fa-exclamation-triangle me-2" title="Warning" />
                         <strong>
                         Under-Allocated.</strong>
-                        <field name="total_group_points" readonly="1" /> / <field
-                            name="total_hr_points" readonly="1" /> pts assigned. Distribute
-                        remaining points before doing a manual save. </div>
+                        <field name="total_group_points" readonly="1" /> /
+                        16 pts assigned. Distribute the remaining <field name="remaining_hr_points"
+                            readonly="1" /> pt(s) across groups before doing a manual save. </div>
 
                     <!-- Over-allocated -->
                     <div class="alert alert-danger o_hr_points_bar mb-0" role="alert"
@@ -241,9 +248,8 @@
                         <i class="fa fa-times-circle me-2" title="Error" />
                         <strong>Over-Allocated.</strong>
                         <field
-                            name="total_group_points" readonly="1" /> / <field
-                            name="total_hr_points" readonly="1" /> pts assigned. Reduce group points
-                        to match Total HR Points. <strong>Saving is blocked.</strong>
+                            name="total_group_points" readonly="1" /> / 16 pts assigned. Reduce
+                        group points to exactly 16. <strong>Saving is blocked.</strong>
                     </div>
 
                     <!-- Fully allocated -->
@@ -251,18 +257,13 @@
                         invisible="points_status != 'exact' or not group_ids">
                         <i class="fa fa-check-circle me-2" title="Success" />
                         <strong>Fully
-                            Allocated.</strong> All <field name="total_hr_points" readonly="1" />
-                        pts distributed. Increase Total HR Points to add more groups. </div>
+                        Allocated.</strong> All 16 pts distributed across groups. </div>
 
                     <notebook>
 
                         <!-- TAB 1: COMPETENCY GROUPS -->
                         <page string="Competency Groups" name="groups_page">
 
-                            <!--
-                                create= hides "Add a line" when fully or over-allocated.
-                                _onchange_group_ids fires as the real-time secondary guard.
-                            -->
                             <field name="group_ids"
                                 context="{'default_template_id': id}"
                                 mode="list"
@@ -298,14 +299,15 @@
                             <p class="text-muted mt-1 mb-0 o_tmpl_groups_full_hint"
                                 invisible="points_status not in ('exact', 'over')"
                                 style="font-size:0.82em;padding:4px 8px;">
-                                <i class="fa fa-lock me-1" /> Adding new groups is disabled — all HR
-                                points are fully committed. Increase Total HR Points to unlock. </p>
+                                <i class="fa fa-lock me-1" /> All 16 HR points are fully committed.
+                                Reduce an existing group's points to add another. </p>
 
                             <p class="text-muted mt-2"
                                 invisible="points_status in ('exact', 'over')"
                                 style="font-size:0.85em;">
-                                <i class="fa fa-info-circle me-1" /> Click any group row to open it
-                                and add competency lines. Over-allocation is blocked immediately. </p>
+                                <i class="fa fa-info-circle me-1" /> Add groups below — their points
+                                must total exactly 16. Click any group row to add competency lines
+                                inside it. </p>
                         </page>
 
                         <!-- TAB 2: COMPETENCY TABLE -->
@@ -368,7 +370,7 @@
         <field name="search_view_id" ref="view_competency_template_search" />
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">No competency templates found.</p>
-            <p>Create a new template to define HR competency points and groups.</p>
+            <p>Create a new template and add groups whose points total exactly 16.</p>
         </field>
     </record>
 

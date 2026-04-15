@@ -23,11 +23,14 @@
 #   under-allocation does NOT block the save while the user is
 #   still distributing points across groups/lines.
 #
-# Validation rules (Template level)
-# ----------------------------------
-#   Over-allocation  : BLOCKED immediately.
-#   Under-allocation : Allowed while editing; blocked on manual save.
-#   HR Points reduce : Blocked if new value < sum already in groups.
+# Fixed total
+# -----------
+#   TOTAL_HR_POINTS = 16  (system constant — not user-editable)
+#   The sum of all group points must equal exactly 16 on manual save.
+#   Over-allocation (> 16) is blocked immediately on both onchange
+#   and constraint.
+#   Under-allocation (< 16) is allowed during autosave but blocked
+#   on deliberate / manual save.
 #
 # Validation rules (Group level — Competency Lines popup)
 # --------------------------------------------------------
@@ -40,6 +43,10 @@
 from odoo import models, fields, api, _
 from odoo.exceptions import ValidationError
 from odoo.tools.float_utils import float_compare
+
+
+# ── System-wide constant ──────────────────────────────────────
+TOTAL_HR_POINTS = 16.0
 
 
 # ============================================================
@@ -62,15 +69,13 @@ class CompetencyFrameworkTemplate(models.Model):
 
     description = fields.Text(string='Description')
 
+    # Fixed system constant — displayed read-only for user information.
     total_hr_points = fields.Float(
         string='Total HR Points',
-        required=True,
-        default=0.0,
-        tracking=True,
-        help=(
-            'Total points defined by HR for this framework. '
-            'The sum of all competency group points must equal this value.'
-        ),
+        compute='_compute_total_hr_points',
+        store=False,
+        readonly=True,
+        help='Fixed system total: group points must sum to exactly this value.',
     )
 
     group_ids = fields.One2many(
@@ -107,7 +112,7 @@ class CompetencyFrameworkTemplate(models.Model):
         string='Remaining HR Points',
         compute='_compute_total_group_points',
         store=True,
-        help='HR points not yet assigned to any group (total_hr_points - total_group_points).',
+        help='Points not yet assigned to any group (16 - total_group_points).',
     )
 
     competency_table_html = fields.Html(
@@ -120,18 +125,23 @@ class CompetencyFrameworkTemplate(models.Model):
 
     # ── Computes ──────────────────────────────────────────────
 
+    def _compute_total_hr_points(self):
+        """Always returns the fixed system constant."""
+        for tmpl in self:
+            tmpl.total_hr_points = TOTAL_HR_POINTS
+
     @api.depends('group_ids')
     def _compute_group_count(self):
         for tmpl in self:
             tmpl.group_count = len(tmpl.group_ids)
 
-    @api.depends('group_ids.points', 'total_hr_points')
+    @api.depends('group_ids.points')
     def _compute_total_group_points(self):
         for tmpl in self:
             total = sum(tmpl.group_ids.mapped('points'))
             tmpl.total_group_points  = total
-            tmpl.remaining_hr_points = tmpl.total_hr_points - total
-            cmp = float_compare(total, tmpl.total_hr_points, precision_digits=2)
+            tmpl.remaining_hr_points = TOTAL_HR_POINTS - total
+            cmp = float_compare(total, TOTAL_HR_POINTS, precision_digits=2)
             if cmp < 0:
                 tmpl.points_status = 'under'
             elif cmp == 0:
@@ -211,7 +221,6 @@ class CompetencyFrameworkTemplate(models.Model):
                 )
                 continue
 
-            # 4 columns: Code | Competency | Targets | Points
             rows = [
                 f'<table style="{S["table"]}"><thead><tr>'
                 f'<th style="{S["th"]}{S["th_code"]}">Code</th>'
@@ -274,12 +283,6 @@ class CompetencyFrameworkTemplate(models.Model):
     # ── Export wizard action ──────────────────────────────────
 
     def action_open_export_wizard(self):
-        """
-        Opens the Export to Excel wizard pre-filled with this template.
-        Called by the 'Export to Excel' button in the form header via
-        type="object" — avoids any XML ID cross-reference between
-        competency_views.xml and competency_export_wizard_views.xml.
-        """
         self.ensure_one()
         return {
             'type':      'ir.actions.act_window',
@@ -294,59 +297,43 @@ class CompetencyFrameworkTemplate(models.Model):
 
     # ── Onchanges ─────────────────────────────────────────────
 
-    @api.onchange('total_hr_points')
-    def _onchange_total_hr_points(self):
-        """Warn immediately if user tries to reduce HR points below committed group total."""
-        if not self.group_ids:
-            return
-        total = sum(self.group_ids.mapped('points'))
-        if float_compare(total, self.total_hr_points, precision_digits=2) > 0:
-            return {
-                'warning': {
-                    'title': _('Cannot Reduce HR Points'),
-                    'message': _(
-                        'Groups already have %(total).2f pts assigned. '
-                        'Reduce group points to %(hr).2f first.'
-                    ) % {'total': total, 'hr': self.total_hr_points},
-                }
-            }
-
     @api.onchange('group_ids')
     def _onchange_group_ids(self):
         """
-        Scenario A - new empty row added but budget is already exhausted:
-            Immediate warning - row addition blocked by JS guard.
-        Scenario B - edited points push total over HR ceiling:
-            Immediate over-allocation warning.
+        Real-time guard while the user edits groups in the One2many list.
+
+        Scenario A – new empty row added but the 16-pt budget is exhausted:
+            Show a warning immediately.
+        Scenario B – edited points push the sum over 16:
+            Show an over-allocation warning immediately.
         """
-        hr    = self.total_hr_points
         total = sum(self.group_ids.mapped('points'))
 
         # Scenario A: budget exhausted, new empty row appended
         new_zero_rows = [g for g in self.group_ids if not g.id and g.points == 0.0]
         if new_zero_rows:
             budget_before = total - sum(r.points for r in new_zero_rows)
-            if float_compare(budget_before, hr, precision_digits=2) >= 0:
+            if float_compare(budget_before, TOTAL_HR_POINTS, precision_digits=2) >= 0:
                 return {
                     'warning': {
                         'title': _('No Points Remaining'),
                         'message': _(
                             'All %(hr).2f HR point(s) are fully allocated. '
-                            'Increase Total HR Points or reduce an existing group to add a new one.'
-                        ) % {'hr': hr},
+                            'Reduce an existing group\'s points to add a new one.'
+                        ) % {'hr': TOTAL_HR_POINTS},
                     }
                 }
 
-        # Scenario B: over-allocation after points entry
-        cmp = float_compare(total, hr, precision_digits=2)
+        # Scenario B: over-allocation
+        cmp = float_compare(total, TOTAL_HR_POINTS, precision_digits=2)
         if cmp > 0:
             return {
                 'warning': {
                     'title': _('Over-Allocated'),
                     'message': _(
-                        'Group points total (%(total).2f) exceeds HR Points (%(hr).2f) '
-                        'by %(excess).2f pt(s). Reduce group points before saving.'
-                    ) % {'total': total, 'hr': hr, 'excess': total - hr},
+                        'Group points total (%(total).2f) exceeds the maximum of '
+                        '%(hr).2f by %(excess).2f pt(s). Reduce group points before saving.'
+                    ) % {'total': total, 'hr': TOTAL_HR_POINTS, 'excess': total - TOTAL_HR_POINTS},
                 }
             }
 
@@ -354,38 +341,19 @@ class CompetencyFrameworkTemplate(models.Model):
 
     def _autosave_if_complete(self):
         for tmpl in self:
-            if tmpl.id and tmpl.name and tmpl.total_hr_points > 0:
+            if tmpl.id and tmpl.name:
                 tmpl.with_context(autosave=True).write({})
 
     # ── Constraints ───────────────────────────────────────────
 
-    @api.constrains('total_hr_points')
-    def _check_total_hr_points_not_negative(self):
-        for rec in self:
-            if float_compare(rec.total_hr_points, 0.0, precision_digits=2) < 0:
-                raise ValidationError(_(
-                    'Total HR Points cannot be negative.'
-                ))
+    @api.constrains('group_ids')
+    def _check_group_points_vs_hr_total(self):
+        """
+        Hard DB-level guard enforcing the fixed 16-point total.
 
-    @api.constrains('total_hr_points', 'group_ids')
-    def _check_total_hr_points_not_below_groups(self):
-        for tmpl in self:
-            if not tmpl.group_ids:
-                continue
-            total = sum(tmpl.group_ids.mapped('points'))
-            if float_compare(total, tmpl.total_hr_points, precision_digits=2) > 0:
-                raise ValidationError(_(
-                    '"%(tmpl)s": Cannot reduce Total HR Points to %(hr).2f - '
-                    'groups already have %(total).2f pts assigned. '
-                    'Reduce group points first.'
-                ) % {
-                    'tmpl':  tmpl.name,
-                    'total': total,
-                    'hr':    tmpl.total_hr_points,
-                })
-
-    @api.constrains('total_hr_points', 'group_ids')
-    def _check_total_hr_points_equals_groups(self):
+        Over-allocation  → always blocked (autosave or manual).
+        Under-allocation → blocked on manual save only; allowed on autosave.
+        """
         autosave = self.env.context.get('autosave', False)
 
         for tmpl in self:
@@ -393,32 +361,30 @@ class CompetencyFrameworkTemplate(models.Model):
                 continue
 
             total = sum(tmpl.group_ids.mapped('points'))
-            cmp   = float_compare(total, tmpl.total_hr_points, precision_digits=2)
+            cmp   = float_compare(total, TOTAL_HR_POINTS, precision_digits=2)
 
             if cmp > 0:
                 raise ValidationError(_(
-                    '"%(tmpl)s": Group points (%(total).2f) exceed HR Points (%(hr).2f) '
-                    'by %(excess).2f pt(s). Reduce group points before saving.'
+                    '"%(tmpl)s": Group points (%(total).2f) exceed the maximum of '
+                    '%(hr).2f by %(excess).2f pt(s). Reduce group points before saving.'
                 ) % {
                     'tmpl':   tmpl.name,
                     'total':  total,
-                    'hr':     tmpl.total_hr_points,
-                    'excess': total - tmpl.total_hr_points,
+                    'hr':     TOTAL_HR_POINTS,
+                    'excess': total - TOTAL_HR_POINTS,
                 })
 
             if cmp < 0 and not autosave:
                 raise ValidationError(_(
-                    '"%(tmpl)s": %(remaining).2f pt(s) still unassigned. '
+                    '"%(tmpl)s": %(remaining).2f pt(s) still unassigned '
+                    '(current total: %(total).2f / %(hr).2f). '
                     'Distribute all points across groups before saving.'
                 ) % {
                     'tmpl':      tmpl.name,
-                    'remaining': tmpl.total_hr_points - total,
+                    'remaining': TOTAL_HR_POINTS - total,
+                    'total':     total,
+                    'hr':        TOTAL_HR_POINTS,
                 })
-
-    _check_hr_points_positive = models.Constraint(
-        'CHECK(total_hr_points >= 0)',
-        'Total HR Points must be zero or positive.',
-    )
 
 
 # ============================================================
@@ -531,26 +497,25 @@ class CompetencyFrameworkGroup(models.Model):
     @api.onchange('points')
     def _onchange_group_points(self):
         """
-        Check 1 - Template HR-points ceiling exceeded.
-        Check 2 - Group points reduced below committed line points.
+        Check 1 – Would this push the template total above 16?
+        Check 2 – Would this reduce below already-committed line points?
         """
         # Check 1: template ceiling
-        if self.template_id and self.template_id.total_hr_points:
+        if self.template_id:
             other_points       = sum(g.points for g in self.template_id.group_ids if g != self)
             new_template_total = other_points + (self.points or 0.0)
-            hr                 = self.template_id.total_hr_points
 
-            if float_compare(new_template_total, hr, precision_digits=2) > 0:
+            if float_compare(new_template_total, TOTAL_HR_POINTS, precision_digits=2) > 0:
                 return {
                     'warning': {
-                        'title': _('Exceeds HR Points'),
+                        'title': _('Exceeds Maximum HR Points'),
                         'message': _(
                             'This would bring the template total to %(new_total).2f, '
-                            'exceeding HR Points (%(hr).2f) by %(excess).2f pt(s).'
+                            'exceeding the maximum of %(hr).2f by %(excess).2f pt(s).'
                         ) % {
                             'new_total': new_template_total,
-                            'hr':        hr,
-                            'excess':    new_template_total - hr,
+                            'hr':        TOTAL_HR_POINTS,
+                            'excess':    new_template_total - TOTAL_HR_POINTS,
                         },
                     }
                 }
@@ -572,15 +537,12 @@ class CompetencyFrameworkGroup(models.Model):
     @api.onchange('line_ids')
     def _onchange_line_ids(self):
         """
-        Scenario A - new empty line added but group budget is fully committed:
-            Immediate warning - line addition blocked by JS guard.
-        Scenario B - line points push group total over its ceiling:
-            Immediate over-allocation warning.
+        Scenario A – new empty line added but group budget is fully committed.
+        Scenario B – line points push group total over its ceiling.
         """
         group_ceiling = self.points or 0.0
         current_total = sum(self.line_ids.mapped('points'))
 
-        # Scenario A: budget exhausted, new empty row appended
         new_zero_rows = [l for l in self.line_ids if not l.id and l.points == 0.0]
         if new_zero_rows:
             budget_before = current_total - sum(r.points for r in new_zero_rows)
@@ -598,7 +560,6 @@ class CompetencyFrameworkGroup(models.Model):
                     }
                 }
 
-        # Scenario B: over-allocation after points entry
         cmp = float_compare(current_total, group_ceiling, precision_digits=2)
         if cmp > 0:
             return {
@@ -666,15 +627,15 @@ class CompetencyFrameworkGroup(models.Model):
             if not tmpl.group_ids:
                 continue
             total = sum(tmpl.group_ids.mapped('points'))
-            if float_compare(total, tmpl.total_hr_points, precision_digits=2) > 0:
+            if float_compare(total, TOTAL_HR_POINTS, precision_digits=2) > 0:
                 raise ValidationError(_(
                     'Template "%(tmpl)s": Group points (%(total).2f) exceed '
-                    'HR Points (%(hr).2f) by %(excess).2f pt(s). Reduce group points.'
+                    'the maximum of %(hr).2f by %(excess).2f pt(s). Reduce group points.'
                 ) % {
                     'tmpl':   tmpl.name,
                     'total':  total,
-                    'hr':     tmpl.total_hr_points,
-                    'excess': total - tmpl.total_hr_points,
+                    'hr':     TOTAL_HR_POINTS,
+                    'excess': total - TOTAL_HR_POINTS,
                 })
 
     _check_points_positive = models.Constraint(
