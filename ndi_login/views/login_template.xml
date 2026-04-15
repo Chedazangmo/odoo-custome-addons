@@ -1,0 +1,329 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ================================================================
+         NDI LOGIN BUTTON — inherits Odoo's web.login template
+    ================================================================ -->
+    <template id="ndi_login_button" inherit_id="web.login" name="NDI Login Button">
+
+        <xpath expr="//div[@id='oe_structure_login_top']" position="after">
+            <div class="ndi-login-header">
+                <div class="ndi-login-header-icon">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+                        <path
+                            d="M12 2L3 7V12C3 16.55 6.84 20.74 12 22C17.16 20.74 21 16.55 21 12V7L12 2Z"
+                            fill="white" opacity="0.9" />
+                        <path d="M10 17L6 13L7.41 11.59L10 14.17L16.59 7.58L18 9L10 17Z"
+                            fill="#2bba9e" />
+                    </svg>
+                </div>
+                <div class="ndi-login-header-title">Performance Management System</div>
+                <div class="ndi-login-header-sub">Sign in to your account</div>
+            </div>
+        </xpath>
+
+        <xpath expr="//div[@id='oe_structure_login_top']" position="after">
+            <t t-set="ndi_error" t-value="request.params.get('ndi_error', '')" />
+
+            <t t-if="ndi_error == 'cid_not_found'">
+                <div id="ndi_err_banner" style="position:relative;margin-bottom:0;">
+                    <div class="alert alert-warning text-center mt-2" role="alert"
+                        style="padding-right:40px;position:relative;">
+                        <strong>CID Not Registered.</strong> Your Bhutan NDI CID number is not
+                        linked to any active employee record. Please contact HR to register your CID
+                        before logging in. <button type="button"
+                            style="position:absolute;top:50%;right:10px;transform:translateY(-50%);background:none;border:none;font-size:22px;font-weight:300;line-height:1;opacity:0.55;cursor:pointer;padding:0;color:inherit;"
+                            onmouseover="this.style.opacity='1'"
+                            onmouseout="this.style.opacity='0.55'"
+                            onclick="var b=document.getElementById('ndi_err_banner');b.style.transition='opacity 0.2s';b.style.opacity='0';setTimeout(function(){b.style.display='none';},200);"
+                            aria-label="Close">&#215;</button>
+                    </div>
+                </div>
+            </t>
+
+            <t t-if="ndi_error == '1'">
+                <div id="ndi_err_banner" style="position:relative;margin-bottom:0;">
+                    <div class="alert alert-danger text-center mt-2" role="alert"
+                        style="padding-right:40px;position:relative;">
+                        <strong>NDI Login Failed.</strong> Could not complete NDI verification.
+                        Please try again. <button type="button"
+                            style="position:absolute;top:50%;right:10px;transform:translateY(-50%);background:none;border:none;font-size:22px;font-weight:300;line-height:1;opacity:0.55;cursor:pointer;padding:0;color:inherit;"
+                            onmouseover="this.style.opacity='1'"
+                            onmouseout="this.style.opacity='0.55'"
+                            onclick="var b=document.getElementById('ndi_err_banner');b.style.transition='opacity 0.2s';b.style.opacity='0';setTimeout(function(){b.style.display='none';},200);"
+                            aria-label="Close">&#215;</button>
+                    </div>
+                </div>
+            </t>
+        </xpath>
+
+        <xpath expr="//div[hasclass('oe_login_buttons')]" position="after">
+            <div class="ndi-or-divider">
+                <hr />
+                <span>OR</span>
+                <hr />
+            </div>
+            <a href="/ndi/login/start"
+                class="btn btn-ndi w-100 d-flex align-items-center justify-content-center gap-2 mb-2">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
+                    <path
+                        d="M12 2L3 7V12C3 16.55 6.84 20.74 12 22C17.16 20.74 21 16.55 21 12V7L12 2Z"
+                        fill="white" opacity="0.9" />
+                    <path d="M10 17L6 13L7.41 11.59L10 14.17L16.59 7.58L18 9L10 17Z" fill="#2bba9e" />
+                </svg>
+                Login with Bhutan NDI </a>
+            <p class="text-center text-muted ndi-btn-hint">Scan QR with your Bhutan NDI Wallet app</p>
+
+            <script>
+                (function () {
+                /* ── Hide navbar elements that leak onto login page ── */
+                var SELECTORS = [
+                '.o_home_menu', '.o_home_menu_sidebar', '.o_main_navbar',
+                'nav.o_main_navbar', '.o_navbar', '.o_menu_sections',
+                '.o_menu_brand', '.o_nav_entry', '.o_app_icon',
+                '.o_systray', '.o_discuss_icon', '.o_home_menu_discuss',
+                '[class*="home_menu"]', 'body > nav', 'body > header'
+                ];
+                function hideNav() {
+                SELECTORS.forEach(function (sel) {
+                document.querySelectorAll(sel).forEach(function (el) {
+                el.style.setProperty('display', 'none', 'important');
+                });
+                });
+                }
+
+                /* ── Add × close button to Odoo's own .alert elements ── */
+                function addCloseButtons() {
+                document.querySelectorAll('.oe_login_form .alert, .o_login_form
+                .alert').forEach(function (alert) {
+                if (alert.querySelector('.ndi-auto-close')) return;
+                alert.style.paddingRight = '40px';
+                alert.style.position = 'relative';
+                var btn = document.createElement('button');
+                btn.className = 'ndi-auto-close';
+                btn.type = 'button';
+                btn.innerHTML = '&#215;';
+                btn.setAttribute('aria-label', 'Close');
+                btn.setAttribute('style',
+                'position:absolute;top:50%;right:10px;transform:translateY(-50%);' +
+                'background:none;border:none;font-size:22px;font-weight:300;' +
+                'line-height:1;opacity:0.55;cursor:pointer;padding:0;color:inherit;'
+                );
+                btn.onmouseover = function () { this.style.opacity = '1'; };
+                btn.onmouseout = function () { this.style.opacity = '0.55'; };
+                btn.onclick = function () {
+                alert.style.transition = 'opacity 0.2s';
+                alert.style.opacity = '0';
+                setTimeout(function () { alert.style.display = 'none'; }, 200);
+                };
+                alert.appendChild(btn);
+                });
+                }
+
+                hideNav();
+                document.addEventListener('DOMContentLoaded', function () {
+                hideNav();
+                addCloseButtons();
+                });
+                setTimeout(function () { hideNav(); addCloseButtons(); }, 500);
+
+                if (window.MutationObserver) {
+                new MutationObserver(function () {
+                hideNav();
+                addCloseButtons();
+                }).observe(document.documentElement, { childList: true, subtree: true });
+                }
+                })();
+            </script>
+        </xpath>
+
+    </template>
+
+
+    <!-- ================================================================
+         NDI QR PAGE — three-column layout fills the full viewport
+    ================================================================ -->
+    <template id="ndi_qr_page" name="NDI QR Login Page">
+        <t t-call="web.layout">
+            <t t-set="head">
+                <title>Bhutan NDI — Scan QR</title>
+                <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+                <!-- Fonts -->
+                <link rel="preconnect" href="https://fonts.googleapis.com" />
+                <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
+                <link
+                    href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&amp;family=Inter:wght@400;500;600;700&amp;display=swap"
+                    rel="stylesheet" />
+
+                <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"
+                    crossorigin="anonymous" />
+                <link rel="stylesheet" href="/ndi_login/static/src/css/ndi_qr_page.css" />
+
+                <script>
+                    (function(){var
+                    S=['.o_home_menu','.o_main_navbar','nav.o_main_navbar','.o_navbar','.o_menu_sections','.o_systray','body
+                    > nav','body > header'];function
+                    h(){S.forEach(function(s){document.querySelectorAll(s).forEach(function(el){el.style.setProperty('display','none','important');});});}h();document.addEventListener('DOMContentLoaded',h);setTimeout(h,500);})();
+                </script>
+            </t>
+
+            <div class="ndi-qr-page-bg">
+
+                <!-- Decorative layers -->
+                <div class="ndi-qr-grid"></div>
+                <div class="ndi-qr-mandala"></div>
+                <div class="ndi-qr-dot-1"></div>
+                <div class="ndi-qr-dot-2"></div>
+                <div class="ndi-qr-dot-3"></div>
+                <div class="ndi-qr-dot-4"></div>
+                <span class="ndi-qr-star" aria-hidden="true">✦</span>
+                <span class="ndi-qr-star" aria-hidden="true">✦</span>
+                <span class="ndi-qr-star" aria-hidden="true">✦</span>
+                <div class="ndi-qr-mountains"></div>
+                <div class="ndi-qr-foothills"></div>
+
+                <!-- Secure badge -->
+                <div class="ndi-qr-secure-badge">
+                    <div class="ndi-qr-secure-badge-dot"></div>
+                    <span>Secured by Bhutan NDI</span>
+                </div>
+
+                <!-- COLUMN 1: LEFT BRANDING -->
+                <div class="ndi-qr-branding">
+                    <p class="ndi-qr-branding-eyebrow">Kingdom of Bhutan</p>
+                    <h2 class="ndi-qr-branding-title"> Performance<br /> Management<br />
+                        <span>
+                        System</span>
+                    </h2>
+                    <div class="ndi-qr-branding-divider"></div>
+                    <p class="ndi-qr-branding-tagline"> Verify your identity securely<br /> with
+                        Bhutan's national<br /> digital identity platform. </p>
+                    <div class="ndi-qr-feature-pills">
+                        <div class="ndi-qr-pill">
+                            <div class="ndi-qr-pill-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="#2bba9e"
+                                    stroke-width="2">
+                                    <path
+                                        d="M12 2L3 7V12C3 16.55 6.84 20.74 12 22C17.16 20.74 21 16.55 21 12V7L12 2Z" />
+                                </svg>
+                            </div>
+                            <span>Secure &amp; encrypted verification</span>
+                        </div>
+                        <div class="ndi-qr-pill">
+                            <div class="ndi-qr-pill-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="#2bba9e"
+                                    stroke-width="2">
+                                    <circle cx="12" cy="12" r="10" />
+                                    <path d="M12 6v6l4 2" />
+                                </svg>
+                            </div>
+                            <span>Instant, one-scan login</span>
+                        </div>
+                        <div class="ndi-qr-pill">
+                            <div class="ndi-qr-pill-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="#2bba9e"
+                                    stroke-width="2">
+                                    <rect x="5" y="2" width="14" height="20" rx="2" />
+                                    <path d="M12 18h.01" />
+                                </svg>
+                            </div>
+                            <span>Works on Android &amp; iOS</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- COLUMN 2: WHITE QR CARD -->
+                <div class="ndi-qr-card">
+                    <h2 class="ndi-qr-title"> Scan with <span class="ndi-qr-title-accent">Bhutan NDI</span>
+                        Wallet </h2>
+
+                    <div class="ndi-qr-frame">
+                        <div id="ndi_qrcode"></div>
+                    </div>
+
+                    <div id="ndi_status_bar" class="o_ndi_status pending">
+                        <span class="o_ndi_spinner"></span>
+                        <span id="ndi_status_text">Waiting for scan…</span>
+                    </div>
+
+                    <ol class="ndi-qr-steps">
+                        <li>Open Bhutan NDI wallet on your phone</li>
+                        <li>Tap the scan button located on the menu bar and capture code</li>
+                    </ol>
+
+                    <a href="https://www.bhutanndi.com" target="_blank" class="ndi-video-btn"> Watch
+                        video guide <span class="ndi-play-circle"></span>
+                    </a>
+
+                    <p class="ndi-download-label">Download Now!</p>
+
+                    <div class="ndi-badges">
+                        <a href="https://play.google.com/store/apps/details?id=com.bhutanndi"
+                            target="_blank">
+                            <img class="ndi-badge-img"
+                                src="https://upload.wikimedia.org/wikipedia/commons/7/78/Google_Play_Store_badge_EN.svg"
+                                alt="Get it on Google Play" />
+                        </a>
+                        <a href="https://apps.apple.com/app/bhutan-ndi-wallet" target="_blank">
+                            <img class="ndi-badge-img"
+                                src="https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg"
+                                alt="Download on the App Store" />
+                        </a>
+                    </div>
+
+                    <a href="/web/login" class="ndi-qr-back-btn">&#8592; Back to Login</a>
+                </div>
+
+                <!-- COLUMN 3: RIGHT CONTEXTUAL TEXT -->
+                <div class="ndi-qr-right-text">
+                    <div class="ndi-qr-right-text-block">
+                        <p class="ndi-qr-right-text-label">How to sign in</p>
+                        <div class="ndi-qr-right-steps">
+                            <div class="ndi-qr-right-step">
+                                <div class="ndi-qr-right-step-num">1</div>
+                                <p class="ndi-qr-right-step-text">Open the Bhutan NDI Wallet app on
+                                    your phone</p>
+                            </div>
+                            <div class="ndi-qr-right-step">
+                                <div class="ndi-qr-right-step-num">2</div>
+                                <p class="ndi-qr-right-step-text">Tap the Scan button in the menu
+                                    bar</p>
+                            </div>
+                            <div class="ndi-qr-right-step">
+                                <div class="ndi-qr-right-step-num">3</div>
+                                <p class="ndi-qr-right-step-text">Point your camera at the QR code
+                                    to verify</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="ndi-qr-right-text-block">
+                        <p class="ndi-qr-right-text-label">Don't have the app?</p>
+                        <p class="ndi-qr-right-text-body"> Download Bhutan NDI Wallet<br /> from the
+                            App Store or<br /> Google Play to get started. </p>
+                    </div>
+                    <div class="ndi-qr-right-contact">
+                        <div>
+                            <p class="ndi-qr-right-contact-text">
+                                <strong>Need help?</strong> Visit bhutanndi.com or contact<br />your
+                                HR department. </p>
+                        </div>
+                        <div class="ndi-qr-right-contact-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="#2bba9e" stroke-width="2"
+                                width="16" height="16">
+                                <path
+                                    d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.18 9.8 19.79 19.79 0 01.1 1.18 2 2 0 012.08 0h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L6.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 14.92z" />
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <script> var NDI_QR_URL = "<t t-esc='qr_url' />"; var NDI_POLL_URL =
+                "/ndi/login/status"; </script>
+            <script src="/ndi_login/static/src/js/ndi_login.js" />
+        </t>
+    </template>
+
+</odoo>

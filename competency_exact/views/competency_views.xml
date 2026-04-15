@@ -1,0 +1,378 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <!-- ============================================================
+         1. GROUP FORM VIEW
+         ============================================================ -->
+
+    <record id="view_competency_group_form" model="ir.ui.view">
+        <field name="name">competency.framework.group.form</field>
+        <field name="model">competency.framework.group</field>
+        <field name="arch" type="xml">
+            <form string="Competency Group">
+                <sheet>
+
+                    <group>
+                        <field name="name" string="Competency" />
+                        <field name="description" string="Define Competency Targets" />
+                        <field name="points" string="Total Points" />
+                    </group>
+
+                    <!-- ══════════════════════════════════════════════
+                         COMPETENCY LINES TABLE
+                         ══════════════════════════════════════════════ -->
+                    <div class="o_grp_lines_section">
+
+                        <div class="o_grp_lines_heading">
+                            <i class="fa fa-list-ul me-2" /> Competency Lines </div>
+
+                        <field name="line_ids" nolabel="1">
+                            <list class="o_competency_lines_table" editable="bottom"
+                                decoration-danger="group_points_status == 'over'"
+                                decoration-warning="group_points_status == 'under'">
+                                <field name="sequence" widget="handle" />
+                                <field name="name"
+                                    string="Competency"
+                                    width="200px"
+                                    class="o_line_col_name" />
+                                <field name="description"
+                                    string="Competency Targets"
+                                    class="o_line_col_targets" />
+                                <field name="points"
+                                    string="Points"
+                                    width="100px"
+                                    class="o_line_col_pts" />
+                                <field name="group_points_status" column_invisible="1" />
+                            </list>
+                        </field>
+
+                        <p class="text-muted mt-1 mb-0"
+                            invisible="points_status not in ('exact', 'over')"
+                            style="font-size:0.82em;padding:6px 8px;">
+                            <i class="fa fa-lock me-1" /> Adding new lines is disabled — Group
+                            Points are fully committed. Increase Group Points to unlock. </p>
+
+                    </div>
+
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+
+    <!-- ============================================================
+         2. GROUPED TABULAR VIEW on competency.framework.line
+         ============================================================ -->
+
+    <record id="view_competency_line_grouped_list" model="ir.ui.view">
+        <field name="name">competency.framework.line.grouped.list</field>
+        <field name="model">competency.framework.line</field>
+        <field name="arch" type="xml">
+            <list string="Competency Framework"
+                default_group_by="group_id"
+                class="o_competency_tabular"
+                decoration-warning="group_points_status == 'under'"
+                decoration-danger="group_points_status == 'over'">
+
+                <field name="group_id" column_invisible="1" />
+                <field name="group_points_status" column_invisible="1" />
+
+                <field name="full_code"
+                    string="SL. No"
+                    class="o_col_code"
+                    readonly="1" />
+                <field name="name"
+                    string="Competency" />
+                <field name="description"
+                    string="Targets"
+                    class="o_col_targets"
+                    optional="show" />
+                <field name="points"
+                    string="Points"
+                    sum="Total Points" />
+                <field name="group_points"
+                    string="Group Points"
+                    readonly="1" />
+
+            </list>
+        </field>
+    </record>
+
+    <!-- Search view for the line grouped view -->
+    <record id="view_competency_line_grouped_search" model="ir.ui.view">
+        <field name="name">competency.framework.line.grouped.search</field>
+        <field name="model">competency.framework.line</field>
+        <field name="arch" type="xml">
+            <search string="Search Competencies">
+                <field name="name" string="Competency" />
+                <field name="group_id" string="Group" />
+                <field name="full_code" string="SL. No" />
+                <separator />
+                <filter name="filter_under" string="Under Allocated"
+                    domain="[('group_points_status', '=', 'under')]" />
+                <filter name="filter_over" string="Over Allocated"
+                    domain="[('group_points_status', '=', 'over')]" />
+                <filter name="filter_exact" string="Fully Allocated"
+                    domain="[('group_points_status', '=', 'exact')]" />
+                <separator />
+                <filter name="groupby_group" string="Group By: Competency Group"
+                    context="{'group_by': 'group_id'}" />
+            </search>
+        </field>
+    </record>
+
+
+    <!-- ============================================================
+         3. TEMPLATE LIST VIEW
+         ============================================================ -->
+
+    <record id="view_competency_template_list" model="ir.ui.view">
+        <field name="name">competency.framework.template.list</field>
+        <field name="model">competency.framework.template</field>
+        <field name="arch" type="xml">
+            <list string="Competency Templates"
+                class="o_competency_template_list"
+                decoration-warning="points_status == 'under'"
+                decoration-danger="points_status == 'over'"
+                decoration-success="points_status == 'exact'">
+
+                <field name="name"
+                    string="Template Name"
+                    class="o_tmpl_col_name" />
+
+                <field name="total_group_points"
+                    string="Assigned Points"
+                    class="o_tmpl_col_pts"
+                    width="160px"
+                    readonly="1" />
+
+                <field name="group_count"
+                    string="No. of Groups"
+                    class="o_tmpl_col_count"
+                    width="160px"
+                    readonly="1" />
+
+                <field name="points_status"
+                    string="Allocation Status"
+                    widget="badge"
+                    class="o_tmpl_col_status"
+                    width="200px"
+                    readonly="1"
+                    decoration-success="points_status == 'exact'"
+                    decoration-warning="points_status == 'under'"
+                    decoration-danger="points_status == 'over'" />
+
+            </list>
+        </field>
+    </record>
+
+
+    <!-- Action: grouped tabular view filtered to one template -->
+    <record id="action_competency_lines_by_template" model="ir.actions.act_window">
+        <field name="name">Competency Lines</field>
+        <field name="res_model">competency.framework.line</field>
+        <field name="view_mode">list</field>
+        <field name="view_ids"
+            eval="[
+            (5, 0, 0),
+            (0, 0, {'view_mode': 'list',
+                    'view_id': ref('view_competency_line_grouped_list')}),
+        ]" />
+        <field name="search_view_id" ref="view_competency_line_grouped_search" />
+        <field name="context">{
+            'group_by': 'group_id',
+            'search_default_groupby_group': 1
+            }</field>
+        <field name="domain">[('template_id', '=', active_id)]</field>
+    </record>
+
+
+    <!-- ============================================================
+         4. TEMPLATE FORM VIEW
+         ============================================================ -->
+
+    <record id="view_competency_template_form" model="ir.ui.view">
+        <field name="name">competency.framework.template.form</field>
+        <field name="model">competency.framework.template</field>
+        <field name="arch" type="xml">
+            <form string="Competency Template" auto_save="1">
+                <sheet>
+
+                    <group>
+                        <group string="Template">
+                            <field name="name"
+                                placeholder="e.g. Annual Competency Framework 2025" />
+                            <field name="description"
+                                placeholder="Optional description" />
+                        </group>
+                        <group string="HR Points Definition">
+                            <!--
+                                total_hr_points is now a computed constant (16).
+                                Displayed read-only so users can see the target.
+                            -->
+                            <field name="total_hr_points"
+                                string="Total HR Points (Fixed)"
+                                readonly="1"
+                                help="System-defined maximum: all group points must sum to exactly 16." />
+                            <field name="total_group_points"
+                                string="Assigned Points"
+                                readonly="1" />
+                            <field name="remaining_hr_points"
+                                string="Remaining Points"
+                                readonly="1" />
+                            <field name="group_count"
+                                string="No. of Groups" readonly="1" />
+                            <field name="points_status"
+                                string="Status" widget="badge" readonly="1"
+                                decoration-success="points_status == 'exact'"
+                                decoration-warning="points_status == 'under'"
+                                decoration-danger="points_status == 'over'" />
+                        </group>
+                    </group>
+
+                    <!-- ── Status banners ── -->
+
+                    <!-- Under-allocated (groups exist) -->
+                    <div class="alert alert-warning o_hr_points_bar mb-0" role="alert"
+                        invisible="points_status != 'under' or not group_ids">
+                        <i class="fa fa-exclamation-triangle me-2" title="Warning" />
+                        <strong>
+                        Under-Allocated.</strong>
+                        <field name="total_group_points" readonly="1" /> /
+                        16 pts assigned. Distribute the remaining <field name="remaining_hr_points"
+                            readonly="1" /> pt(s) across groups before doing a manual save. </div>
+
+                    <!-- Over-allocated -->
+                    <div class="alert alert-danger o_hr_points_bar mb-0" role="alert"
+                        invisible="points_status != 'over'">
+                        <i class="fa fa-times-circle me-2" title="Error" />
+                        <strong>Over-Allocated.</strong>
+                        <field
+                            name="total_group_points" readonly="1" /> / 16 pts assigned. Reduce
+                        group points to exactly 16. <strong>Saving is blocked.</strong>
+                    </div>
+
+                    <!-- Fully allocated -->
+                    <div class="alert alert-success o_hr_points_bar mb-0" role="alert"
+                        invisible="points_status != 'exact' or not group_ids">
+                        <i class="fa fa-check-circle me-2" title="Success" />
+                        <strong>Fully
+                        Allocated.</strong> All 16 pts distributed across groups. </div>
+
+                    <notebook>
+
+                        <!-- TAB 1: COMPETENCY GROUPS -->
+                        <page string="Competency Groups" name="groups_page">
+
+                            <field name="group_ids"
+                                context="{'default_template_id': id}"
+                                mode="list"
+                                form_view_ref="competency_exact.view_competency_group_form">
+                                <list class="o_competency_groups_table"
+                                    decoration-warning="points_status == 'under'"
+                                    decoration-danger="points_status == 'over'"
+                                    decoration-success="points_status == 'exact'">
+                                    <field name="sequence" widget="handle" />
+                                    <field name="hr_code" column_invisible="1" />
+                                    <field name="name"
+                                        string="Competency Group"
+                                        class="o_grp_col_name" />
+                                    <field name="points"
+                                        string="Group Points"
+                                        class="o_grp_col_pts" />
+                                    <field name="line_count"
+                                        string="No. of Lines"
+                                        readonly="1"
+                                        class="o_grp_col_count" />
+                                    <field name="points_status"
+                                        string="Allocation Status"
+                                        widget="badge"
+                                        readonly="1"
+                                        class="o_grp_col_status"
+                                        decoration-success="points_status == 'exact'"
+                                        decoration-warning="points_status == 'under'"
+                                        decoration-danger="points_status == 'over'" />
+                                </list>
+                            </field>
+
+                            <!-- Lock hint when no more groups can be added -->
+                            <p class="text-muted mt-1 mb-0 o_tmpl_groups_full_hint"
+                                invisible="points_status not in ('exact', 'over')"
+                                style="font-size:0.82em;padding:4px 8px;">
+                                <i class="fa fa-lock me-1" /> All 16 HR points are fully committed.
+                                Reduce an existing group's points to add another. </p>
+
+                            <p class="text-muted mt-2"
+                                invisible="points_status in ('exact', 'over')"
+                                style="font-size:0.85em;">
+                                <i class="fa fa-info-circle me-1" /> Add groups below — their points
+                                must total exactly 16. Click any group row to add competency lines
+                                inside it. </p>
+                        </page>
+
+                        <!-- TAB 2: COMPETENCY TABLE -->
+                        <page string="Competency Table" name="table_page">
+                            <field name="competency_table_html"
+                                widget="html"
+                                readonly="1"
+                                nolabel="1" />
+                        </page>
+
+                    </notebook>
+
+                </sheet>
+                <chatter />
+            </form>
+        </field>
+    </record>
+
+
+    <!-- ============================================================
+         5. SEARCH VIEW (template)
+         ============================================================ -->
+
+    <record id="view_competency_template_search" model="ir.ui.view">
+        <field name="name">competency.framework.template.search</field>
+        <field name="model">competency.framework.template</field>
+        <field name="arch" type="xml">
+            <search string="Search Competency Templates">
+                <field name="name" string="Template" />
+                <separator />
+                <filter name="filter_exact" string="Fully Allocated"
+                    domain="[('points_status', '=', 'exact')]" />
+                <filter name="filter_under" string="Under Allocated"
+                    domain="[('points_status', '=', 'under')]" />
+                <filter name="filter_over" string="Over Allocated"
+                    domain="[('points_status', '=', 'over')]" />
+            </search>
+        </field>
+    </record>
+
+
+    <!-- ============================================================
+         6. ACTION (template)
+         ============================================================ -->
+
+    <record id="action_competency_template" model="ir.actions.act_window"
+        forcecreate="True">
+        <field name="name">Competency Template</field>
+        <field name="res_model">competency.framework.template</field>
+        <field name="view_mode">list,form</field>
+        <field name="context">{}</field>
+        <field name="view_ids"
+            eval="[
+            (5, 0, 0),
+            (0, 0, {'view_mode': 'list',
+                    'view_id': ref('view_competency_template_list')}),
+            (0, 0, {'view_mode': 'form',
+                    'view_id': ref('view_competency_template_form')}),
+        ]" />
+        <field name="search_view_id" ref="view_competency_template_search" />
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">No competency templates found.</p>
+            <p>Create a new template and add groups whose points total exactly 16.</p>
+        </field>
+    </record>
+
+
+</odoo>

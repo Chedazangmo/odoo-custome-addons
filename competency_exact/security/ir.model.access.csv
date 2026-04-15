@@ -1,0 +1,7 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_competency_template_user,competency.framework.template user,model_competency_framework_template,base.group_user,1,0,0,0
+access_competency_template_manager,competency.framework.template manager,model_competency_framework_template,base.group_system,1,1,1,1
+access_competency_group_user,competency.framework.group user,model_competency_framework_group,base.group_user,1,0,0,0
+access_competency_group_manager,competency.framework.group manager,model_competency_framework_group,base.group_system,1,1,1,1
+access_competency_line_user,competency.framework.line user,model_competency_framework_line,base.group_user,1,0,0,0
+access_competency_line_manager,competency.framework.line manager,model_competency_framework_line,base.group_system,1,1,1,1
