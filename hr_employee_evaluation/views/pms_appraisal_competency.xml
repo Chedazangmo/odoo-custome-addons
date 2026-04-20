@@ -1,0 +1,181 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <!-- ============================================================
+         1. COMPETENCY SCORE — LIST VIEW (inline in both appraisal forms)
+         ============================================================ -->
+
+    <record id="view_appraisal_competency_score_list" model="ir.ui.view">
+        <field name="name">appraisal.competency.score.list</field>
+        <field name="model">appraisal.competency.score</field>
+        <field name="arch" type="xml">
+            <list
+                string="Competency Scores"
+                editable="bottom"
+                class="o_appraisal_competency_table"
+                default_group_by="group_id"
+                create="0"
+                delete="0">
+
+                <!-- Hidden ordering/grouping fields -->
+                <field name="group_id" column_invisible="1" />
+                <field name="group_sequence" column_invisible="1" />
+                <field name="group_hr_code" column_invisible="1" />
+                <field name="line_sequence" column_invisible="1" />
+
+                <!-- Visible columns -->
+                <field name="line_full_code"
+                    string="Code"
+                    readonly="1"
+                    width="70px" />
+
+                <field name="line_name"
+                    string="Competency"
+                    readonly="1" />
+
+                <field name="line_description"
+                    string="Targets"
+                    readonly="1"
+                    optional="show" />
+
+                <field name="line_points"
+                    string="Max Pts"
+                    readonly="1"
+                    width="80px"
+                    sum="Total Max Points" />
+
+                <!-- Employee self-scoring (no remarks column) -->
+                <field name="self_score"
+                    string="Emp Score"
+                    width="90px"
+                    sum="Total Emp Score"
+                    readonly="not parent.can_employee_self_rate" />
+
+                <!-- Supervisor scoring (no remarks column) -->
+                <field name="supervisor_score"
+                    string="Sup Score"
+                    width="90px"
+                    sum="Total Sup Score"
+                    readonly="not parent.can_supervisor_rate" />
+
+                <!-- Secondary supervisor scoring (no remarks column) -->
+                <field name="secondary_supervisor_score"
+                    string="2nd Sup Score"
+                    width="100px"
+                    sum="Total 2nd Sup Score"
+                    optional="show"
+                    readonly="not parent.can_secondary_supervisor_rate" />
+
+                <!-- Reviewer scoring (no remarks column) -->
+                <field name="reviewer_score"
+                    string="Rev Score"
+                    width="90px"
+                    sum="Total Rev Score"
+                    readonly="not parent.can_reviewer_rate" />
+
+            </list>
+        </field>
+    </record>
+
+
+    <!-- ============================================================
+         2. COMPETENCY SCORE — FORM VIEW (popup when clicking a row)
+         ============================================================ -->
+
+    <record id="view_appraisal_competency_score_form" model="ir.ui.view">
+        <field name="name">appraisal.competency.score.form</field>
+        <field name="model">appraisal.competency.score</field>
+        <field name="arch" type="xml">
+            <form string="Competency Score">
+                <sheet>
+                    <group string="Competency Details">
+                        <field name="group_name" string="Group" readonly="1" />
+                        <field name="line_full_code" string="Code" readonly="1" />
+                        <field name="line_name" string="Competency" readonly="1" />
+                        <field name="line_points" string="Max Points" readonly="1" />
+                        <field name="line_description" string="Targets" readonly="1" widget="text" />
+                    </group>
+                    <group string="Employee Self-Rating">
+                        <field name="self_score" string="Score" />
+                        <field name="self_remarks" string="Remarks" widget="text" />
+                    </group>
+                    <group string="Supervisor Rating">
+                        <field name="supervisor_score" string="Score" />
+                        <field name="supervisor_remarks" string="Remarks" widget="text" />
+                    </group>
+                    <group string="2nd Supervisor Rating">
+                        <field name="secondary_supervisor_score" string="Score" />
+                        <field name="secondary_supervisor_remarks" string="Remarks" widget="text" />
+                    </group>
+                    <group string="Reviewer Rating">
+                        <field name="reviewer_score" string="Score" />
+                        <field name="reviewer_remarks" string="Remarks" widget="text" />
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+
+    <!-- ============================================================
+         3a. INJECT competency_score_ids DATA FIELD — EMPLOYEE FORM
+             Inherits: view_employee_appraisal_form
+             Renders the field invisibly so the OWL widget can access
+             the data via props.record.data.competency_score_ids.
+             All visible rendering is handled by the kra_tabs_widget.
+         ============================================================ -->
+
+    <record id="view_pms_appraisal_competency_page_employee" model="ir.ui.view">
+        <field name="name">pms.appraisal.employee.form.competency.page</field>
+        <field name="model">pms.appraisal</field>
+        <field name="inherit_id" ref="hr_employee_evaluation.view_employee_appraisal_form" />
+        <field name="arch" type="xml">
+
+            <xpath expr="//field[@name='kra_ids']" position="before">
+                <!-- Invisible data carrier: loads competency_score_ids into the
+                     OWL record so the kra_tabs_widget can read it downstream.
+                     No visible HTML is rendered here. -->
+                <field name="competency_score_ids"
+                    invisible="1"
+                    list_view_ref="hr_employee_evaluation.view_appraisal_competency_score_list"
+                    form_view_ref="hr_employee_evaluation.view_appraisal_competency_score_form" />
+                <field name="competency_max_total" invisible="1" />
+                <field name="competency_self_total" invisible="1" />
+                <field name="competency_supervisor_total" invisible="1" />
+                <field name="competency_secondary_total" invisible="1" />
+                <field name="competency_reviewer_total" invisible="1" />
+            </xpath>
+
+        </field>
+    </record>
+
+
+    <!-- ============================================================
+         3b. INJECT competency_score_ids DATA FIELD — SUPERVISOR FORM
+             Inherits: view_employee_appraisals_supervisor_form
+         ============================================================ -->
+
+    <record id="view_pms_appraisal_competency_page_supervisor" model="ir.ui.view">
+        <field name="name">pms.appraisal.supervisor.form.competency.page</field>
+        <field name="model">pms.appraisal</field>
+        <field name="inherit_id"
+            ref="hr_employee_evaluation.view_employee_appraisals_supervisor_form" />
+        <field name="arch" type="xml">
+
+            <xpath expr="//field[@name='kra_ids']" position="before">
+                <!-- Invisible data carrier — same rationale as the employee form. -->
+                <field name="competency_score_ids"
+                    invisible="1"
+                    list_view_ref="hr_employee_evaluation.view_appraisal_competency_score_list"
+                    form_view_ref="hr_employee_evaluation.view_appraisal_competency_score_form" />
+                <field name="competency_max_total" invisible="1" />
+                <field name="competency_self_total" invisible="1" />
+                <field name="competency_supervisor_total" invisible="1" />
+                <field name="competency_secondary_total" invisible="1" />
+                <field name="competency_reviewer_total" invisible="1" />
+            </xpath>
+
+        </field>
+    </record>
+
+</odoo>

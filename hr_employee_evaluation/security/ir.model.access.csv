@@ -1,0 +1,63 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_appraisal_template_hr,appraisal.template.hr,model_appraisal_template,group_pms_hr_manager,1,1,1,1
+access_appraisal_template_reviewer,appraisal.template.reviewer,model_appraisal_template,group_pms_reviewer,1,0,0,0
+access_appraisal_template_supervisor,appraisal.template.supervisor,model_appraisal_template,group_pms_supervisor,1,0,0,0
+access_appraisal_template_employee,appraisal.template.employee,model_appraisal_template,group_pms_employee,1,0,0,0
+
+access_appraisal_kra_hr,appraisal.kra.hr,model_appraisal_kra,group_pms_hr_manager,1,1,1,1
+access_appraisal_kra_reviewer,appraisal.kra.reviewer,model_appraisal_kra,group_pms_reviewer,1,0,0,0
+access_appraisal_kra_supervisor,appraisal.kra.supervisor,model_appraisal_kra,group_pms_supervisor,1,0,0,0
+access_appraisal_kra_employee,appraisal.kra.employee,model_appraisal_kra,group_pms_employee,1,0,0,0
+
+access_appraisal_kpi_hr,appraisal.kpi.hr,model_appraisal_kpi,group_pms_hr_manager,1,1,1,1
+access_appraisal_kpi_reviewer,appraisal.kpi.reviewer,model_appraisal_kpi,group_pms_reviewer,1,0,0,0
+access_appraisal_kpi_supervisor,appraisal.kpi.supervisor,model_appraisal_kpi,group_pms_supervisor,1,0,0,0
+access_appraisal_kpi_employee,appraisal.kpi.employee,model_appraisal_kpi,group_pms_employee,1,1,1,0
+
+access_pms_cycle_hr,pms.cycle.hr,model_pms_cycle,group_pms_hr_manager,1,1,1,1
+access_pms_cycle_reviewer,pms.cycle.reviewer,model_pms_cycle,group_pms_reviewer,1,0,0,0
+access_pms_cycle_supervisor,pms.cycle.supervisor,model_pms_cycle,group_pms_supervisor,1,0,0,0
+access_pms_cycle_employee,pms.cycle.employee,model_pms_cycle,group_pms_employee,1,0,0,0
+
+access_pms_appraisal_hr,pms.appraisal.hr,model_pms_appraisal,group_pms_hr_manager,1,1,1,1
+access_pms_appraisal_reviewer_role,pms.appraisal.reviewer,model_pms_appraisal,group_pms_reviewer,1,1,0,0
+access_pms_appraisal_supervisor,pms.appraisal.supervisor,model_pms_appraisal,group_pms_supervisor,1,1,0,0
+access_pms_appraisal_employee,pms.appraisal.employee,model_pms_appraisal,group_pms_employee,1,1,0,0
+
+access_pms_appraisal_kra_hr,pms.appraisal.kra.hr,model_pms_appraisal_kra,group_pms_hr_manager,1,1,1,1
+access_pms_appraisal_kra_reviewer_role,pms.appraisal.kra.reviewer,model_pms_appraisal_kra,group_pms_reviewer,1,1,0,0
+access_pms_appraisal_kra_supervisor,pms.appraisal.kra.supervisor,model_pms_appraisal_kra,group_pms_supervisor,1,1,0,0
+access_pms_appraisal_kra_employee,pms.appraisal.kra.employee,model_pms_appraisal_kra,group_pms_employee,1,1,0,0
+
+access_pms_appraisal_kpi_hr,pms.appraisal.kpi.hr,model_pms_appraisal_kpi,group_pms_hr_manager,1,1,1,1
+access_pms_appraisal_kpi_reviewer_role,pms.appraisal.kpi.reviewer,model_pms_appraisal_kpi,group_pms_reviewer,1,1,0,0
+access_pms_appraisal_kpi_supervisor,pms.appraisal.kpi.supervisor,model_pms_appraisal_kpi,group_pms_supervisor,1,1,0,0
+access_pms_appraisal_kpi_employee,pms.appraisal.kpi.employee,model_pms_appraisal_kpi,group_pms_employee,1,1,1,1
+
+access_pms_scoring_engine_hr,pms.scoring.engine.hr,model_pms_scoring_engine,hr_employee_evaluation.group_pms_hr_manager,1,1,1,1
+access_pms_scoring_engine_reviewer,pms.scoring.engine.reviewer,model_pms_scoring_engine,hr_employee_evaluation.group_pms_reviewer,1,0,0,0
+access_pms_scoring_engine_supervisor,pms.scoring.engine.supervisor,model_pms_scoring_engine,hr_employee_evaluation.group_pms_supervisor,1,0,0,0
+access_pms_scoring_engine_employee,pms.scoring.engine.employee,model_pms_scoring_engine,hr_employee_evaluation.group_pms_employee,1,0,0,0
+
+access_pms_scoring_engine_line_hr,pms.scoring.engine.line.hr,model_pms_scoring_engine_line,hr_employee_evaluation.group_pms_hr_manager,1,1,1,1
+access_pms_scoring_engine_line_reviewer,pms.scoring.engine.line.reviewer,model_pms_scoring_engine_line,hr_employee_evaluation.group_pms_reviewer,1,0,0,0
+access_pms_scoring_engine_line_supervisor,pms.scoring.engine.line.supervisor,model_pms_scoring_engine_line,hr_employee_evaluation.group_pms_supervisor,1,0,0,0
+access_pms_scoring_engine_line_employee,pms.scoring.engine.line.employee,model_pms_scoring_engine_line,hr_employee_evaluation.group_pms_employee,1,0,0,0
+
+access_appraisal_competency_score_employee,appraisal.competency.score.employee,model_appraisal_competency_score,hr_employee_evaluation.group_pms_employee,1,1,1,0
+access_appraisal_competency_score_supervisor,appraisal.competency.score.supervisor,model_appraisal_competency_score,hr_employee_evaluation.group_pms_supervisor,1,1,1,0
+access_appraisal_competency_score_reviewer,appraisal.competency.score.reviewer,model_appraisal_competency_score,hr_employee_evaluation.group_pms_reviewer,1,1,1,0
+access_appraisal_competency_score_hr,appraisal.competency.score.hr,model_appraisal_competency_score,hr_employee_evaluation.group_pms_hr_manager,1,1,1,1
+
+access_pms_rating_definition_manager,pms.rating.definition manager,model_pms_rating_definition,hr_employee_evaluation.group_pms_hr_manager,1,1,1,1
+access_pms_rating_definition_employee,pms.rating.definition employee,model_pms_rating_definition,hr_employee_evaluation.group_pms_employee,1,0,0,0
+access_pms_weightage_config_manager,pms.weightage.config manager,model_pms_weightage_config,hr_employee_evaluation.group_pms_hr_manager,1,1,1,1
+access_pms_weightage_config_employee,pms.weightage.config employee,model_pms_weightage_config,hr_employee_evaluation.group_pms_employee,1,0,0,0
+access_pms_weightage_config_line_manager,pms.weightage.config.line manager,model_pms_weightage_config_line,hr_employee_evaluation.group_pms_hr_manager,1,1,1,1
+access_pms_weightage_config_line_employee,pms.weightage.config.line employee,model_pms_weightage_config_line,hr_employee_evaluation.group_pms_employee,1,0,0,0
+access_pms_bonus_formula_field_manager,pms.bonus.formula.field manager,model_pms_bonus_formula_field,hr_employee_evaluation.group_pms_hr_manager,1,1,1,1
+access_pms_bonus_formula_field_employee,pms.bonus.formula.field employee,model_pms_bonus_formula_field,hr_employee_evaluation.group_pms_employee,1,0,0,0
+access_pms_bonus_mapping_rule_manager,pms.bonus.mapping.rule manager,model_pms_bonus_mapping_rule,hr_employee_evaluation.group_pms_hr_manager,1,1,1,1
+access_pms_bonus_mapping_rule_employee,pms.bonus.mapping.rule employee,model_pms_bonus_mapping_rule,hr_employee_evaluation.group_pms_employee,1,0,0,0
+access_pms_bonus_engine_manager,pms.bonus.engine manager,model_pms_bonus_engine,hr_employee_evaluation.group_pms_hr_manager,1,1,1,1
+access_pms_bonus_engine_employee,pms.bonus.engine employee,model_pms_bonus_engine,hr_employee_evaluation.group_pms_employee,1,0,0,0

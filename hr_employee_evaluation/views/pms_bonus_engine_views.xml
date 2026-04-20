@@ -1,0 +1,329 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ================================================================
+         BONUS CALCULATION ENGINE
+         ONE menu item → ONE list → ONE form with 5 tabs:
+           Tab 1  Rating Definitions    (manage company rating tiers)
+           Tab 2  Weightage Config      (component weights, must = 100%)
+           Tab 3  Bonus Mapping Rules   (rating → eligibility %)
+           Tab 4  Bonus Formula         (tokens + formula)
+           Tab 5  Notes
+         ================================================================ -->
+
+    <!-- ── List ─────────────────────────────────────────────────────── -->
+    <record id="view_pms_bonus_engine_list" model="ir.ui.view">
+        <field name="name">pms.bonus.engine.list</field>
+        <field name="model">pms.bonus.engine</field>
+        <field name="arch" type="xml">
+            <list string="Bonus Calculation Engines"
+                decoration-success="is_default == True">
+                <field name="name" />
+                <field name="scoring_engine_id"
+                    string="Scoring Engine"
+                    optional="show" />
+                <field name="weightage_config_id"
+                    string="Weightage Config"
+                    optional="show" />
+                <field name="mapping_rule_count"
+                    string="Rating Rules" />
+                <field name="is_default"
+                    widget="boolean_toggle" />
+                <field name="active"
+                    widget="boolean_toggle"
+                    optional="show" />
+                <field name="company_id"
+                    groups="base.group_multi_company"
+                    optional="hide" />
+            </list>
+        </field>
+    </record>
+
+    <!-- ── Form ─────────────────────────────────────────────────────── -->
+    <record id="view_pms_bonus_engine_form" model="ir.ui.view">
+        <field name="name">pms.bonus.engine.form</field>
+        <field name="model">pms.bonus.engine</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="action_set_default"
+                        string="Set as Default"
+                        type="object"
+                        class="btn-primary"
+                        invisible="is_default == True" />
+                    <span invisible="is_default == False"
+                        class="badge text-bg-success ms-2">
+                        Default Engine
+                    </span>
+                </header>
+
+                <sheet>
+                    <!-- Engine title -->
+                    <div class="oe_title">
+                        <label for="name" string="Engine Name" />
+                        <h1>
+                            <field name="name"
+                                placeholder="e.g. Standard Bonus Engine 2025"
+                                style="width: 100%;" />
+                        </h1>
+                    </div>
+
+                    <!-- Top settings row -->
+                    <group>
+                        <group string="Linked Configurations">
+                            <field name="scoring_engine_id"
+                                options="{'no_create': True}"
+                                help="Scoring engine that translates a final score into a rating label" />
+                            <field name="weightage_config_id"
+                                options="{'no_create': True}"
+                                help="Weightage config used to compute the employee's final score" />
+                        </group>
+                        <group string="Settings">
+                            <field name="is_default" />
+                            <field name="active"
+                                widget="boolean_toggle" />
+                            <field name="company_id"
+                                groups="base.group_multi_company" />
+                        </group>
+                    </group>
+
+                    <notebook>
+
+                        <!-- ══════════════════════════════════════════
+                             TAB 1 — RATING DEFINITIONS
+                             All rating tiers for this company.
+                             No separate menu needed.
+                        ══════════════════════════════════════════ -->
+                        <page string="Rating Definitions"
+                            name="page_ratings">
+                            <div class="alert alert-info mb-3"
+                                role="alert"> Define the rating tiers used across this company —
+                                e.g. Outstanding, Commendable, Good, Developing, Unacceptable. The <b>
+                                Code</b> field (e.g. <code>OUTSTANDING</code>) links a rating to the
+                                bonus mapping rules in Tab 3. </div>
+                            <field name="rating_definition_ids"
+                                nolabel="1"
+                                context="{'default_company_id': company_id}">
+                                <list editable="bottom"
+                                    string="Rating Definitions">
+                                    <field name="sequence"
+                                        widget="handle" />
+                                    <field name="name"
+                                        placeholder="e.g. Outstanding"
+                                        style="width: 100%;" />
+                                    <field name="code"
+                                        placeholder="e.g. OUTSTANDING" />
+                                    <field name="description"
+                                        placeholder="What this rating means…"
+                                        optional="show" />
+                                    <field name="active"
+                                        widget="boolean_toggle" />
+                                </list>
+                            </field>
+                        </page>
+
+                        <!-- ══════════════════════════════════════════
+                             TAB 2 — WEIGHTAGE CONFIGURATION
+                             Inline edit lines of the linked config.
+                        ══════════════════════════════════════════ -->
+                        <page string="Weightage Configuration"
+                            name="page_weightage">
+                            <div class="alert alert-info mb-3"
+                                role="alert"> Set how each assessment component (e.g. Target
+                                Assessment, Behavior &amp; Values) is weighted to produce the final
+                                score. All weights must total <b>100%</b>. Link a configuration
+                                above to enable editing. </div>
+
+                            <!-- Warning if no config linked -->
+                            <div class="alert alert-warning"
+                                role="alert"
+                                invisible="weightage_config_id != False"> No weightage configuration
+                                linked. Select one in the <b>Linked Configurations</b> group above,
+                                or create a new one via <b>Configuration → Weightage Configurations</b>
+                                .
+                            </div>
+
+                            <!-- Config name + total when linked -->
+                            <group invisible="weightage_config_id == False">
+                                <group>
+                                    <field name="weightage_config_id"
+                                        readonly="1"
+                                        string="Configuration" />
+                                </group>
+                                <group>
+                                    <field name="weightage_total_weight"
+                                        readonly="1"
+                                        string="Total Weight (%)" />
+                                </group>
+                            </group>
+
+                            <!-- Inline component lines -->
+                            <field name="weightage_line_ids"
+                                nolabel="1"
+                                invisible="weightage_config_id == False">
+                                <list editable="bottom"
+                                    string="Weightage Components"
+                                    decoration-danger="weight &lt; 0">
+                                    <field name="sequence"
+                                        widget="handle" />
+                                    <field name="name"
+                                        placeholder="e.g. Target Assessment"
+                                        style="width: 100%;" />
+                                    <field name="code"
+                                        placeholder="e.g. TARGET_SCORE" />
+                                    <field name="weight"
+                                        string="Weight (%)" />
+                                    <field name="description"
+                                        optional="hide" />
+                                </list>
+                            </field>
+                        </page>
+
+                        <!-- ══════════════════════════════════════════
+                             TAB 3 — BONUS MAPPING RULES
+                             Rating → Eligibility %.
+                             {ELIGIBILITY_PCT} in formula resolves here.
+                        ══════════════════════════════════════════ -->
+                        <page string="Bonus Mapping Rules"
+                            name="page_mapping">
+                            <div class="alert alert-info mb-3"
+                                role="alert"> Map each <b>Rating</b> to its <b>Eligibility %</b>.
+                                When the employee's final score resolves to a rating (via the
+                                Scoring Engine), the matching eligibility % is injected as <code>
+                                {ELIGIBILITY_PCT}</code> into the bonus formula. Example:
+                                Outstanding → 100%, Commendable → 75%, Good → 50%, Developing → 25%,
+                                Unacceptable → 0%. </div>
+                            <field name="mapping_rule_ids" nolabel="1">
+                                <list editable="bottom"
+                                    decoration-success="eligibility_pct == 100"
+                                    decoration-muted="eligibility_pct == 0">
+                                    <field name="sequence"
+                                        widget="handle" />
+                                    <field name="rating_id"
+                                        string="Rating"
+                                        options="{'no_create': True}" />
+                                    <field name="eligibility_pct"
+                                        string="Eligibility (%)" />
+                                    <field name="notes"
+                                        string="Notes"
+                                        optional="show" />
+                                </list>
+                            </field>
+                        </page>
+
+                        <!-- ══════════════════════════════════════════
+                             TAB 4 — BONUS FORMULA
+                             Step 1: define custom tokens
+                             Step 2: auto-generated token reference
+                             Step 3: write the formula
+                        ══════════════════════════════════════════ -->
+                        <page string="Bonus Formula"
+                            name="page_formula">
+
+                            <!-- Step 1 -->
+                            <group string="Step 1 — Define custom tokens">
+                                <div class="text-muted mb-2"
+                                    style="font-size: 12px; padding-left: 8px;"> Add a row for each
+                                    variable you need in the formula. The <b>Token Name</b> becomes <code>
+                                    {TOKEN_NAME}</code> in Step 3. Two tokens are always built-in: <code>
+                                    {ELIGIBILITY_PCT}</code> and <code>{RATING_CODE}</code>. </div>
+                            </group>
+                            <field name="formula_field_ids"
+                                nolabel="1">
+                                <list editable="bottom"
+                                    string="Formula Tokens">
+                                    <field name="token_name"
+                                        string="Token Name"
+                                        placeholder="e.g. BONUS_POOL" />
+                                    <field name="name"
+                                        string="Label"
+                                        placeholder="e.g. Bonus Pool Amount" />
+                                    <field name="field_type"
+                                        string="Type" />
+                                    <field name="source_model"
+                                        string="Model"
+                                        placeholder="e.g. hr.appraisal"
+                                        optional="show"
+                                        invisible="field_type == 'constant'" />
+                                    <field name="source_field"
+                                        string="Field"
+                                        placeholder="e.g. final_score"
+                                        optional="show"
+                                        invisible="field_type == 'constant'" />
+                                    <field name="constant_value"
+                                        string="Constant"
+                                        optional="show"
+                                        invisible="field_type != 'constant'" />
+                                    <field name="description"
+                                        string="Notes"
+                                        optional="hide" />
+                                </list>
+                            </field>
+
+                            <!-- Step 2 -->
+                            <group string="Step 2 — Token reference (auto-updated)">
+                                <field name="formula_token_preview"
+                                    nolabel="1"
+                                    readonly="1"
+                                    widget="text"
+                                    style="font-family: monospace; font-size: 12px; background: #f8f9fa; padding: 10px; border-radius: 4px; min-height: 80px;" />
+                            </group>
+
+                            <!-- Step 3 -->
+                            <group string="Step 3 — Write the formula">
+                                <field name="formula"
+                                    nolabel="1"
+                                    widget="text"
+                                    style="font-family: monospace; font-size: 14px;"
+                                    placeholder="{FINAL_SCORE} * {ELIGIBILITY_PCT} * {BONUS_POOL} / 100" />
+                            </group>
+
+                            <div class="alert alert-secondary mt-2"
+                                role="alert"
+                                style="font-size: 12px;">
+                                <b>Allowed operators:</b>
+                                <code>+ - * / ( )</code>. All tokens must
+                                be defined in the table above or be built-in. Example: <code>{FINAL_SCORE}
+                                * {ELIGIBILITY_PCT} * {BONUS_POOL} / 100</code>
+                            </div>
+                        </page>
+
+                        <!-- ══════════════════════════════════════════
+                             TAB 5 — NOTES
+                        ══════════════════════════════════════════ -->
+                        <page string="Notes" name="page_notes">
+                            <field name="description"
+                                nolabel="1"
+                                placeholder="Notes about this engine, versioning, or intended use…" />
+                        </page>
+
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- ── Window action ────────────────────────────────────────────── -->
+    <record id="action_pms_bonus_calculation" model="ir.actions.act_window">
+        <field name="name">Bonus Calculation</field>
+        <field name="res_model">pms.bonus.engine</field>
+        <field name="view_mode">list,form</field>
+        <field name="view_ids"
+            eval="[(5, 0, 0),
+                      (0, 0, {'view_mode': 'list',
+                              'view_id': ref('view_pms_bonus_engine_list')}),
+                      (0, 0, {'view_mode': 'form',
+                              'view_id': ref('view_pms_bonus_engine_form')})]" />
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No bonus engine defined yet
+            </p>
+            <p>
+                Create a bonus engine to manage rating definitions,
+                component weightage, mapping rules, and the bonus
+                formula — all in one place.
+            </p>
+        </field>
+    </record>
+
+</odoo>
