@@ -31,10 +31,12 @@ class FeedbackSession(models.Model):
         help='Employees who will receive feedback in this session.',
     )
     reviewer_ids = fields.Many2many(
-        'hr.employee', 'pms_session_reviewer_rel',
-        'session_id', 'employee_id',
-        string='Allowed Reviewers (optional)',
-        help='Leave empty to allow all employees to provide feedback.',
+        'hr.employee',
+        'feedback_session_reviewer_rel',
+        'session_id',
+        'employee_id',
+        string='Allowed Reviewers',
+        help='Leave empty to allow all employees to give feedback'
     )
     response_ids = fields.One2many('pms.feedback.response', 'session_id', string='Responses')
     response_count = fields.Integer(string='Responses', compute='_compute_response_count')

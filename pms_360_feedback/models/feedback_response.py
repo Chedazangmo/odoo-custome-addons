@@ -19,8 +19,14 @@ class FeedbackResponse(models.Model):
                                    store=True, readonly=True)
     reviewee_employee_id = fields.Many2one('hr.employee', string='Employee Being Reviewed',
                                             required=True)
-    reviewer_employee_id = fields.Many2one('hr.employee', string='Reviewer (You)',
-                                            required=True)
+    reviewer_employee_id = fields.Many2one(
+        'hr.employee',
+        string='Reviewer',
+        required=True,
+        default=lambda self: self.env['hr.employee'].search(
+            [('user_id', '=', self.env.uid)], limit=1
+        )
+    )
     reviewer_display = fields.Char(
         string='Reviewer',
         compute='_compute_reviewer_display'
@@ -28,7 +34,8 @@ class FeedbackResponse(models.Model):
     allowed_reviewee_ids = fields.Many2many(
         'hr.employee',
         compute='_compute_allowed_reviewees',
-        string='Allowed Reviewees'
+        string='Allowed Reviewees',
+        store=False,
     )
     is_anonymous = fields.Boolean(string='Submit Anonymously', default=False)
     state = fields.Selection([
@@ -60,11 +67,42 @@ class FeedbackResponse(models.Model):
 
     @api.depends('session_id')
     def _compute_allowed_reviewees(self):
-        for rec in self:
+        for rec in self.sudo():
             if rec.session_id:
                 rec.allowed_reviewee_ids = rec.session_id.reviewee_ids
             else:
                 rec.allowed_reviewee_ids = self.env['hr.employee']
+
+    @api.constrains('reviewer_employee_id', 'reviewee_employee_id')
+    def _check_not_reviewing_self(self):
+        for rec in self:
+            if rec.reviewer_employee_id and rec.reviewee_employee_id:
+                if rec.reviewer_employee_id == rec.reviewee_employee_id:
+                    raise ValidationError(
+                        "You cannot give feedback about yourself. "
+                        "Please select a different employee to review."
+                    )
+
+    @api.constrains('reviewee_employee_id', 'session_id')
+    def _check_reviewee_in_session(self):
+        for rec in self:
+            if rec.reviewee_employee_id and rec.session_id:
+                if rec.reviewee_employee_id not in rec.sudo().session_id.reviewee_ids:
+                    raise ValidationError(
+                        f"'{rec.reviewee_employee_id.name}' is not in the list of "
+                        f"employees being reviewed in this session."
+                    )
+
+    @api.constrains('reviewer_employee_id', 'session_id')
+    def _check_reviewer_allowed(self):
+        for rec in self:
+            if rec.reviewer_employee_id and rec.session_id:
+                session = rec.sudo().session_id
+                if session.reviewer_ids and rec.reviewer_employee_id not in session.reviewer_ids:
+                    raise ValidationError(
+                        "You are not an allowed reviewer for this session. "
+                        "Please contact HR if you believe this is a mistake."
+                    )
 
     @api.onchange('session_id')
     def _onchange_session_id(self):
@@ -78,15 +116,31 @@ class FeedbackResponse(models.Model):
             self.answer_ids = answer_lines
 
     @api.model
-    def create(self, vals):
-        record = super().create(vals)
-        if record.session_id and record.session_id.template_id and not record.answer_ids:
-            for question in record.session_id.template_id.question_ids:
-                self.env['pms.feedback.answer'].create({
-                    'response_id': record.id,
-                    'question_id': question.id,
-                })
-        return record
+    def create(self, vals_list):
+        for vals in vals_list:
+            if not vals.get('reviewer_employee_id'):
+                employee = self.env['hr.employee'].search(
+                    [('user_id', '=', self.env.uid)], limit=1
+                )
+                if employee:
+                    vals['reviewer_employee_id'] = employee.id
+
+        records = super().create(vals_list)
+
+        answers_to_create = []
+
+        for record in records:
+            if record.session_id and record.session_id.template_id and not record.answer_ids:
+                for question in record.session_id.template_id.question_ids:
+                    answers_to_create.append({
+                        'response_id': record.id,
+                        'question_id': question.id,
+                    })
+
+        if answers_to_create:
+            self.env['pms.feedback.answer'].create(answers_to_create)
+
+        return records
 
     @api.model
     def get_my_employee_id(self):

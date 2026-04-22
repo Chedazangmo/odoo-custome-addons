@@ -1,6 +1,6 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
-access_feedback_template_admin,pms.feedback.template admin,model_pms_feedback_template,pms_360_feedback.group_pms_hr_admin,1,1,1,1
-access_feedback_template_employee,pms.feedback.template employee,model_pms_feedback_template,pms_360_feedback.group_pms_employee,1,0,0,0
+access_feedback_template_admin,feedback.template.admin,model_pms_feedback_template,pms_360_feedback.group_pms_hr_admin,1,1,1,1
+access_feedback_template_employee,feedback.template.employee,model_pms_feedback_template,pms_360_feedback.group_pms_employee,1,0,0,0
 access_feedback_question_admin,pms.feedback.question admin,model_pms_feedback_question,pms_360_feedback.group_pms_hr_admin,1,1,1,1
 access_feedback_question_employee,pms.feedback.question employee,model_pms_feedback_question,pms_360_feedback.group_pms_employee,1,0,0,0
 access_feedback_question_option_admin,pms.feedback.question.option admin,model_pms_feedback_question_option,pms_360_feedback.group_pms_hr_admin,1,1,1,1
@@ -8,6 +8,6 @@ access_feedback_question_option_employee,pms.feedback.question.option employee,m
 access_feedback_session_admin,pms.feedback.session admin,model_pms_feedback_session,pms_360_feedback.group_pms_hr_admin,1,1,1,1
 access_feedback_session_employee,pms.feedback.session employee,model_pms_feedback_session,pms_360_feedback.group_pms_employee,1,0,0,0
 access_feedback_response_admin,pms.feedback.response admin,model_pms_feedback_response,pms_360_feedback.group_pms_hr_admin,1,1,1,1
-access_feedback_response_employee,pms.feedback.response employee,model_pms_feedback_response,pms_360_feedback.group_pms_employee,1,1,1,0
+access_feedback_response_employee,pms.feedback.response employee,model_pms_feedback_response,pms_360_feedback.group_pms_employee,1,1,1,1
 access_feedback_answer_admin,pms.feedback.answer admin,model_pms_feedback_answer,pms_360_feedback.group_pms_hr_admin,1,1,1,1
-access_feedback_answer_employee,pms.feedback.answer employee,model_pms_feedback_answer,pms_360_feedback.group_pms_employee,1,1,1,0
+access_feedback_answer_employee,pms.feedback.answer employee,model_pms_feedback_answer,pms_360_feedback.group_pms_employee,1,1,1,1
