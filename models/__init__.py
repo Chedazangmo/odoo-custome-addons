@@ -6,3 +6,8 @@ from . import pms_appraisal
 from . import pms_appraisal_kra
 from . import pms_appraisal_kpi
 from . import pms_score_engine
+from . import pms_cycle_erollment
+from . import competency
+from . import appraisal_competency
+from . import hr_appraisal_competency_inherit
+from . import pms_adhoc

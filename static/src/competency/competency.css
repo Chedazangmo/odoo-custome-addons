@@ -1,0 +1,629 @@
+/* =============================================================================
+   COMPETENCY FRAMEWORK — STYLESHEET
+   Navy #1a3c5e  |  Gold #e8a020  |  White #ffffff
+   ============================================================================= */
+
+
+/* =============================================================================
+   1.  TEMPLATE LIST VIEW
+       Full-width, well-spaced, readable columns with clear visual hierarchy.
+   ============================================================================= */
+
+/* ── Outer list container ── */
+.o_competency_template_list.o_list_view {
+    border: none;
+}
+
+/* ── thead row background ── */
+.o_competency_template_list thead tr {
+    background-color: #1a3c5e !important;
+}
+
+/* ── All <th> cells ── */
+.o_competency_template_list thead th {
+    background-color: #1a3c5e !important;
+    color: #94a3b8 !important;
+    font-size: 0.68rem !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.09em !important;
+    padding: 15px 20px !important;
+    border-bottom: 3px solid #e8a020 !important;
+    border-top: none !important;
+    border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
+    white-space: nowrap !important;
+    vertical-align: middle !important;
+}
+
+.o_competency_template_list thead th:last-child {
+    border-right: none !important;
+}
+
+/* Any child elements in <th> also white */
+.o_competency_template_list thead th * {
+    color: #94a3b8 !important;
+}
+
+/* ── Column width constraints ──────────────────────────────────────────────
+   3 data columns after removing "Assigned to Groups":
+     Template Name  |  Total HR Points  |  No. of Groups  |  Allocation Status
+   ── */
+
+/* Template Name — fluid */
+.o_competency_template_list th.o_tmpl_col_name,
+.o_competency_template_list td.o_tmpl_col_name {
+    min-width: 200px;
+    width: auto;
+}
+
+/* Total HR Points */
+.o_competency_template_list th.o_tmpl_col_pts,
+.o_competency_template_list td.o_tmpl_col_pts {
+    min-width: 180px !important;
+    width: 180px !important;
+    white-space: nowrap !important;
+    text-align: right !important;
+    padding-right: 28px !important;
+}
+
+.o_competency_template_list td.o_tmpl_col_pts {
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
+    color: #1a3c5e;
+}
+
+/* No. of Groups */
+.o_competency_template_list th.o_tmpl_col_count,
+.o_competency_template_list td.o_tmpl_col_count {
+    min-width: 160px !important;
+    width: 160px !important;
+    white-space: nowrap !important;
+    text-align: center !important;
+}
+
+.o_competency_template_list td.o_tmpl_col_count {
+    color: #475569;
+}
+
+/* Allocation Status */
+.o_competency_template_list th.o_tmpl_col_status,
+.o_competency_template_list td.o_tmpl_col_status {
+    min-width: 200px !important;
+    width: 200px !important;
+    white-space: nowrap !important;
+    text-align: center !important;
+    padding-right: 20px !important;
+}
+
+/* Defeat Odoo's inner <span> ellipsis on ALL header cells */
+.o_competency_template_list thead th span,
+.o_competency_template_list thead th .o_resize {
+    white-space: nowrap !important;
+    overflow: visible !important;
+    text-overflow: unset !important;
+    display: inline !important;
+}
+
+/* ── General body row cells ── */
+.o_competency_template_list .o_data_row td {
+    padding: 14px 20px !important;
+    font-size: 0.875rem !important;
+    vertical-align: middle !important;
+    border-bottom: 1px solid #e8edf3 !important;
+    color: #1e293b;
+}
+
+/* ── Template name styling ── */
+.o_competency_template_list .o_data_row td.o_tmpl_col_name {
+    font-weight: 600;
+    color: #1a3c5e;
+    font-size: 0.9rem !important;
+}
+
+/* ── Alternating row colours ── */
+.o_competency_template_list .o_data_row:nth-child(even) td {
+    background-color: #f8fafc;
+}
+
+.o_competency_template_list .o_data_row:nth-child(odd) td {
+    background-color: #ffffff;
+}
+
+/* ── Hover state ── */
+.o_competency_template_list .o_data_row:hover td {
+    background-color: #eff6ff !important;
+    cursor: pointer;
+}
+
+/* ── Status-based left border accent ── */
+.o_competency_template_list .o_data_row.text-success td:first-child {
+    border-left: 4px solid #16a34a !important;
+}
+
+.o_competency_template_list .o_data_row.text-warning td:first-child {
+    border-left: 4px solid #d97706 !important;
+}
+
+.o_competency_template_list .o_data_row.text-danger td:first-child {
+    border-left: 4px solid #dc2626 !important;
+}
+
+/* ── Row background tints per status ── */
+.o_competency_template_list .o_data_row.text-success td {
+    background-color: #f0fdf4 !important;
+}
+
+.o_competency_template_list .o_data_row.text-warning td {
+    background-color: #fffbeb !important;
+}
+
+.o_competency_template_list .o_data_row.text-danger td {
+    background-color: #fff1f2 !important;
+}
+
+/* ── Hover overrides for tinted rows ── */
+.o_competency_template_list .o_data_row.text-success:hover td {
+    background-color: #dcfce7 !important;
+}
+
+.o_competency_template_list .o_data_row.text-warning:hover td {
+    background-color: #fef3c7 !important;
+}
+
+.o_competency_template_list .o_data_row.text-danger:hover td {
+    background-color: #fee2e2 !important;
+}
+
+
+/* =============================================================================
+   2.  STATUS BADGES  (reusable across list + form)
+   ============================================================================= */
+
+.badge.text-bg-success {
+    background-color: #dcfce7 !important;
+    color: #15803d !important;
+    border: 1px solid #86efac !important;
+    font-size: 0.72rem !important;
+    font-weight: 700 !important;
+    padding: 5px 14px !important;
+    border-radius: 20px !important;
+    letter-spacing: 0.02em !important;
+    white-space: nowrap;
+}
+
+.badge.text-bg-warning {
+    background-color: #fef3c7 !important;
+    color: #b45309 !important;
+    border: 1px solid #fcd34d !important;
+    font-size: 0.72rem !important;
+    font-weight: 700 !important;
+    padding: 5px 14px !important;
+    border-radius: 20px !important;
+    letter-spacing: 0.02em !important;
+    white-space: nowrap;
+}
+
+.badge.text-bg-danger {
+    background-color: #fee2e2 !important;
+    color: #b91c1c !important;
+    border: 1px solid #fca5a5 !important;
+    font-size: 0.72rem !important;
+    font-weight: 700 !important;
+    padding: 5px 14px !important;
+    border-radius: 20px !important;
+    letter-spacing: 0.02em !important;
+    white-space: nowrap;
+}
+
+
+/* =============================================================================
+   3.  GROUPS LIST  (inside Template form, Tab 1)
+   ============================================================================= */
+
+/* ── thead ── */
+.o_field_widget[name="group_ids"] thead th,
+.o_cf_groups_list thead th {
+    background-color: #1a3c5e !important;
+    color: #94a3b8 !important;
+    font-size: 0.68rem !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.09em !important;
+    padding: 13px 18px !important;
+    border-bottom: 3px solid #e8a020 !important;
+    border-top: none !important;
+    border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
+    white-space: nowrap !important;
+    vertical-align: middle !important;
+}
+
+.o_field_widget[name="group_ids"] thead th:last-child,
+.o_cf_groups_list thead th:last-child {
+    border-right: none !important;
+}
+
+.o_field_widget[name="group_ids"] thead th *,
+.o_cf_groups_list thead th * {
+    color: #94a3b8 !important;
+}
+
+.o_field_widget[name="group_ids"] thead tr,
+.o_cf_groups_list thead tr {
+    background-color: #1a3c5e !important;
+}
+
+/* ── Handle + actions columns ── */
+.o_field_widget[name="group_ids"] thead th.o_handle_cell,
+.o_cf_groups_list thead th.o_handle_cell {
+    background-color: #1a3c5e !important;
+    width: 36px !important;
+    padding: 0 !important;
+}
+
+.o_field_widget[name="group_ids"] thead th.o_list_actions_header,
+.o_cf_groups_list thead th.o_list_actions_header {
+    background-color: #1a3c5e !important;
+    border-right: none !important;
+}
+
+/* ── Body rows ── */
+.o_field_widget[name="group_ids"] .o_data_row td,
+.o_cf_groups_list .o_data_row td {
+    padding: 13px 18px !important;
+    font-size: 0.875rem !important;
+    vertical-align: middle !important;
+    border-bottom: 1px solid #e8edf3 !important;
+    color: #1e293b;
+    border-left: none !important;
+}
+
+.o_field_widget[name="group_ids"] .o_data_row:nth-child(odd) td {
+    background-color: #ffffff;
+}
+
+.o_field_widget[name="group_ids"] .o_data_row:nth-child(even) td {
+    background-color: #f8fafc;
+}
+
+.o_field_widget[name="group_ids"] .o_data_row:hover td {
+    background-color: #eff6ff !important;
+}
+
+.o_field_widget[name="group_ids"] .o_selected_row td {
+    background-color: #dbeafe !important;
+}
+
+/* Status tints */
+.o_field_widget[name="group_ids"] tr.text-success td {
+    background-color: #f0fdf4 !important;
+}
+
+.o_field_widget[name="group_ids"] tr.text-warning td {
+    background-color: #fffbeb !important;
+}
+
+.o_field_widget[name="group_ids"] tr.text-danger td {
+    background-color: #fff1f2 !important;
+}
+
+
+/* =============================================================================
+   4.  LINES LIST  (inside Group popup form)
+   ============================================================================= */
+
+/* ── thead ── */
+.o_field_widget[name="line_ids"] thead th,
+.o_cf_lines_list thead th {
+    background-color: #1a3c5e !important;
+    color: #94a3b8 !important;
+    font-size: 0.68rem !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.09em !important;
+    padding: 13px 18px !important;
+    border-bottom: 3px solid #e8a020 !important;
+    border-top: none !important;
+    border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
+    white-space: nowrap !important;
+    vertical-align: middle !important;
+}
+
+.o_field_widget[name="line_ids"] thead th:last-child,
+.o_cf_lines_list thead th:last-child {
+    border-right: none !important;
+}
+
+.o_field_widget[name="line_ids"] thead th *,
+.o_cf_lines_list thead th * {
+    color: #94a3b8 !important;
+}
+
+.o_field_widget[name="line_ids"] thead tr,
+.o_cf_lines_list thead tr {
+    background-color: #1a3c5e !important;
+}
+
+.o_field_widget[name="line_ids"] thead th.o_handle_cell,
+.o_cf_lines_list thead th.o_handle_cell {
+    background-color: #1a3c5e !important;
+    width: 36px !important;
+    padding: 0 !important;
+}
+
+.o_field_widget[name="line_ids"] thead th.o_list_actions_header,
+.o_cf_lines_list thead th.o_list_actions_header {
+    background-color: #1a3c5e !important;
+    border-right: none !important;
+}
+
+/* ── Body rows ── */
+.o_field_widget[name="line_ids"] .o_data_row td,
+.o_cf_lines_list .o_data_row td {
+    padding: 12px 18px !important;
+    font-size: 0.875rem !important;
+    vertical-align: middle !important;
+    border-bottom: 1px solid #e8edf3 !important;
+    color: #1e293b;
+    border-left: none !important;
+}
+
+.o_field_widget[name="line_ids"] .o_data_row:nth-child(odd) td {
+    background-color: #ffffff;
+}
+
+.o_field_widget[name="line_ids"] .o_data_row:nth-child(even) td {
+    background-color: #f8fafc;
+}
+
+.o_field_widget[name="line_ids"] .o_data_row:hover td {
+    background-color: #f0f9ff !important;
+}
+
+.o_field_widget[name="line_ids"] .o_selected_row td {
+    background-color: #dbeafe !important;
+}
+
+
+/* =============================================================================
+   5.  STATUS + AUTOSAVE BANNERS  (Template & Group forms)
+   ============================================================================= */
+
+.o_hr_points_bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.865rem;
+    font-weight: 500;
+    padding: 11px 20px;
+    margin-bottom: 4px;
+    border-radius: 7px;
+    border-left-width: 5px;
+    border-left-style: solid;
+    line-height: 1.5;
+}
+
+.o_hr_points_bar .o_field_widget {
+    display: inline;
+    font-weight: 700;
+}
+
+.alert-info.o_hr_points_bar {
+    background: #eff6ff;
+    border-left-color: #2d6a9f;
+    color: #1a3c5e;
+}
+
+.alert-warning.o_hr_points_bar {
+    background: #fef3c7;
+    border-left-color: #d97706;
+    color: #78350f;
+}
+
+.alert-danger.o_hr_points_bar {
+    background: #fee2e2;
+    border-left-color: #dc2626;
+    color: #7f1d1d;
+}
+
+.alert-success.o_hr_points_bar {
+    background: #dcfce7;
+    border-left-color: #16a34a;
+    color: #14532d;
+}
+
+.o_grp_banner {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 0.865rem;
+    font-weight: 500;
+    padding: 10px 20px;
+    margin: 0;
+    border-radius: 0;
+    border-left: 5px solid transparent;
+    line-height: 1.5;
+}
+
+.o_grp_banner .o_field_widget {
+    display: inline;
+    font-weight: 700;
+}
+
+.o_grp_banner_warning {
+    background: #fef3c7;
+    border-left-color: #d97706;
+    color: #78350f;
+}
+
+.o_grp_banner_danger {
+    background: #fee2e2;
+    border-left-color: #dc2626;
+    color: #7f1d1d;
+}
+
+.o_grp_banner_success {
+    background: #dcfce7;
+    border-left-color: #16a34a;
+    color: #14532d;
+}
+
+.o_grp_banner_info {
+    background: #eff6ff;
+    border-left-color: #2d6a9f;
+    color: #1a3c5e;
+}
+
+
+/* =============================================================================
+   9.  GROUP FORM — LINES SECTION
+   ============================================================================= */
+
+.o_grp_lines_section {
+    margin-top: 4px;
+    border-top: 2px solid #e2e8f0;
+    padding-top: 0;
+}
+
+.o_grp_lines_heading {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #64748b;
+    padding: 13px 2px 9px;
+}
+
+
+/* =============================================================================
+   9.  GROUPED TABULAR VIEW (competency.framework.line)
+   ============================================================================= */
+
+.o_competency_tabular .o_group_header td {
+    background-color: #1a3c5e !important;
+    color: #ffffff !important;
+    font-weight: 700;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 11px 18px;
+    border-bottom: 2px solid #e8a020;
+}
+
+.o_competency_tabular .o_group_header:hover td {
+    background-color: #162f4a !important;
+}
+
+
+/* =============================================================================
+   11. TEMPLATE FORM — HR POINTS DEFINITION GROUP SPACING
+       Better spacing and visual weight for the three remaining fields:
+       Total HR Points  |  No. of Groups  |  Status
+   ============================================================================= */
+
+/* Give the two <group> columns more breathing room */
+.o_competency_template_form .o_group>.o_inner_group {
+    row-gap: 14px !important;
+}
+
+/* Each field row inside the group */
+.o_competency_template_form .o_group .o_field_widget {
+    padding: 4px 0 !important;
+}
+
+/* Labels — slightly bolder and spaced */
+.o_competency_template_form .o_group .o_form_label {
+    font-size: 0.78rem !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.06em !important;
+    color: #64748b !important;
+    padding-top: 6px !important;
+    white-space: nowrap !important;
+}
+
+/* Total HR Points input — make it visually prominent */
+.o_competency_template_form .o_field_widget[name="total_hr_points"] input {
+    font-size: 1.05rem !important;
+    font-weight: 700 !important;
+    color: #1a3c5e !important;
+    border: 1.5px solid #cbd5e1 !important;
+    border-radius: 6px !important;
+    padding: 7px 12px !important;
+    background: #ffffff !important;
+    box-shadow: none !important;
+    min-width: 120px !important;
+}
+
+.o_competency_template_form .o_field_widget[name="total_hr_points"] input:focus {
+    border-color: #1a3c5e !important;
+    box-shadow: 0 0 0 3px rgba(26, 60, 94, 0.10) !important;
+    outline: none !important;
+}
+
+/* No. of Groups — read-only value, styled as a soft pill */
+.o_competency_template_form .o_field_widget[name="group_count"] {
+    font-size: 0.95rem !important;
+    font-weight: 700 !important;
+    color: #1a3c5e !important;
+}
+
+/* Status badge — extra spacing above */
+.o_competency_template_form .o_field_widget[name="points_status"] {
+    margin-top: 4px !important;
+}
+
+/* Group box headings ("Template" / "HR Points Definition") */
+.o_competency_template_form .o_group_label,
+.o_competency_template_form .o_inner_group>.o_group_label {
+    font-size: 0.7rem !important;
+    font-weight: 800 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.09em !important;
+    color: #1a3c5e !important;
+    border-bottom: 2px solid #e8a020 !important;
+    padding-bottom: 6px !important;
+    margin-bottom: 14px !important;
+}
+
+/* =============================================================================
+   COMPETENCY LINES TABLE — prevent header truncation
+   ============================================================================= */
+
+/* Competency column — wraps instead of truncating */
+.o_competency_lines_table th.o_line_col_name {
+    min-width: 180px !important;
+    width: 180px !important;
+    white-space: nowrap !important;
+}
+
+.o_competency_lines_table td.o_line_col_name {
+    min-width: 180px !important;
+    width: 180px !important;
+    white-space: normal !important;
+    word-break: break-word !important;
+    vertical-align: top !important;
+}
+
+/* Defeat Odoo inner <span> ellipsis on all headers */
+.o_competency_lines_table thead th span,
+.o_competency_lines_table thead th .o_resize {
+    white-space: nowrap !important;
+    overflow: visible !important;
+    text-overflow: unset !important;
+    display: inline !important;
+}
+
+/* Points column — fixed narrow */
+.o_competency_lines_table th.o_line_col_pts,
+.o_competency_lines_table td.o_line_col_pts {
+    min-width: 100px !important;
+    width: 100px !important;
+    text-align: right !important;
+    white-space: nowrap !important;
+}
+
+/* Targets — takes remaining space */
+.o_competency_lines_table th.o_line_col_targets,
+.o_competency_lines_table td.o_line_col_targets {
+    min-width: 200px !important;
+}

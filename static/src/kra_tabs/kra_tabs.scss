@@ -75,8 +75,8 @@
             flex-shrink: 0;
             white-space: nowrap;
 
-            &:hover        { color: #004D8B; }
-            &.o_active_tab { color: #004D8B; font-weight: 700; border-bottom-color: #004D8B; }
+            &:hover        { color: #9989C9; }
+            &.o_active_tab { color: #9989C9; font-weight: 700; border-bottom-color: #9989C9; }
         }
     }
 
@@ -112,29 +112,40 @@
             width: 100%;
         }
 
+        
+
         .table {
             table-layout: fixed;
             width: 100%;
             border-collapse: separate;
             border-spacing: 0;
+            border: 1.9px solid #313131;
+            border-radius: 16px;
+            overflow: hidden;
 
             thead th {
-                background-color: #f8f9fa;
-                border-bottom: 2px solid #e9ecef;
-                color: #495057;
-                font-weight: 600;
+                background-color: #f8f9fa !important; // Deep Slate Blue (very professional)
+                color: #495057 !important;
                 text-transform: uppercase;
-                font-size: 0.75rem;
-                letter-spacing: 0.05em;
-                padding: 12px;
+                font-size: 0.825rem !important; // Smaller headers = cleaner look
+                font-weight: 600 !important;
+                padding: 16px 12px !important;
+                border: none !important;
                 vertical-align: middle;
             }
+
+            thead th:first-child { border-radius: 8px 0 0 0; }
+            thead th:last-child  { border-radius: 0 8px 0 0; }
 
             tbody td {
                 vertical-align: top;
                 padding: 8px;
-                border-color: #f1f3f5;
+                border-color: #e9ecef;
             }
+
+            tbody tr:last-child td { border-bottom: none; }
+            tbody tr:last-child td:first-child { border-radius: 0 0 0 8px; }
+            tbody tr:last-child td:last-child  { border-radius: 0 0 8px 0; }
 
             input.form-control,
             textarea.form-control {
@@ -157,6 +168,55 @@
     }
 }
 
+/* --- Modern Corporate Table Theme --- */
+
+.o_kra_kpi_section .table, 
+.appraisal-flex-table, 
+.appraisal-expand-table {
+    border: none !important; // Remove the heavy black border
+    border-collapse: separate !important;
+    border-spacing: 0;
+    // Adds a soft "lift" from the page
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03); 
+    border-radius: 10px;
+    overflow: hidden;
+    margin-top: 10px;
+
+
+    tbody tr {
+        background-color: #ffffff !important; // Start with White
+        transition: background 0.2s ease-in-out;
+
+        // Subtle Zebra Striping
+        &:nth-child(even) {
+            background-color: #f8fafc !important; // Very pale slate/blue
+        }
+
+        // Row Highlight on Hover
+        &:hover {
+            background-color: #f1f5f9 !important;
+        }
+
+        td {
+            border-top: 1px solid #f1f5f9 !important; // Light gray line instead of black
+            border-bottom: none !important;
+            padding: 12px 12px !important;
+            color: #334155;
+            font-size: 0.85rem;
+            vertical-align: middle;
+        }
+    }
+}
+
+
+/* --- Status Badge Styling --- */
+.badge {
+    padding: 6px 10px;
+    font-weight: 600;
+    border-radius: 6px;
+    text-transform: capitalize;
+}
+
 
 // for appraisal, scrolling for the scores and the remarks field
 
@@ -164,6 +224,8 @@
     width: 100%;
     background-color: #fff;
     padding-bottom: 12px;
+    border-radius: 8px;
+    overflow: hidden;
 }
 
 .appraisal-flex-table {
@@ -180,13 +242,17 @@
     word-wrap: break-word;
 }
 
+.appraisal-flex-table tbody tr:hover td { background-color: #EEF4FA; }
+.appraisal-flex-table tbody tr:last-child td { border-bottom: none; }
+
 .appraisal-flex-table thead th {
-    background-color: #f8f9fa !important;
-    color: #495057;
+    background-color: #1A6FAD !important;
+    color: #EEF4FA !important;
     font-weight: 600;
     text-transform: uppercase;
     font-size: 12px;
-    border-bottom: 2px solid #dee2e6 !important;
+    border-bottom: none !important;
+    padding: 16px 8px !important;
     position: sticky;
     top: 0;
     z-index: 10;
@@ -218,13 +284,41 @@
 .appraisal-flex-table textarea.form-control:focus,
 .appraisal-flex-table input.form-control:focus {
     background: #f8f9fa;
-    border-bottom: 1px solid #004D8B;
+    border-bottom: 1px solid #9989C9;
     outline: none;
 }
 
 .o_field_kra_tabs_widget {
     width: 100% !important;
     display: block !important;
+}
+
+/* --- Alternating COLUMN colors (Zebra Columns) --- */
+.o_kra_kpi_section .table, 
+.appraisal-flex-table, 
+.appraisal-expand-table {
+    
+    tbody tr {
+        // Reset row backgrounds to ensure they don't override columns
+        background-color: transparent !important;
+
+        // ODD Columns (1st, 3rd, 5th...) -> White
+        td:nth-child(odd) {
+            background-color: #ffffff !important;
+        }
+
+        // EVEN Columns (2nd, 4th, 6th...) -> Soft Blue Shade
+        td:nth-child(even) {
+            background-color: #fcfdff !important; 
+        }
+    }
+}
+
+/* Ensure headers stay the solid brand blue you already have */
+.appraisal-flex-table thead th, 
+.o_kra_kpi_section .table thead th {
+    background-color: #9989C9 !important;
+    color: #EEF4FA !important;
 }
 
 
@@ -288,10 +382,10 @@
         z-index: 20 !important;
     }
 
-    .appraisal-flex-table thead th.s-1 { z-index: 24 !important; background-color: #f8f9fa !important; }
-    .appraisal-flex-table thead th.s-2 { z-index: 23 !important; background-color: #f8f9fa !important; }
-    .appraisal-flex-table thead th.s-3 { z-index: 22 !important; background-color: #f8f9fa !important; }
-    .appraisal-flex-table thead th.s-4 { z-index: 21 !important; background-color: #f8f9fa !important; }
+    .appraisal-flex-table thead th.s-1 { z-index: 24 !important; background-color: #1A6FAD !important; }
+    .appraisal-flex-table thead th.s-2 { z-index: 23 !important; background-color: #1A6FAD !important; }
+    .appraisal-flex-table thead th.s-3 { z-index: 22 !important; background-color: #1A6FAD !important; }
+    .appraisal-flex-table thead th.s-4 { z-index: 21 !important; background-color: #1A6FAD !important; }
 
     .appraisal-wrapper::-webkit-scrollbar { height: 10px; }
     .appraisal-wrapper::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 4px; }
@@ -320,11 +414,17 @@
 
 .appraisal-expand-table {
     width: 100%;
-    table-layout: fixed; 
+    table-layout: fixed;
     border-collapse: separate;
     border-spacing: 0;
-    word-wrap: break-word; 
+    word-wrap: break-word;
+    border: 1.5px solid #B8D0E8;
+    border-radius: 8px;
+    overflow: hidden;
 }
+
+.appraisal-expand-table tbody tr:hover td { background-color: #EEF4FA; }
+.appraisal-expand-table tbody tr:last-child td { border-bottom: none; }
 
 .pop-col-name { width: 13%; }
 .pop-col-base-score { width: 6%; }
@@ -336,15 +436,18 @@
     position: sticky;
     top: 0;
     z-index: 10;
-    background-color: #f8f9fa;
-    padding: 10px 8px;
+    background-color: #9989C9;
+    padding: 16px 8px;
     font-size: 12px;
     font-weight: 600;
     text-transform: uppercase;
-    color: #495057;
-    border-bottom: 2px solid #dee2e6;
+    color: #EEF4FA;
+    border-bottom: none;
     vertical-align: middle;
 }
+
+.appraisal-expand-table thead th:first-child { border-radius: 8px 0 0 0; }
+.appraisal-expand-table thead th:last-child  { border-radius: 0 8px 0 0; }
 
 .appraisal-expand-table tbody tr { border-bottom: 1px solid #f1f3f5; }
 .appraisal-expand-table tbody td { padding: 8px; vertical-align: top; }

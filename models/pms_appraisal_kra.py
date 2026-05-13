@@ -59,6 +59,15 @@ class PMSAppraisalKRA(models.Model):
         compute_sudo=True,
         help='Sum of all selected KPI weightages in this KRA'
     )
+
+    evidence_attachment_ids = fields.Many2many(
+        'ir.attachment',
+        'pms_kra_attachment_rel',
+        'kra_id',
+        'attachment_id',
+        string="Evidence Documents",
+        help="Supporting documents for the employee to upload during self-appraisal."
+    )
     
     @api.depends('kpi_ids')
     def _compute_kpi_count(self):

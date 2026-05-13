@@ -71,10 +71,18 @@
                 groups="hr_employee_evaluation.group_pms_hr_manager"
                 sequence="2"/>
 
+        <menuitem id="menu_competency_template_config"
+                name="Competency Template"
+                parent="menu_appraisal_configuration"
+                action="action_competency_template"
+                groups="hr_employee_evaluation.group_pms_hr_manager"
+                sequence="3" />
+
         <menuitem id="menu_scoring_engine"
                 name="Scoring Engine"
                 parent="menu_appraisal_configuration"
                 action="action_pms_scoring_engine"
                 groups="hr_employee_evaluation.group_pms_hr_manager"
-                sequence="3"/>
+                sequence="4"/>
+
 </odoo>

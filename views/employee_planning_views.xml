@@ -7,18 +7,18 @@
         <field name="model">pms.appraisal</field>
         <field name="arch" type="xml">
             <list string="My Performance Plan" create="false" delete="false">
-                <field name="employee_id" string="Employee Name"/>
-                <field name="employee_evaluation_group_id" string="Evaluation Group"/>
-                <field name="supervisor_id" string="Manager"/>
-                <field name="secondary_supervisor_id" string="Secondary Manager"/>
-                <field name="reviewer_id" string="Reviewer"/>
-                <field name="planning_start_date" string="Planning Start"/>
-                <field name="planning_end_date" string="Planning Deadline"/>
+                <field name="employee_id" string="Employee Name" />
+                <field name="employee_evaluation_group_id" string="Evaluation Group" />
+                <field name="supervisor_id" string="Manager" />
+                <field name="secondary_supervisor_id" string="Secondary Manager" />
+                <field name="reviewer_id" string="Reviewer" />
+                <field name="planning_start_date" string="Planning Start" />
+                <field name="planning_end_date" string="Planning Deadline" />
                 <field name="state"
-                       widget="badge"
-                       decoration-info="state == 'draft'"
-                       decoration-warning="state in ('pending_supervisor', 'pending_secondary_supervisor', 'pending_reviewer')"
-                       decoration-success="state == 'approved'"/>
+                    widget="badge"
+                    decoration-info="state == 'draft'"
+                    decoration-warning="state in ('pending_supervisor', 'pending_secondary_supervisor', 'pending_reviewer')"
+                    decoration-success="state == 'approved'" />
             </list>
         </field>
     </record>
@@ -33,151 +33,262 @@
                         Submit button only visible to the employee, only in draft
                     -->
                     <button name="action_submit_for_review"
-                            string="Submit for Review"
-                            type="object"
-                            class="btn-primary"
-                            invisible="state not in ['draft'] or not is_own_appraisal"
-                            confirm="Are you sure you want to submit your performance plan? Make sure your total score matches the template."/>
+                        string="Submit for Review"
+                        type="object"
+                        class="btn-primary"
+                        invisible="state not in ['draft'] or not is_own_appraisal"
+                        confirm="Are you sure you want to submit your performance plan? Make sure your total score matches the template." />
 
-                    <field name="state"
-                           widget="statusbar"
-                           statusbar_visible="draft,pending_supervisor,pending_secondary_supervisor,pending_reviewer,approved"/>
+                    <!-- state statusbar moved inline to profile header -->
                 </header>
 
                 <sheet style="max-width: 100% !important; width: 100% !important;">
 
                     <div class="oe_button_box" name="button_box">
                         <button class="oe_stat_button"
-                                type="object"
-                                name="action_view_plan_summary"
-                                icon="fa-list-alt"
-                                target="_blank">
+                            type="object"
+                            name="action_view_plan_summary"
+                            icon="fa-list-alt"
+                            target="_blank">
                             <div class="o_stat_info">
                                 <span class="o_stat_text">View Summary</span>
                             </div>
                         </button>
 
 
-                        <button type="button" 
-                                class="oe_stat_button pms-chatter-toggle-btn"
-                                icon="fa-comments"
-                                title="Toggle Chatter">
+                        <button type="button"
+                            class="oe_stat_button pms-chatter-toggle-btn"
+                            icon="fa-comments"
+                            title="Toggle Chatter">
                             <div class="o_stat_info">
                                 <span class="o_stat_text">Chatter</span>
                             </div>
                         </button>
-  
+
 
                     </div>
 
-                    <group>
-                        <group string="Employee Information">
-                            <field name="employee_id" readonly="1" options="{'no_open': True}"/>
-                            <field name="employee_job_id" string="Job Position" readonly="1" options="{'no_open': True}"/>
-                            <field name="employee_department_id" string="Department" readonly="1" options="{'no_open': True}"/>
-                            <field name="employee_evaluation_group_id" string="Evaluation Group" readonly="1" options="{'no_open': True}"/>
-                        </group>
+                    <!-- Hidden fields needed for logic only -->
+                    <field name="employee_id" readonly="1" options="{'no_open': True}" invisible="1"/>
+                    <field name="employee_job_id" string="Job Position" readonly="1" options="{'no_open': True}" invisible="1"/>
+                    <field name="employee_department_id" string="Department" readonly="1" options="{'no_open': True}" invisible="1"/>
+                    <field name="employee_evaluation_group_id" string="Evaluation Group" readonly="1" options="{'no_open': True}" invisible="1"/>
+                    <field name="planning_start_date" string="Start Date" invisible="1"/>
+                    <field name="planning_end_date" string="Deadline" invisible="1"/>
+                    <field name="template_total_score" string="Required Total Score" widget="float" invisible="1"/>
+                    <field name="current_total_score" string="Your Current Total" widget="float"
+                        decoration-success="current_total_score == template_total_score"
+                        decoration-danger="current_total_score != template_total_score"
+                        invisible="1"/>
 
-                        <group string="Plan Details">
-                            <field name="supervisor_id" string="Manager" readonly="1" options="{'no_open': True}"/>
-                            <field name="secondary_supervisor_id" string="Secondary Manager" readonly="1" options="{'no_open': True}"/>
-                            <field name="reviewer_id" string="Reviewer" readonly="1" options="{'no_open': True}"/>
-                            <field name="template_id" string="Template Name" readonly="1" options="{'no_open': True}"/>
-                        </group>
-                    </group>
+                    <!-- Two-column layout: profile+stats left, details card right -->
+                    <div class="pms_plan_two_col_wrapper">
 
-                    <group>
-                        <group string="Planning Period">
-                            <field name="planning_start_date" string="Start Date"/>
-                            <field name="planning_end_date" string="Deadline"/>
-                        </group>
-
-                        <group string="Score Validation">
-                            <field name="template_total_score"
-                                   string="Required Total Score"
-                                   widget="float"
-                                   class="fw-bold text-primary"/>
-                            <field name="current_total_score"
-                                   string="Your Current Total"
-                                   widget="float"
-                                   decoration-success="current_total_score == template_total_score"
-                                   decoration-danger="current_total_score != template_total_score"
-                                   class="fw-bold"/>
-                            <div class="alert alert-warning"
-                                 invisible="current_total_score == template_total_score or state != 'draft'">
-                                <i class="fa fa-exclamation-triangle"/>
-                                <strong>Warning:</strong> Your total score must equal
-                                <field name="template_total_score" class="d-inline fw-bold"/>
-                                before you can submit.
+                        <!-- LEFT: Profile + stat cards -->
+                        <div class="pms_plan_left_col">
+                            <div class="pms_plan_header">
+                                <div class="pms_plan_profile_row">
+                                    <field name="employee_id"
+                                        widget="many2one_avatar_employee"
+                                        readonly="1"
+                                        options="{'no_open': True}"
+                                        nolabel="1"
+                                        class="pms_plan_avatar_field"/>
+                                    <div class="pms_plan_profile_info">
+                                        <div class="pms_plan_emp_name">
+                                            <field name="employee_id" readonly="1" options="{'no_open': True}" nolabel="1" class="pms_emp_name_field"/>
+                                        </div>
+                                        <div class="pms_plan_meta_row">
+                                            <span class="pms_plan_meta_item">
+                                                <i class="fa fa-briefcase me-1 text-muted"/>
+                                                <field name="employee_job_id" string="Job Position" readonly="1" options="{'no_open': True}" nolabel="1" class="d-inline"/>
+                                            </span>
+                                            <span class="pms_plan_meta_sep">·</span>
+                                            <span class="pms_plan_meta_item">
+                                                <i class="fa fa-building me-1 text-muted"/>
+                                                <field name="employee_department_id" string="Department" readonly="1" options="{'no_open': True}" nolabel="1" class="d-inline"/>
+                                            </span>
+                                            <span class="pms_plan_meta_sep">·</span>
+                                            <span class="pms_plan_meta_item">
+                                                <i class="fa fa-users me-1 text-muted"/>
+                                                <field name="employee_evaluation_group_id" string="Evaluation Group" readonly="1" options="{'no_open': True}" nolabel="1" class="d-inline"/>
+                                            </span>
+                                        </div>
+                                        <div class="pms_plan_status_row mt-2">
+                                            <field name="state" widget="statusbar"
+                                                statusbar_visible="draft,pending_supervisor,pending_secondary_supervisor,pending_reviewer,approved"
+                                                class="pms_inline_statusbar"/>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="pms_plan_stats_row mt-3">
+                                    <div class="pms_plan_stat_card pms_stat_score_alloc">
+                                        <div class="pms_stat_label">Allocated Score</div>
+                                        <div class="pms_stat_value">
+                                            <field name="template_total_score" widget="float" nolabel="1" readonly="1"/>
+                                        </div>
+                                    </div>
+                                    <div class="pms_plan_stat_card pms_stat_score_current">
+                                        <div class="pms_stat_label">Current Total</div>
+                                        <div class="pms_stat_value">
+                                            <field name="current_total_score" widget="float" nolabel="1" readonly="1"
+                                                decoration-success="current_total_score == template_total_score"
+                                                decoration-danger="current_total_score != template_total_score"/>
+                                        </div>
+                                    </div>
+                                    <div class="pms_plan_stat_card pms_stat_date_start">
+                                        <div class="pms_stat_label">Planning Start</div>
+                                        <div class="pms_stat_value">
+                                            <field name="planning_start_date" nolabel="1"/>
+                                        </div>
+                                    </div>
+                                    <div class="pms_plan_stat_card pms_stat_date_end">
+                                        <div class="pms_stat_label">Deadline</div>
+                                        <div class="pms_stat_value">
+                                            <field name="planning_end_date" nolabel="1"/>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
-                        </group>
-                    </group>
+                        </div>
+
+                        <!-- RIGHT: Plan details card -->
+                        <div class="pms_plan_right_col">
+                            <div class="pms_details_card">
+
+                                <div class="pms_details_section_title">Plan Details</div>
+                                <div class="pms_detail_row">
+                                    <span class="pms_detail_label">Manager</span>
+                                    <div class="pms_detail_value">
+                                        <field name="supervisor_id" readonly="1" options="{'no_open': True}" nolabel="1"/>
+                                    </div>
+                                </div>
+                                <div class="pms_detail_row" invisible="not secondary_supervisor_id">
+                                    <span class="pms_detail_label">Secondary Manager</span>
+                                    <div class="pms_detail_value">
+                                        <field name="secondary_supervisor_id" readonly="1" options="{'no_open': True}" nolabel="1"/>
+                                    </div>
+                                </div>
+                                <div class="pms_detail_row" invisible="not reviewer_id">
+                                    <span class="pms_detail_label">Reviewer</span>
+                                    <div class="pms_detail_value">
+                                        <field name="reviewer_id" readonly="1" options="{'no_open': True}" nolabel="1"/>
+                                    </div>
+                                </div>
+                                <div class="pms_detail_row">
+                                    <span class="pms_detail_label">Template</span>
+                                    <div class="pms_detail_value">
+                                        <field name="template_id" readonly="1" options="{'no_open': True}" nolabel="1"/>
+                                    </div>
+                                </div>
+
+                                <div class="pms_detail_row" invisible="not submitted_date">
+                                    <span class="pms_detail_label">Submitted On</span>
+                                    <div class="pms_detail_value">
+                                        <field name="submitted_date" readonly="1" nolabel="1"/>
+                                    </div>
+                                </div>
+                                <div class="pms_detail_row" invisible="not draft_reset_date">
+                                    <span class="pms_detail_label">Last Reset By HR</span>
+                                    <div class="pms_detail_value">
+                                        <field name="draft_reset_date" readonly="1" nolabel="1"/>
+                                    </div>
+                                </div>
+                                <div class="pms_detail_row" invisible="not resubmission_deadline">
+                                    <span class="pms_detail_label">Resubmit By</span>
+                                    <div class="pms_detail_value">
+                                        <field name="resubmission_deadline" readonly="1" nolabel="1"/>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <div class="alert alert-warning"
+                        invisible="current_total_score == template_total_score or state != 'draft'">
+                        <i class="fa fa-exclamation-triangle" />
+                        <strong>Warning:</strong>
+                        Your total score must equal the required total before you can submit.
+                    </div>
 
                     <!-- Access control flags (helpers) -->
-                    <field name="is_own_appraisal" invisible="1"/>
-                    <field name="can_employee_edit" invisible="1"/>
-                    <field name="is_editable" invisible="1"/>
-                    <field name="cycle_id" invisible="1"/>
+                    <field name="is_own_appraisal" invisible="1" />
+                    <field name="can_employee_edit" invisible="1" />
+                    <field name="is_editable" invisible="1" />
+                    <field name="cycle_id" invisible="1" />
 
-
-                    <hr class="mt-4 mb-4"/>
                     <!--
                         employee edit during draft
                         readonly during pending_supervisor
                     -->
                     <field name="kra_ids"
-                            widget="kra_tabs_widget"
-                            options="{'mode': 'employee'}"
-                            readonly="not can_employee_edit"
-                            nolabel="1"
-                            invisible="state not in ('draft', 'pending_supervisor', 'pending_secondary_supervisor', 'pending_reviewer') and not (can_employee_edit)">
+                        widget="kra_tabs_widget"
+                        options="{'mode': 'employee'}"
+                        readonly="not can_employee_edit"
+                        nolabel="1"
+                        invisible="state not in ('draft', 'pending_supervisor', 'pending_secondary_supervisor', 'pending_reviewer') and not (can_employee_edit)">
                         <list>
-                            <field name="name"/>
+                            <field name="name" />
                             <field name="kpi_ids">
                                 <list>
-                                    <field name="name"/>
-                                    <field name="description"/>
-                                    <field name="criteria"/>
-                                    <field name="weightage"/>
-                                    <field name="is_selected"/>
-                                    <field name="target"/>
-                                    <field name="planning_remarks"/>
-                                    <field name="is_clone" invisible="1"/>
-                                    <field name="snapshot_employee_target" invisible="1"/>  <!-- History fields -->
-                                    <field name="snapshot_supervisor_target" invisible="1"/>
-                                    <field name="snapshot_secondary_target" invisible="1"/>
+                                    <field name="name" />
+                                    <field name="description" />
+                                    <field name="criteria" />
+                                    <field name="weightage" />
+                                    <field name="is_selected" />
+                                    <field name="target" />
+                                    <field name="planning_remarks" />
+                                    <field name="is_clone" invisible="1" />
+                                    
+                                    <field name="snapshot_employee_target" invisible="1" /> 
+                                    <field name="snapshot_employee_criteria" invisible="1" />
+
+                                    <field name="snapshot_supervisor_target" invisible="1" />
+                                    <field name="snapshot_supervisor_criteria" invisible="1" />
+                                    
+                                    <field name="snapshot_secondary_target" invisible="1" />
+                                    <field name="snapshot_secondary_criteria" invisible="1" />
                                 </list>
                             </field>
                         </list>
                     </field>
 
                     <field name="kra_ids"
-                            widget="kra_tabs_widget"
-                            options="{'mode': 'supervisor'}"
-                            readonly="1"
-                            nolabel="1"
-                            invisible="state not in ('approved', 'appraisal_draft', 'appraisal_pending_supervisor', 'appraisal_pending_secondary_supervisor', 'appraisal_pending_reviewer', 'appraisal_approved') or can_employee_edit">
+                        widget="kra_tabs_widget"
+                        options="{'mode': 'supervisor'}"
+                        readonly="1"
+                        nolabel="1"
+                        invisible="state not in ('approved', 'appraisal_draft', 'appraisal_pending_supervisor', 'appraisal_pending_secondary_supervisor', 'appraisal_pending_reviewer', 'appraisal_approved') or can_employee_edit">
                         <list>
-                            <field name="name"/>
+                            <field name="name" />
                             <field name="kpi_ids">
                                 <list>
-                                    <field name="name"/>
-                                    <field name="description"/>
-                                    <field name="criteria"/>
-                                    <field name="weightage"/>
-                                    <field name="is_selected"/>
-                                    <field name="target"/>
-                                    <field name="planning_remarks"/>
-                                    <field name="snapshot_employee_target" invisible="1"/>     
-                                    <field name="snapshot_supervisor_target" invisible="1"/>     
-                                    <field name="snapshot_secondary_target" invisible="1"/>
+                                    <field name="name" />
+                                    <field name="description" />
+                                    <field name="criteria" />
+                                    <field name="weightage" />
+                                    <field name="is_selected" />
+                                    <field name="target" />
+                                    <field name="planning_remarks" />
+
+                                    <field name="snapshot_employee_target" invisible="1" /> 
+                                    <field name="snapshot_employee_criteria" invisible="1" />
+
+                                    <field name="snapshot_supervisor_target" invisible="1" />
+                                    <field name="snapshot_supervisor_criteria" invisible="1" />
+                                    
+                                    <field name="snapshot_secondary_target" invisible="1" />
+                                    <field name="snapshot_secondary_criteria" invisible="1" />
+                     
                                 </list>
                             </field>
                         </list>
                     </field>
                 </sheet>
 
-                <chatter/>
+                <chatter />
             </form>
         </field>
     </record>
@@ -187,17 +298,18 @@
         <field name="name">My Performance Plan</field>
         <field name="res_model">pms.appraisal</field>
         <field name="view_mode">list,form</field>
-        <field name="view_ids" eval="[(5, 0, 0),
+        <field name="view_ids"
+            eval="[(5, 0, 0),
             (0, 0, {'view_mode': 'list', 'view_id': ref('view_employee_performance_planning_list')}),
-            (0, 0, {'view_mode': 'form', 'view_id': ref('view_employee_performance_planning_form')})]"/>
+            (0, 0, {'view_mode': 'form', 'view_id': ref('view_employee_performance_planning_form')})]" />
         <field name="domain">[
             ('employee_id.user_id', '=', uid),
             ('cycle_id.state', 'in', ['planning', 'monitoring', 'appraisal'])
-        ]</field>
+            ]</field>
         <field name="context">{
             'create': False,
             'delete': False,
-        }</field>
+            }</field>
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">
                 No active performance plan

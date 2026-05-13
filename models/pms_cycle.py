@@ -635,4 +635,3 @@ class PMSCycle(models.Model):
             message_type='notification'
         )
         return True
-

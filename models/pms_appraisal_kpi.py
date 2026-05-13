@@ -141,6 +141,21 @@ class PMSAppraisalKPI(models.Model):
         readonly=True,
         help='See supervisors edits to the employees target field.'
     )
+
+    snapshot_employee_criteria = fields.Text(
+        string='Employee Criteria Snapshot',
+        readonly=True
+    )
+
+    snapshot_supervisor_criteria = fields.Text(
+        string='Supervisor Criteria Snapshot',
+        readonly=True
+    )
+
+    snapshot_secondary_criteria = fields.Text(
+        string='Secondary Criteria Snapshot',
+        readonly=True
+    )
     
     # computed fields
     is_planning_complete = fields.Boolean(
