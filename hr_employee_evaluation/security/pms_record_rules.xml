@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <record id="rule_pms_appraisal_employee" model="ir.rule">
+            <field name="name">PMS Appraisal: Employee - Own</field>
+            <field name="model_id" ref="model_pms_appraisal"/>
+            <field name="domain_force">[('employee_id.user_id', '=', user.id)]</field>
+            <field name="groups" eval="[(4, ref('group_pms_employee'))]"/>
+        </record>
+
+        <record id="rule_pms_appraisal_supervisor" model="ir.rule">
+            <field name="name">PMS Appraisal: Supervisor - Subordinates</field>
+            <field name="model_id" ref="model_pms_appraisal"/>
+            <field name="domain_force">[
+                '|',
+                ('supervisor_id.user_id', '=', user.id),
+                ('secondary_supervisor_id.user_id', '=', user.id)
+            ]</field>
+            <field name="groups" eval="[(4, ref('group_pms_supervisor'))]"/>
+        </record>
+
+        <record id="rule_pms_appraisal_reviewer" model="ir.rule">
+            <field name="name">PMS Appraisal: Reviewer - Assigned</field>
+            <field name="model_id" ref="model_pms_appraisal"/>
+            <field name="domain_force">[('reviewer_id.user_id', '=', user.id)]</field>
+            <field name="groups" eval="[(4, ref('group_pms_reviewer'))]"/>
+        </record>
+
+        <record id="rule_pms_appraisal_hr_manager" model="ir.rule">
+            <field name="name">PMS Appraisal: HR Manager - All</field>
+            <field name="model_id" ref="model_pms_appraisal"/>
+            <field name="domain_force">[(1, '=', 1)]</field>
+            <field name="groups" eval="[(4, ref('group_pms_hr_manager'))]"/>
+        </record>
+
+        <record id="rule_pms_cycle_employee" model="ir.rule">
+            <field name="name">PMS Cycle: Employee - Own</field>
+            <field name="model_id" ref="model_pms_cycle"/>
+            <field name="domain_force">[('appraisal_ids.employee_id.user_id', '=', user.id)]</field>
+            <field name="groups" eval="[(4, ref('group_pms_employee'))]"/>
+        </record>
+
+        <record id="rule_pms_cycle_supervisor" model="ir.rule">
+            <field name="name">PMS Cycle: Supervisor - Involved</field>
+            <field name="model_id" ref="model_pms_cycle"/>
+            <field name="domain_force">[
+                '|',
+                ('appraisal_ids.supervisor_id.user_id', '=', user.id),
+                ('appraisal_ids.secondary_supervisor_id.user_id', '=', user.id)
+            ]</field>
+            <field name="groups" eval="[(4, ref('group_pms_supervisor'))]"/>
+        </record>
+
+        <record id="rule_pms_cycle_reviewer" model="ir.rule">
+            <field name="name">PMS Cycle: Reviewer - Involved</field>
+            <field name="model_id" ref="model_pms_cycle"/>
+            <field name="domain_force">[('appraisal_ids.reviewer_id.user_id', '=', user.id)]</field>
+            <field name="groups" eval="[(4, ref('group_pms_reviewer'))]"/>
+        </record>
+
+        <record id="rule_pms_cycle_hr_manager" model="ir.rule">
+            <field name="name">PMS Cycle: HR Manager - All</field>
+            <field name="model_id" ref="model_pms_cycle"/>
+            <field name="domain_force">[(1, '=', 1)]</field>
+            <field name="groups" eval="[(4, ref('group_pms_hr_manager'))]"/>
+        </record>
+
+        <record id="rule_pms_appraisal_kra_employee" model="ir.rule">
+            <field name="name">PMS Appraisal KRA: Employee - Own</field>
+            <field name="model_id" ref="model_pms_appraisal_kra"/>
+            <field name="domain_force">[('appraisal_id.employee_id.user_id', '=', user.id)]</field>
+            <field name="groups" eval="[(4, ref('group_pms_employee'))]"/>
+        </record>
+
+        <record id="rule_pms_appraisal_kra_supervisor" model="ir.rule">
+            <field name="name">PMS Appraisal KRA: Supervisor - Subordinates</field>
+            <field name="model_id" ref="model_pms_appraisal_kra"/>
+            <field name="domain_force">[
+                '|',
+                ('appraisal_id.supervisor_id.user_id', '=', user.id),
+                ('appraisal_id.secondary_supervisor_id.user_id', '=', user.id)
+            ]</field>
+            <field name="groups" eval="[(4, ref('group_pms_supervisor'))]"/>
+        </record>
+
+        <record id="rule_pms_appraisal_kra_reviewer" model="ir.rule">
+            <field name="name">PMS Appraisal KRA: Reviewer - Assigned</field>
+            <field name="model_id" ref="model_pms_appraisal_kra"/>
+            <field name="domain_force">[('appraisal_id.reviewer_id.user_id', '=', user.id)]</field>
+            <field name="groups" eval="[(4, ref('group_pms_reviewer'))]"/>
+        </record>
+
+        <record id="rule_pms_appraisal_kra_hr_manager" model="ir.rule">
+            <field name="name">PMS Appraisal KRA: HR Manager - All</field>
+            <field name="model_id" ref="model_pms_appraisal_kra"/>
+            <field name="domain_force">[(1, '=', 1)]</field>
+            <field name="groups" eval="[(4, ref('group_pms_hr_manager'))]"/>
+        </record>
+
+        <record id="rule_pms_appraisal_kpi_employee" model="ir.rule">
+            <field name="name">PMS Appraisal KPI: Employee - Own</field>
+            <field name="model_id" ref="model_pms_appraisal_kpi"/>
+            <field name="domain_force">[('appraisal_id.employee_id.user_id', '=', user.id)]</field>
+            <field name="groups" eval="[(4, ref('group_pms_employee'))]"/>
+        </record>
+
+        <record id="rule_pms_appraisal_kpi_supervisor" model="ir.rule">
+            <field name="name">PMS Appraisal KPI: Supervisor - Subordinates</field>
+            <field name="model_id" ref="model_pms_appraisal_kpi"/>
+            <field name="domain_force">[
+                '|',
+                ('appraisal_id.supervisor_id.user_id', '=', user.id),
+                ('appraisal_id.secondary_supervisor_id.user_id', '=', user.id)
+            ]</field>
+            <field name="groups" eval="[(4, ref('group_pms_supervisor'))]"/>
+        </record>
+
+        <record id="rule_pms_appraisal_kpi_reviewer" model="ir.rule">
+            <field name="name">PMS Appraisal KPI: Reviewer - Assigned</field>
+            <field name="model_id" ref="model_pms_appraisal_kpi"/>
+            <field name="domain_force">[('appraisal_id.reviewer_id.user_id', '=', user.id)]</field>
+            <field name="groups" eval="[(4, ref('group_pms_reviewer'))]"/>
+        </record>
+
+        <record id="rule_pms_appraisal_kpi_hr_manager" model="ir.rule">
+            <field name="name">PMS Appraisal KPI: HR Manager - All</field>
+            <field name="model_id" ref="model_pms_appraisal_kpi"/>
+            <field name="domain_force">[(1, '=', 1)]</field>
+            <field name="groups" eval="[(4, ref('group_pms_hr_manager'))]"/>
+        </record>
+
+    </data>
+</odoo>

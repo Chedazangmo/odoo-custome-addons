@@ -1,0 +1,296 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_appraisal_template_list" model="ir.ui.view">
+        <field name="name">appraisal.template.list</field>
+        <field name="model">appraisal.template</field>
+        <field name="arch" type="xml">
+            <list string="Appraisal Templates">
+                <field name="name" />
+                <field name="evaluation_group_id" />
+                <field name="score_allocation_id" string="Score Allocation" />
+                <field name="kpi_weight" string="KPI Weight" readonly="1" />
+                <field name="competency_weight" string="Comp. Weight" readonly="1" />
+                <field name="total_kpi_score" string="KPI Score" />
+                <field name="competency_template_id" string="Competency Template" />
+            </list>
+        </field>
+    </record>
+
+    <record id="view_appraisal_template_form" model="ir.ui.view">
+        <field name="name">appraisal.template.form</field>
+        <field name="model">appraisal.template</field>
+        <field name="arch" type="xml">
+            <form string="Appraisal Template">
+                <sheet style="width: 100%; max-width: 1400px; margin: 0 auto;">
+                    <!-- Removed button_box with Total Score and Competency Groups -->
+
+                    <!-- Main fields row -->
+                    <group>
+                        <group string="Template Info">
+                            <field name="name" placeholder="e.g. Druksmart Template" />
+                            <field name="evaluation_group_id" options="{'no_create': True}" />
+                        </group>
+                        <group string="Score Allocation">
+                            <field name="score_allocation_id" options="{'no_create': False}" />
+                        </group>
+                    </group>
+
+                    <!-- Allocation status banner -->
+                    <div class="alert alert-warning mt-2 mb-0" role="alert"
+                        invisible="not score_allocation_id or allocation_status == 'exact'"
+                        style="border-radius: 8px;">
+                        <i class="fa fa-exclamation-triangle me-2" />
+                        <strong>Warning:</strong> The
+                        linked score allocation does not sum to 100. Fix it before locking this
+                        template. </div>
+
+                    <field name="allocation_status" invisible="1" />
+
+                    <!-- KPI and Competency Configuration - Consistent Side by Side Layout -->
+                    <div style="margin: 20px 0; display: flex; gap: 20px; width: 100%;">
+
+                        <!-- KPI Configuration Card -->
+                        <div
+                            style="flex: 1; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+                            <div style="padding: 20px;">
+                                <div
+                                    style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                                    <div style="display: flex; align-items: center; gap: 8px;">
+                                        <i class="fa fa-tachometer"
+                                            style="font-size: 20px; color: #3498db;"></i>
+                                        <strong style="font-size: 16px; color: #2c3e50;">KPI
+                                            Distribution</strong>
+                                    </div>
+                                    <div
+                                        style="background: #ecf0f1; padding: 4px 12px; border-radius: 20px;">
+                                        <span
+                                            style="font-size: 12px; color: #7f8c8d; font-weight: 500;">
+                                            Weight: <field name="kpi_weight" class="d-inline"
+                                                style="font-weight: bold; color: #3498db;" /> pts </span>
+                                    </div>
+                                </div>
+
+                                <div
+                                    style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 20px;">
+                                    <div>
+                                        <div
+                                            style="font-size: 11px; color: #95a5a6; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px;">
+                                            <i class="fa fa-check-circle me-1"></i> ALLOCATED </div>
+                                        <strong style="font-size: 28px; color: #2c3e50;">
+                                            <field name="total_kpi_score" class="d-inline" /> pts </strong>
+                                    </div>
+                                    <div style="text-align: right;">
+                                        <div
+                                            style="font-size: 11px; color: #95a5a6; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px;">
+                                            <i class="fa fa-clock-o me-1"></i> REMAINING </div>
+                                        <strong style="font-size: 28px; color: #e74c3c;">
+                                            <field name="kpi_remaining" class="d-inline" /> pts </strong>
+                                    </div>
+                                </div>
+
+                                <div
+                                    style="background: #ecf0f1; border-radius: 6px; height: 6px; overflow: hidden;">
+                                    <div class="progress-bar"
+                                        role="progressbar"
+                                        style="width: 0%; background: #3498db; height: 100%; transition: width 0.3s ease;">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Competency Configuration Card -->
+                        <div
+                            style="flex: 1; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+                            <div style="padding: 20px;">
+                                <div
+                                    style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                                    <div style="display: flex; align-items: center; gap: 8px;">
+                                        <i class="fa fa-star"
+                                            style="font-size: 20px; color: #27ae60;"></i>
+                                        <strong style="font-size: 16px; color: #2c3e50;">Competency
+                                            Distribution</strong>
+                                    </div>
+                                    <div
+                                        style="background: #ecf0f1; padding: 4px 12px; border-radius: 20px;">
+                                        <span
+                                            style="font-size: 12px; color: #7f8c8d; font-weight: 500;">
+                                            Weight: <field name="competency_weight" class="d-inline"
+                                                style="font-weight: bold; color: #27ae60;" /> pts </span>
+                                    </div>
+                                </div>
+
+                                <div style="margin-bottom: 20px;">
+                                    <field name="competency_template_id"
+                                        string="Competency Template"
+                                        options="{'no_create': True, 'no_open': False}"
+                                        style="width: 100%; border: 1px solid #dcdde1; border-radius: 6px; padding: 8px 12px; margin-bottom: 12px;"
+                                        placeholder="Select or create template" />
+
+                                    <div style="display: flex; gap: 10px;">
+                                        <button name="action_create_competency_template"
+                                            type="object"
+                                            string="Create Template"
+                                            class="btn btn-primary btn-sm"
+                                            icon="fa-plus"
+                                            invisible="competency_template_id != False"
+                                            style="flex: 1; border-radius: 6px;" />
+
+                                        <button name="action_open_competency_template"
+                                            type="object"
+                                            string="Open Template"
+                                            class="btn btn-default btn-sm"
+                                            icon="fa-external-link"
+                                            invisible="competency_template_id == False"
+                                            style="flex: 1; border-radius: 6px;" />
+                                    </div>
+                                </div>
+
+                                <div style="background: #f8f9fa; border-radius: 8px; padding: 15px;">
+                                    <div
+                                        style="display: flex; justify-content: space-between; align-items: center;">
+                                        <span
+                                            style="font-size: 12px; color: #7f8c8d; text-transform: uppercase; letter-spacing: 0.5px;">
+                                            <i class="fa fa-pie-chart me-1"></i> POINTS TOTAL: </span>
+                                        <strong style="font-size: 24px; color: #2c3e50;">
+                                            <field name="competency_total_hr_points"
+                                                class="d-inline" />
+                                            <span style="font-size: 14px; color: #95a5a6;"> / <field
+                                                    name="competency_weight" class="d-inline" /> pts</span>
+                                        </strong>
+                                    </div>
+                                    <div style="margin-top: 10px;">
+                                        <div
+                                            style="background: #ecf0f1; border-radius: 4px; height: 6px; overflow: hidden;">
+                                            <div class="progress-bar"
+                                                role="progressbar"
+                                                style="width: 0%; background: #27ae60; height: 100%; transition: width 0.3s ease;">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Status banners with clean styling -->
+                    <div class="alert alert-success mt-2 mb-0" role="alert"
+                        invisible="kpi_status != 'exact'"
+                        style="border-radius: 8px; background-color: #d4edda; border-color: #c3e6cb; color: #155724; padding: 10px 15px;">
+                        <i class="fa fa-check-circle me-2" />
+                        <strong>KPI fully allocated!</strong>
+                        All <field name="kpi_weight" readonly="1" /> points have been distributed
+                        successfully. </div>
+                    <div class="alert alert-info mt-2 mb-0" role="alert"
+                        invisible="kpi_status != 'under' or not score_allocation_id"
+                        style="border-radius: 8px; background-color: #d1ecf1; border-color: #bee5eb; color: #0c5460; padding: 10px 15px;">
+                        <i class="fa fa-info-circle me-2" />
+                        <strong>KPI incomplete:</strong> <field
+                            name="kpi_remaining" readonly="1" /> point(s) remaining. Assign them in
+                        the KRAs below to complete the allocation. </div>
+                    <div class="alert alert-danger mt-2 mb-0" role="alert"
+                        invisible="kpi_status != 'over'"
+                        style="border-radius: 8px; background-color: #f8d7da; border-color: #f5c6cb; color: #721c24; padding: 10px 15px;">
+                        <i class="fa fa-exclamation-triangle me-2" />
+                        <strong>KPI overallocated:</strong> <field
+                            name="total_kpi_score" readonly="1" /> exceeds the KPI weight (<field
+                            name="kpi_weight" readonly="1" />). </div>
+
+                    <field name="kpi_status" invisible="1" />
+
+                    <div class="alert alert-warning mt-2 mb-0" role="alert"
+                        invisible="competency_template_id != False"
+                        style="border-radius: 8px; background-color: #fff3cd; border-color: #ffeeba; color: #856404; padding: 10px 15px;">
+                        <i class="fa fa-exclamation-triangle me-2" />
+                        <strong>No competency template
+                        linked.</strong> Click the "Create Template" button above to create one. </div>
+
+                    <div class="alert alert-danger mt-2 mb-0" role="alert"
+                        invisible="not competency_template_id or not score_allocation_id or competency_points_status == 'exact'"
+                        style="border-radius: 8px; background-color: #f8d7da; border-color: #f5c6cb; color: #721c24; padding: 10px 15px;">
+                        <i class="fa fa-times-circle me-2" />
+                        <strong>Competency mismatch:</strong>
+                        Template total (<field name="competency_total_hr_points" readonly="1" />)
+                        does not match the competency weight (<field name="competency_weight"
+                            readonly="1" />). </div>
+
+                    <field name="competency_points_status" invisible="1" />
+                    <field name="id" invisible="1" />
+
+                    <!-- KRA Tabs Section -->
+                    <div class="mt-4">
+                        <field name="kra_ids" widget="kra_tabs_widget">
+                            <list>
+                                <field name="name" />
+                                <field name="sequence" />
+                                <field name="kpi_ids">
+                                    <list>
+                                        <field name="name" />
+                                        <field name="description" />
+                                        <field name="criteria" />
+                                        <field name="score" />
+                                    </list>
+                                </field>
+                            </list>
+                        </field>
+                    </div>
+
+                </sheet>
+                <chatter />
+            </form>
+        </field>
+    </record>
+
+    <!-- KRA form view with consistent styling -->
+    <record id="view_appraisal_kra_form" model="ir.ui.view">
+        <field name="name">appraisal.kra.form</field>
+        <field name="model">appraisal.kra</field>
+        <field name="arch" type="xml">
+            <form string="Key Result Area">
+                <sheet>
+                    <div class="alert alert-info mb-3" role="alert"
+                        style="border-radius: 8px; background-color: #d1ecf1; border-color: #bee5eb; color: #0c5460; padding: 10px 15px;">
+                        <i class="fa fa-info-circle me-2"></i>
+                        <strong>Tip:</strong> Each KPI should
+                        have a point value. The sum of all KPI points across all KRAs should equal
+                        the total KPI weight defined in the appraisal template. </div>
+
+                    <group>
+                        <group>
+                            <field name="name" placeholder="KRA Name"
+                                style="font-size: 16px; font-weight: 500;" />
+                            <field name="template_id" readonly="1" />
+                            <field name="sequence" widget="handle" />
+                        </group>
+                    </group>
+
+                    <group string="Key Performance Indicators" class="mt-3">
+                        <field name="kpi_ids" nolabel="1">
+                            <list editable="bottom" create="1" delete="1">
+                                <field name="name" string="KPI Name"
+                                    placeholder="e.g., Revenue Growth" width="30%" />
+                                <field name="description" string="Description"
+                                    placeholder="Detailed description" width="35%" />
+                                <field name="score" string="Points" widget="float" width="15%" />
+                                <field name="criteria" string="Criteria"
+                                    placeholder="Success criteria" width="20%" />
+                            </list>
+                        </field>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_appraisal_template" model="ir.actions.act_window">
+        <field name="name">Templates</field>
+        <field name="res_model">appraisal.template</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create your first appraisal template
+            </p>
+        </field>
+    </record>
+
+</odoo>
