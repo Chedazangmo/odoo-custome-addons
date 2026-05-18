@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_manager_cycle_kanban" model="ir.ui.view">
+        <field name="name">pms.cycle.manager.kanban</field>
+        <field name="model">pms.cycle</field>
+        <field name="arch" type="xml">
+    <kanban class="o_kanban_mobile pms_rounded_kanban">
+                <field name="name"/>
+                <field name="cycle_type"/>
+                <field name="start_date"/>
+                <field name="end_date"/>
+                <field name="state"/>
+                <field name="appraisal_count"/>
+                <templates>
+    <t t-name="card">
+        <div class="d-flex flex-column h-100 p-2">
+            
+            <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
+                <strong class="fs-5 text-dark">
+                    <field name="name"/>
+                </strong>
+                <div class="o_kanban_record_state">
+                    <field name="state" 
+                           widget="label_selection" 
+                           options="{'classes': {'planning': 'info', 'monitoring': 'warning', 'appraisal': 'primary', 'completed': 'success'}}"/>
+                </div>
+            </div>
+            
+            <div class="d-flex flex-column mb-3 gap-2">
+                <div class="text-muted">
+                    <i class="fa fa-calendar me-2"/> <strong class="text-dark">Dates:</strong> <field name="start_date"/> to <field name="end_date"/>
+                </div>
+                <div class="text-muted">
+                    <i class="fa fa-refresh me-2"/> <strong class="text-dark">Type:</strong> <field name="cycle_type"/>
+                </div>
+                <div class="text-muted">
+                    <i class="fa fa-users me-2"/> <strong class="text-dark">Employees:</strong> <field name="appraisal_count"/>
+                </div>
+            </div>
+            
+            <div class="mt-auto">
+                <button name="action_open_subordinate_plans"
+                        string="View Plans"
+                        type="object"
+                        class="btn btn-primary w-100 rounded-pill fw-bold"
+                        invisible="context.get('hide_view_plan', False)"/>
+                        
+                <button name="action_open_subordinate_appraisals"
+                        string="View Appraisals"
+                        type="object"
+                        class="btn btn-primary w-100 rounded-pill fw-bold mt-2"
+                        invisible="context.get('hide_view_appraisal', False)"/>
+            </div>
+            
+        </div>
+    </t>
+</templates>
+            </kanban>
+        </field>
+    </record>
+
+    <record id="view_manager_cycle_list" model="ir.ui.view">
+        <field name="name">pms.cycle.manager.list</field>
+        <field name="model">pms.cycle</field>
+        <field name="arch" type="xml">
+            <list string="Cycles" open_form_view="false">
+                <field name="is_manager_in_cycle" column_invisible="True"/>
+                <field name="name" string="Ref"/>
+                <field name="cycle_type" string="Type"/>
+                <field name="start_date" string="Start"/>
+                <field name="end_date" string="End"/>
+                <field name="appraisal_count" string="Employees"/>
+                <field name="state"
+                       widget="badge"
+                       decoration-info="state == 'planning'"
+                       decoration-warning="state == 'monitoring'"
+                       decoration-primary="state == 'appraisal'"
+                       decoration-success="state == 'completed'"/>
+                
+                <button name="action_open_subordinate_plans"
+                        string="View Plans"
+                        type="object"
+                        icon="fa-users"
+                        class="btn-primary btn-sm"
+                        invisible="context.get('hide_view_plan', False)"/>
+                        
+                <button name="action_open_subordinate_appraisals"
+                        string="View Appraisals"
+                        type="object"
+                        icon="fa-star"
+                        class="btn-primary btn-sm"
+                        invisible="context.get('hide_view_appraisal', False)"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_manager_planning_cycles" model="ir.actions.act_window">
+        <field name="name">Employee Plans</field>
+        <field name="res_model">pms.cycle</field>
+        <field name="view_mode">kanban,list</field> <field name="view_ids" eval="[(5, 0, 0),
+            (0, 0, {'view_mode': 'kanban', 'view_id': ref('view_manager_cycle_kanban')}),
+            (0, 0, {'view_mode': 'list', 'view_id': ref('view_manager_cycle_list')})]"/>
+        <field name="domain">[('is_manager_in_cycle', '=', True)]</field>
+        <field name="context">{'create': False, 'delete': False, 'hide_view_appraisal': True}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">No cycles found</p>
+            <p>Cycles where you manage at least one employee will appear here.</p>
+        </field>
+    </record>
+
+    <record id="action_manager_appraisal_cycles" model="ir.actions.act_window">
+        <field name="name">Employee Appraisals</field>
+        <field name="res_model">pms.cycle</field>
+        <field name="view_mode">kanban,list</field> <field name="view_ids" eval="[(5, 0, 0),
+            (0, 0, {'view_mode': 'kanban', 'view_id': ref('view_manager_cycle_kanban')}),
+            (0, 0, {'view_mode': 'list', 'view_id': ref('view_manager_cycle_list')})]"/>
+        <field name="domain">[
+            ('is_manager_in_cycle', '=', True),
+            ('state', 'in', ['appraisal', 'completed'])
+        ]</field>
+        <field name="context">{'create': False, 'delete': False, 'hide_view_plan': True}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">No appraisal cycles found</p>
+            <p>Cycles in the Appraisal phase where you manage at least one employee will appear here.</p>
+        </field>
+    </record>
+
+</odoo>
