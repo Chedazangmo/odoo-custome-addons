@@ -38,10 +38,9 @@
             'hr_employee_evaluation/static/src/scss/*.scss',
             'hr_employee_evaluation/static/img/expand_icon.svg',
             'hr_employee_evaluation/static/src/css/bonus_system.css',
-             'hr_employee_evaluation/static/src/css/formula_builder_widget.css',
-            # OWL component JS
+            'hr_employee_evaluation/static/src/css/pms_score_allocation.css',
+            'hr_employee_evaluation/static/src/css/formula_builder_widget.css',
             'hr_employee_evaluation/static/src/js/formula_builder_widget.js',
-            # OWL XML template
             'hr_employee_evaluation/static/src/xml/formula_builder_widget.xml',
         ],
     },

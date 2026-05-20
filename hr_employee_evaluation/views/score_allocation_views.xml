@@ -48,7 +48,7 @@
                     <group>
                         <group string="Allocation Details">
                             <field name="name"
-                                placeholder="e.g. Standard 70/30 – FY 2025" />
+                                placeholder="e.g. Standard 70/30 – FY 2026" />
                             <field name="description" />
                         </group>
                         <group string="Weight Summary">
@@ -68,7 +68,7 @@
                     <div class="alert alert-success mb-0" role="alert"
                         invisible="allocation_status != 'exact'">
                         <i class="fa fa-check-circle me-2" />
-                        <strong>Valid.</strong> KPI (<field
+                        <strong>Valid. </strong> KPI (<field
                             name="kpi_weight" readonly="1" />) + Competency (<field
                             name="competency_weight" readonly="1" />) = 100 pts. </div>
 
@@ -79,7 +79,7 @@
                         Grand total is <field name="grand_total" readonly="1" /> — add <field
                             name="competency_weight"
                             readonly="1"
-                            invisible="1" /> more pt(s) to reach 100 before saving. </div>
+                            invisible="1" /> more point(s) to reach 100 before saving. </div>
 
                     <div class="alert alert-danger mb-0" role="alert"
                         invisible="allocation_status != 'over'">

@@ -69,17 +69,21 @@
                     </div>
 
                     <!-- Hidden fields needed for logic only -->
-                    <field name="employee_id" readonly="1" options="{'no_open': True}" invisible="1"/>
-                    <field name="employee_job_id" string="Job Position" readonly="1" options="{'no_open': True}" invisible="1"/>
-                    <field name="employee_department_id" string="Department" readonly="1" options="{'no_open': True}" invisible="1"/>
-                    <field name="employee_evaluation_group_id" string="Evaluation Group" readonly="1" options="{'no_open': True}" invisible="1"/>
-                    <field name="planning_start_date" string="Start Date" invisible="1"/>
-                    <field name="planning_end_date" string="Deadline" invisible="1"/>
-                    <field name="template_total_score" string="Required Total Score" widget="float" invisible="1"/>
-                    <field name="current_total_score" string="Your Current Total" widget="float"
-                        decoration-success="current_total_score == template_total_score"
-                        decoration-danger="current_total_score != template_total_score"
-                        invisible="1"/>
+                    <field name="employee_id" readonly="1" options="{'no_open': True}" invisible="1" />
+                    <field name="employee_job_id" string="Job Position" readonly="1"
+                        options="{'no_open': True}" invisible="1" />
+                    <field name="employee_department_id" string="Department" readonly="1"
+                        options="{'no_open': True}" invisible="1" />
+                    <field name="employee_evaluation_group_id" string="Evaluation Group"
+                        readonly="1" options="{'no_open': True}" invisible="1" />
+                    <field name="planning_start_date" string="Start Date" invisible="1" />
+                    <field name="planning_end_date" string="Deadline" invisible="1" />
+                    <field name="template_total_score" string="Required Total Score" widget="float"
+                        invisible="1" />
+                    <field name="planning_total_score" string="Your Current Total" widget="float"
+                        decoration-success="planning_total_score == template_total_score"
+                        decoration-danger="planning_total_score != template_total_score"
+                        invisible="1" />
 
                     <!-- Two-column layout: profile+stats left, details card right -->
                     <div class="pms_plan_two_col_wrapper">
@@ -93,31 +97,41 @@
                                         readonly="1"
                                         options="{'no_open': True}"
                                         nolabel="1"
-                                        class="pms_plan_avatar_field"/>
+                                        class="pms_plan_avatar_field" />
                                     <div class="pms_plan_profile_info">
                                         <div class="pms_plan_emp_name">
-                                            <field name="employee_id" readonly="1" options="{'no_open': True}" nolabel="1" class="pms_emp_name_field"/>
+                                            <field name="employee_id" readonly="1"
+                                                options="{'no_open': True}" nolabel="1"
+                                                class="pms_emp_name_field" />
                                         </div>
                                         <div class="pms_plan_meta_row">
                                             <span class="pms_plan_meta_item">
-                                                <i class="fa fa-briefcase me-1 text-muted"/>
-                                                <field name="employee_job_id" string="Job Position" readonly="1" options="{'no_open': True}" nolabel="1" class="d-inline"/>
+                                                <i class="fa fa-briefcase me-1 text-muted" />
+                                                <field name="employee_job_id" string="Job Position"
+                                                    readonly="1" options="{'no_open': True}"
+                                                    nolabel="1" class="d-inline" />
                                             </span>
                                             <span class="pms_plan_meta_sep">·</span>
                                             <span class="pms_plan_meta_item">
-                                                <i class="fa fa-building me-1 text-muted"/>
-                                                <field name="employee_department_id" string="Department" readonly="1" options="{'no_open': True}" nolabel="1" class="d-inline"/>
+                                                <i class="fa fa-building me-1 text-muted" />
+                                                <field name="employee_department_id"
+                                                    string="Department" readonly="1"
+                                                    options="{'no_open': True}" nolabel="1"
+                                                    class="d-inline" />
                                             </span>
                                             <span class="pms_plan_meta_sep">·</span>
                                             <span class="pms_plan_meta_item">
-                                                <i class="fa fa-users me-1 text-muted"/>
-                                                <field name="employee_evaluation_group_id" string="Evaluation Group" readonly="1" options="{'no_open': True}" nolabel="1" class="d-inline"/>
+                                                <i class="fa fa-users me-1 text-muted" />
+                                                <field name="employee_evaluation_group_id"
+                                                    string="Evaluation Group" readonly="1"
+                                                    options="{'no_open': True}" nolabel="1"
+                                                    class="d-inline" />
                                             </span>
                                         </div>
                                         <div class="pms_plan_status_row mt-2">
                                             <field name="state" widget="statusbar"
                                                 statusbar_visible="draft,pending_supervisor,pending_secondary_supervisor,pending_reviewer,approved"
-                                                class="pms_inline_statusbar"/>
+                                                class="pms_inline_statusbar" />
                                         </div>
                                     </div>
                                 </div>
@@ -125,27 +139,29 @@
                                     <div class="pms_plan_stat_card pms_stat_score_alloc">
                                         <div class="pms_stat_label">Allocated Score</div>
                                         <div class="pms_stat_value">
-                                            <field name="template_total_score" widget="float" nolabel="1" readonly="1"/>
+                                            <field name="template_total_score" widget="float"
+                                                nolabel="1" readonly="1" />
                                         </div>
                                     </div>
                                     <div class="pms_plan_stat_card pms_stat_score_current">
                                         <div class="pms_stat_label">Current Total</div>
                                         <div class="pms_stat_value">
-                                            <field name="current_total_score" widget="float" nolabel="1" readonly="1"
-                                                decoration-success="current_total_score == template_total_score"
-                                                decoration-danger="current_total_score != template_total_score"/>
+                                            <field name="planning_total_score" widget="float"
+                                                nolabel="1" readonly="1"
+                                                decoration-success="planning_total_score == template_total_score"
+                                                decoration-danger="planning_total_score != template_total_score" />
                                         </div>
                                     </div>
                                     <div class="pms_plan_stat_card pms_stat_date_start">
                                         <div class="pms_stat_label">Planning Start</div>
                                         <div class="pms_stat_value">
-                                            <field name="planning_start_date" nolabel="1"/>
+                                            <field name="planning_start_date" nolabel="1" />
                                         </div>
                                     </div>
                                     <div class="pms_plan_stat_card pms_stat_date_end">
                                         <div class="pms_stat_label">Deadline</div>
                                         <div class="pms_stat_value">
-                                            <field name="planning_end_date" nolabel="1"/>
+                                            <field name="planning_end_date" nolabel="1" />
                                         </div>
                                     </div>
                                 </div>
@@ -160,44 +176,48 @@
                                 <div class="pms_detail_row">
                                     <span class="pms_detail_label">Manager</span>
                                     <div class="pms_detail_value">
-                                        <field name="supervisor_id" readonly="1" options="{'no_open': True}" nolabel="1"/>
+                                        <field name="supervisor_id" readonly="1"
+                                            options="{'no_open': True}" nolabel="1" />
                                     </div>
                                 </div>
                                 <div class="pms_detail_row" invisible="not secondary_supervisor_id">
                                     <span class="pms_detail_label">Secondary Manager</span>
                                     <div class="pms_detail_value">
-                                        <field name="secondary_supervisor_id" readonly="1" options="{'no_open': True}" nolabel="1"/>
+                                        <field name="secondary_supervisor_id" readonly="1"
+                                            options="{'no_open': True}" nolabel="1" />
                                     </div>
                                 </div>
                                 <div class="pms_detail_row" invisible="not reviewer_id">
                                     <span class="pms_detail_label">Reviewer</span>
                                     <div class="pms_detail_value">
-                                        <field name="reviewer_id" readonly="1" options="{'no_open': True}" nolabel="1"/>
+                                        <field name="reviewer_id" readonly="1"
+                                            options="{'no_open': True}" nolabel="1" />
                                     </div>
                                 </div>
                                 <div class="pms_detail_row">
                                     <span class="pms_detail_label">Template</span>
                                     <div class="pms_detail_value">
-                                        <field name="template_id" readonly="1" options="{'no_open': True}" nolabel="1"/>
+                                        <field name="template_id" readonly="1"
+                                            options="{'no_open': True}" nolabel="1" />
                                     </div>
                                 </div>
 
                                 <div class="pms_detail_row" invisible="not submitted_date">
                                     <span class="pms_detail_label">Submitted On</span>
                                     <div class="pms_detail_value">
-                                        <field name="submitted_date" readonly="1" nolabel="1"/>
+                                        <field name="submitted_date" readonly="1" nolabel="1" />
                                     </div>
                                 </div>
                                 <div class="pms_detail_row" invisible="not draft_reset_date">
                                     <span class="pms_detail_label">Last Reset By HR</span>
                                     <div class="pms_detail_value">
-                                        <field name="draft_reset_date" readonly="1" nolabel="1"/>
+                                        <field name="draft_reset_date" readonly="1" nolabel="1" />
                                     </div>
                                 </div>
                                 <div class="pms_detail_row" invisible="not resubmission_deadline">
                                     <span class="pms_detail_label">Resubmit By</span>
                                     <div class="pms_detail_value">
-                                        <field name="resubmission_deadline" readonly="1" nolabel="1"/>
+                                        <field name="resubmission_deadline" readonly="1" nolabel="1" />
                                     </div>
                                 </div>
 
@@ -207,11 +227,10 @@
                     </div>
 
                     <div class="alert alert-warning"
-                        invisible="current_total_score == template_total_score or state != 'draft'">
+                        invisible="planning_total_score == template_total_score or state != 'draft'">
                         <i class="fa fa-exclamation-triangle" />
-                        <strong>Warning:</strong>
-                        Your total score must equal the required total before you can submit.
-                    </div>
+                        <strong>Warning:</strong> Your total
+                        score must equal the required total before you can submit. </div>
 
                     <!-- Access control flags (helpers) -->
                     <field name="is_own_appraisal" invisible="1" />
@@ -241,13 +260,13 @@
                                     <field name="target" />
                                     <field name="planning_remarks" />
                                     <field name="is_clone" invisible="1" />
-                                    
-                                    <field name="snapshot_employee_target" invisible="1" /> 
+
+                                    <field name="snapshot_employee_target" invisible="1" />
                                     <field name="snapshot_employee_criteria" invisible="1" />
 
                                     <field name="snapshot_supervisor_target" invisible="1" />
                                     <field name="snapshot_supervisor_criteria" invisible="1" />
-                                    
+
                                     <field name="snapshot_secondary_target" invisible="1" />
                                     <field name="snapshot_secondary_criteria" invisible="1" />
                                 </list>
@@ -273,15 +292,15 @@
                                     <field name="target" />
                                     <field name="planning_remarks" />
 
-                                    <field name="snapshot_employee_target" invisible="1" /> 
+                                    <field name="snapshot_employee_target" invisible="1" />
                                     <field name="snapshot_employee_criteria" invisible="1" />
 
                                     <field name="snapshot_supervisor_target" invisible="1" />
                                     <field name="snapshot_supervisor_criteria" invisible="1" />
-                                    
+
                                     <field name="snapshot_secondary_target" invisible="1" />
                                     <field name="snapshot_secondary_criteria" invisible="1" />
-                     
+
                                 </list>
                             </field>
                         </list>

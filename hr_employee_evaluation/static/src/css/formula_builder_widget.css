@@ -1,679 +1,525 @@
 /* ================================================================
-   PMS Bonus System - Complete Styling (Clean Version)
+   FORMULA BUILDER WIDGET - FULLY VISIBLE STYLES
+   All elements have visible base colors, not just on hover
    ================================================================ */
 
-/* CSS Variables - Light only, no dark mode */
-:root {
-    --pms-primary: #6C4FD4;
-    --pms-primary-dark: #5a3db8;
-    --pms-primary-light: #EEEDFE;
-    --pms-success: #10b981;
-    --pms-success-light: #E1F5EE;
-    --pms-warning: #f59e0b;
-    --pms-warning-light: #FEF3C7;
-    --pms-danger: #ef4444;
-    --pms-danger-light: #FEF2F2;
-    --pms-border: #e2e8f0;
-    --pms-bg: #f8fafc;
-    --pms-bg-card: #ffffff;
-    --pms-text: #475569;
-    --pms-text-light: #94a3b8;
-    --pms-text-dark: #1e293b;
-    --pms-radius: 16px;
-    --pms-radius-sm: 12px;
-    --pms-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+/* Main Container */
+.pfb-root {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    width: 100%;
+    max-width: 100%;
+    background: linear-gradient(135deg, #ffffff 0%, #fafbff 100%);
+    border-radius: 16px;
+    padding: 20px;
+    border: 1px solid #e2e8f0;
 }
 
-/* ================================================================
-   RATING TIERS - IMPROVED STYLING
-   ================================================================ */
-
-.pms-rating-list .o_list_table thead th {
-    background: var(--pms-bg);
-    font-size: 11px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: var(--pms-text-dark);
-    border-bottom: 2px solid var(--pms-border);
-}
-
-.pms-rating-list .o_list_table tbody td {
-    padding: 12px;
-    border-bottom: 1px solid var(--pms-border);
-}
-
-.pms-rating-list .o_list_table tbody tr:hover td {
-    background: var(--pms-primary-light);
-}
-
-/* Rating Eligibility Card */
-.pms-eligibility-card {
+/* Section Cards */
+.pfb-section {
     background: #ffffff;
-    border: 1px solid var(--pms-border);
-    border-radius: var(--pms-radius);
-    margin: 16px 0;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
     overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.pms-eligibility-header {
+.pfb-section:hover {
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    border-color: #c7d2fe;
+}
+
+.pfb-section-hd {
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 14px 20px;
-    background: var(--pms-success-light);
-    border-bottom: 1px solid var(--pms-border);
+    gap: 12px;
+    padding: 16px 20px;
+    background: linear-gradient(135deg, #eef2ff, #ffffff);
+    border-bottom: 2px solid #c7d2fe;
+    font-size: 11px;
     font-weight: 700;
-    font-size: 13px;
     text-transform: uppercase;
-    color: #065f46;
+    letter-spacing: 0.08em;
+    color: #5a3db8;
 }
 
-.pms-eligibility-header i {
+.pfb-section-hd i {
     font-size: 18px;
-    color: var(--pms-success);
+    color: #6C4FD4;
+    background: white;
+    padding: 6px;
+    border-radius: 10px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
-.pms-eligibility-body {
+.pfb-section-bd {
     padding: 20px;
 }
 
-.pms-eligibility-hero {
-    margin-bottom: 12px;
-}
-
-.pms-eligibility-hero .o_progressbar {
-    height: 40px;
-    border-radius: 100px;
-    background: var(--pms-bg);
-    overflow: hidden;
-    border: 1px solid var(--pms-border);
-}
-
-.pms-eligibility-hero .o_progressbar .o_progressbar_complete {
-    background: linear-gradient(90deg, var(--pms-primary), var(--pms-success));
-    border-radius: 100px;
-}
-
-.pms-eligibility-note {
-    font-size: 12px;
-    color: var(--pms-text-light);
-    padding-top: 12px;
-    border-top: 1px solid var(--pms-border);
-}
-
-/* Description Card */
-.pms-description-card {
-    background: var(--pms-bg);
-    border: 1px solid var(--pms-border);
-    border-radius: var(--pms-radius);
-    margin: 16px 0;
-    overflow: hidden;
-}
-
-.pms-description-header {
+/* Variables Grid - ALWAYS VISIBLE */
+.pfb-var-grid {
     display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.pfb-var-chip {
+    display: inline-flex;
     align-items: center;
     gap: 10px;
-    padding: 14px 20px;
-    background: var(--pms-bg-card);
-    border-bottom: 1px solid var(--pms-border);
-    font-weight: 700;
+    padding: 10px 20px;
+    background: linear-gradient(135deg, #6C4FD4, #8b5cf6);
+    border: 1px solid #5a3db8;
+    border-radius: 50px;
     font-size: 13px;
+    font-weight: 600;
+    color: white;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.pfb-var-chip:hover {
+    background: linear-gradient(135deg, #5a3db8, #6C4FD4);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.pfb-chip-icon {
+    font-size: 14px;
+    color: white;
+}
+
+/* Operators Section - ALWAYS VISIBLE */
+.pfb-ops-group {
+    margin-bottom: 16px;
+}
+
+.pfb-ops-group:last-child {
+    margin-bottom: 0;
+}
+
+.pfb-ops-label {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 700;
+    color: #64748b;
     text-transform: uppercase;
-    color: var(--pms-text-dark);
+    letter-spacing: 0.08em;
+    margin-bottom: 10px;
+    padding: 4px 8px;
+    background: #f1f5f9;
+    border-radius: 6px;
 }
 
-.pms-description-header i {
-    font-size: 18px;
-    color: var(--pms-primary);
-}
-
-.pms-description-card .o_field_text {
-    margin: 0;
-    padding: 16px;
-}
-
-/* ================================================================
-   FORMULA BUILDER - FULL WIDTH
-   ================================================================ */
-
-.pms-engine-header {
+.pfb-ops-row {
     display: flex;
-    align-items: center;
-    gap: 16px;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.pfb-op-btn {
+    padding: 8px 18px;
+    background: #3b82f6;
+    border: 1px solid #2563eb;
+    border-radius: 40px;
+    font-size: 13px;
+    font-weight: 600;
+    color: white;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    font-family: 'SF Mono', 'Monaco', 'Cascadia Code', monospace;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.pfb-op-btn:hover {
+    background: #2563eb;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.pfb-op-fn {
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    border-color: #b45309;
+    color: white;
+}
+
+.pfb-op-fn:hover {
+    background: linear-gradient(135deg, #d97706, #b45309);
+}
+
+/* Constants Section - ALWAYS VISIBLE */
+.pfb-num-row {
+    display: flex;
+    gap: 12px;
     margin-bottom: 20px;
     flex-wrap: wrap;
 }
 
-.pms-engine-active {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    border: 1px solid var(--pms-border);
-    border-radius: 100px;
-    padding: 6px 18px;
-    background: var(--pms-bg-card);
-}
-
-.pms-active-label {
-    font-size: 11px;
-    font-weight: 600;
-    text-transform: uppercase;
-    color: var(--pms-text-light);
-}
-
-.pms-engine-description {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    background: var(--pms-bg);
-    border: 1px solid var(--pms-border);
-    border-radius: var(--pms-radius-sm);
-    padding: 12px 18px;
-    margin-bottom: 24px;
-    font-size: 13px;
-    color: var(--pms-text);
-}
-
-.pms-engine-description i {
-    font-size: 18px;
-    color: var(--pms-primary);
-}
-
-/* Formula Section - FULL WIDTH */
-.pms-formula-section {
+.pfb-num-input {
+    flex: 2;
+    min-width: 180px;
+    padding: 10px 18px;
+    border: 2px solid #cbd5e1;
+    border-radius: 40px;
+    font-size: 14px;
     background: #ffffff;
-    border: 1px solid var(--pms-border);
-    border-radius: var(--pms-radius);
-    margin-bottom: 24px;
-    overflow: hidden;
+    transition: all 0.3s ease;
+    font-weight: 500;
 }
 
-.pms-formula-header {
+.pfb-num-input:focus {
+    outline: none;
+    border-color: #6C4FD4;
+    box-shadow: 0 0 0 3px #e0e7ff;
+}
+
+.pfb-add-btn {
+    padding: 10px 28px;
+    background: linear-gradient(135deg, #10b981, #059669);
+    border: none;
+    border-radius: 40px;
+    font-weight: 600;
+    color: white;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.pfb-add-btn:hover {
+    transform: translateY(-2px);
+    background: linear-gradient(135deg, #059669, #047857);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Presets - ALWAYS VISIBLE */
+.pfb-preset-group {
+    margin-bottom: 16px;
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 14px 20px;
-    background: var(--pms-primary-light);
-    border-bottom: 1px solid var(--pms-border);
-    font-weight: 700;
-    font-size: 13px;
-    text-transform: uppercase;
-    color: var(--pms-primary-dark);
+    flex-wrap: wrap;
+    gap: 12px;
 }
 
-.pms-formula-header i {
+.pfb-preset-group:last-child {
+    margin-bottom: 0;
+}
+
+.pfb-preset-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+.pfb-presets {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.pfb-preset {
+    padding: 6px 16px;
+    background: #64748b;
+    border: 1px solid #475569;
+    border-radius: 30px;
+    font-size: 12px;
+    font-weight: 600;
+    color: white;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.pfb-preset:hover {
+    background: #475569;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Expression Builder Area */
+.pfb-expr-wrap {
+    background: #fefce8;
+    border: 2px solid #fde047;
+    border-radius: 12px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.pfb-expr-wrap:focus-within {
+    border-color: #6C4FD4;
+    box-shadow: 0 0 0 4px #e0e7ff;
+}
+
+.pfb-expr-hd {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 20px;
+    background: linear-gradient(135deg, #fef08a, #fef9c3);
+    border-bottom: 2px solid #fde047;
+}
+
+.pfb-expr-hd i {
     font-size: 18px;
-    color: var(--pms-primary);
+    color: #ca8a04;
 }
 
-.pms-formula-body {
-    padding: 0;
-    width: 100%;
+.pfb-expr-hd span {
+    font-size: 12px;
+    font-weight: 800;
+    color: #854d0e;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
 }
 
-.pms-formula-body .pfb-root {
-    width: 100%;
-    max-width: 100%;
+.pfb-expr-tokens {
+    min-height: 100px;
     padding: 20px;
-}
-
-/* ================================================================
-   ADVANCED OPTIONS - SIMPLE SIDE-BY-SIDE STYLING
-   ================================================================ */
-
-.pms-advanced-section {
-    background: var(--pms-bg-card);
-    border: 1px solid var(--pms-border);
-    border-radius: var(--pms-radius);
-    overflow: hidden;
-    margin-top: 20px;
-}
-
-.pms-advanced-header {
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 14px 20px;
-    background: var(--pms-bg);
-    border-bottom: 1px solid var(--pms-border);
-    font-weight: 700;
+    flex-wrap: wrap;
+    gap: 12px;
+    background: #fefce8;
+}
+
+.pfb-expr-placeholder {
     font-size: 13px;
-    text-transform: uppercase;
-    color: var(--pms-text-dark);
-}
-
-.pms-advanced-header i {
-    font-size: 16px;
-    color: var(--pms-primary);
-}
-
-/* Side-by-side grid for advanced options */
-.pms-advanced-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 20px;
-    padding: 20px;
-}
-
-/* Simple card styling */
-.pms-adv-card {
-    background: var(--pms-bg-card);
-    border: 1px solid var(--pms-border);
-    border-radius: var(--pms-radius-sm);
-    overflow: hidden;
-}
-
-/* Simple header without gradients */
-.pms-adv-card-header {
+    color: #94a3b8;
+    font-style: italic;
     display: flex;
     align-items: center;
     gap: 8px;
-    padding: 12px 16px;
-    font-weight: 600;
-    font-size: 13px;
-    background: var(--pms-bg);
-    border-bottom: 1px solid var(--pms-border);
 }
 
-.pms-adv-card-header i {
+.pfb-expr-placeholder::before {
+    content: '💡';
+    font-size: 16px;
+}
+
+/* Token Styling - ALWAYS VISIBLE */
+.pfb-tok {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 12px 6px 18px;
+    border-radius: 40px;
+    font-size: 12px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    animation: pfbFadeIn 0.2s ease;
+}
+
+@keyframes pfbFadeIn {
+    from {
+        opacity: 0;
+        transform: scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.pfb-tok:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.pfb-tok-var {
+    background: #6C4FD4;
+    color: white;
+    border: 1px solid #5a3db8;
+}
+
+.pfb-tok-op {
+    background: #3b82f6;
+    color: white;
+    border: 1px solid #2563eb;
+    font-family: monospace;
     font-size: 14px;
 }
 
-/* Simple color accents for headers */
-.pms-adv-purple {
-    color: var(--pms-primary-dark);
+.pfb-tok-num {
+    background: #10b981;
+    color: white;
+    border: 1px solid #059669;
 }
 
-.pms-adv-purple i {
-    color: var(--pms-primary);
+.pfb-tok-fn {
+    background: #f59e0b;
+    color: white;
+    border: 1px solid #d97706;
 }
 
-.pms-adv-teal {
+.pfb-tok-del-btn {
+    width: 20px;
+    height: 20px;
+    border: none;
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    cursor: pointer;
+    color: white;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.pfb-tok-del-btn:hover {
+    background: rgba(255, 255, 255, 0.5);
+    transform: scale(1.1);
+}
+
+.pfb-cursor {
+    display: inline-block;
+    width: 2px;
+    height: 22px;
+    background: linear-gradient(180deg, #6C4FD4, #8b5cf6);
+    border-radius: 2px;
+    animation: pfbBlink 1s step-end infinite;
+    margin-left: 6px;
+}
+
+@keyframes pfbBlink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+}
+
+.pfb-expr-preview {
+    padding: 12px 20px;
+    border-top: 1px solid #fde047;
+    background: #fefce8;
+    font-family: 'SF Mono', 'Monaco', monospace;
+    font-size: 12px;
+}
+
+.pfb-preview-label {
+    font-weight: 800;
+    color: #6C4FD4;
+    margin-right: 10px;
+    text-transform: uppercase;
+    font-size: 10px;
+    letter-spacing: 0.05em;
+}
+
+.pfb-preview-value {
+    color: #1e293b;
+    font-weight: 600;
+}
+
+/* Action Buttons - ALWAYS VISIBLE */
+.pfb-action-row {
+    display: flex;
+    gap: 14px;
+    flex-wrap: wrap;
+    margin-top: 8px;
+}
+
+.pfb-btn-validate {
+    background: linear-gradient(135deg, #6C4FD4, #8b5cf6);
+    border: none;
+    border-radius: 40px;
+    padding: 12px 32px;
+    font-weight: 700;
+    color: white;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.pfb-btn-validate:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.pfb-btn-validate:active {
+    transform: translateY(0);
+}
+
+.pfb-btn-secondary {
+    border-radius: 40px;
+    padding: 12px 28px;
+    font-weight: 600;
+    border: 1px solid #cbd5e1;
+    background: #ffffff;
+    color: #1e293b;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.pfb-btn-secondary:hover {
+    background: #f8fafc;
+    border-color: #6C4FD4;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+/* Status Messages */
+.pfb-status {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-radius: 12px;
+    padding: 14px 18px;
+    font-size: 13px;
+    animation: pfbSlideIn 0.3s ease;
+}
+
+@keyframes pfbSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.pfb-status-ok {
+    background: linear-gradient(135deg, #d1fae5, #ffffff);
+    border-left: 4px solid #10b981;
     color: #065f46;
 }
 
-.pms-adv-teal i {
-    color: var(--pms-success);
+.pfb-status-err {
+    background: linear-gradient(135deg, #fee2e2, #ffffff);
+    border-left: 4px solid #ef4444;
+    color: #991b1b;
 }
 
-/* Simple body padding */
-.pms-adv-card-body {
-    padding: 16px;
-}
-
-/* Simple field spacing */
-.pms-adv-field {
-    margin-bottom: 14px;
-}
-
-.pms-adv-field:last-child {
-    margin-bottom: 0;
-}
-
-/* Simple label styling */
-.pms-adv-field label {
-    display: block;
-    font-size: 12px;
-    font-weight: 500;
-    color: var(--pms-text);
-    margin-bottom: 6px;
-}
-
-/* Checkbox label - inline */
-.pms-check-label {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    cursor: pointer;
-    margin: 0;
-}
-
-.pms-check-label span {
-    font-weight: 500;
-    color: var(--pms-text-dark);
-    font-size: 12px;
-}
-
-/* Simple input styling */
-.pms-adv-input {
-    width: 100%;
-    padding: 8px 12px;
-    border: 1px solid var(--pms-border);
-    border-radius: 8px;
-    font-size: 13px;
-    background: var(--pms-bg-card);
-    transition: all 0.2s ease;
-}
-
-.pms-adv-input:focus {
-    outline: none;
-    border-color: var(--pms-primary);
-    box-shadow: 0 0 0 2px rgba(108, 79, 212, 0.1);
-}
-
-/* Simple divider */
-.pms-adv-divider {
-    height: 1px;
-    background: var(--pms-border);
-    margin: 12px 0;
-}
-
-/* Row layout for inline fields */
-.pms-adv-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 12px;
-}
-
-.pms-adv-row:last-child {
-    margin-bottom: 0;
-}
-
-.pms-adv-row label {
-    margin-bottom: 0;
-    flex: 1;
-}
-
-.pms-adv-row .pms-adv-input {
-    width: 120px;
-}
-
-/* ================================================================
-   BONUS CALCULATION - CLEAN STYLING
-   ================================================================ */
-
-.pms-calculation-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 20px;
-    margin-bottom: 24px;
-}
-
-.pms-calculation-card {
-    background: var(--pms-bg-card);
-    border: 1px solid var(--pms-border);
-    border-radius: var(--pms-radius);
-    overflow: hidden;
-}
-
-.pms-calculation-card-header {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 14px 18px;
-    font-weight: 600;
-    font-size: 13px;
-    background: var(--pms-bg);
-    border-bottom: 1px solid var(--pms-border);
-}
-
-.pms-calculation-card-header i {
-    font-size: 16px;
-}
-
-.pms-calculation-card-body {
-    padding: 18px;
-}
-
-.pms-form-field {
-    margin-bottom: 16px;
-}
-
-.pms-form-field label {
-    display: block;
-    font-size: 12px;
-    font-weight: 500;
-    color: var(--pms-text);
-    margin-bottom: 6px;
-}
-
-.pms-form-field .o_field_widget {
-    width: 100%;
-}
-
-/* Employee Selection - Minimal */
-.pms-selection-type {
-    margin-bottom: 16px;
-}
-
-.pms-selection-type .o_radio {
-    display: flex;
-    gap: 20px;
-    margin: 0;
-}
-
-.pms-employee-selector {
-    background: var(--pms-bg-card);
-    border-radius: var(--pms-radius-sm);
-    padding: 14px;
-    margin: 12px 0;
-    border: 1px solid var(--pms-border);
-}
-
-.pms-load-btn {
-    margin-top: 10px;
-    margin-right: 10px;
-}
-
-.pms-selection-count {
-    display: inline-block;
-    font-size: 12px;
-    color: var(--pms-text-light);
-    margin-left: 10px;
-}
-
-.pms-selection-help {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 11px;
-    color: var(--pms-text-light);
-    background: var(--pms-bg);
-    padding: 10px 12px;
-    border-radius: var(--pms-radius-sm);
-    margin-top: 12px;
-}
-
-.pms-selection-help i {
-    font-size: 12px;
-    color: var(--pms-primary);
-}
-
-/* Results Section - Clean */
-.pms-results-section {
-    background: var(--pms-bg-card);
-    border: 1px solid var(--pms-border);
-    border-radius: var(--pms-radius);
-    overflow: hidden;
-}
-
-.pms-results-header {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 14px 20px;
-    background: var(--pms-bg);
-    border-bottom: 1px solid var(--pms-border);
-    font-weight: 700;
-    font-size: 13px;
-    text-transform: uppercase;
-    color: var(--pms-text-dark);
-}
-
-.pms-results-header i {
+.pfb-status i {
     font-size: 18px;
-    color: var(--pms-primary);
 }
 
-.pms-bonus-results-table .o_list_table {
-    width: 100%;
-}
-
-.pms-bonus-results-table .o_list_table thead th {
-    background: var(--pms-bg);
-    font-size: 11px;
-    font-weight: 600;
-    padding: 12px 14px;
-    border-bottom: 2px solid var(--pms-border);
-}
-
-.pms-bonus-results-table .o_list_table tbody td {
-    padding: 12px 14px;
-    border-bottom: 1px solid var(--pms-border);
-}
-
-.pms-bonus-results-table .o_list_table tbody tr:hover td {
-    background: var(--pms-primary-light);
-}
-
-.pms-bonus-results-table td[name="score"] {
-    font-weight: 600;
-    text-align: center;
-}
-
-.pms-bonus-results-table td[name="bonus_amount"] .o_monetary {
-    font-weight: 600;
-    color: var(--pms-success);
-}
-
-/* ================================================================
-   EMPLOYEE MY BONUS
-   ================================================================ */
-
-.pms-my-bonus-list .o_list_table thead th {
-    background: var(--pms-bg);
-    font-size: 11px;
-    font-weight: 600;
-}
-
-.pms-bonus-summary {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 16px;
-    margin-bottom: 24px;
-}
-
-.pms-summary-card {
-    background: var(--pms-bg-card);
-    border: 1px solid var(--pms-border);
-    border-radius: var(--pms-radius);
-    padding: 20px;
-    text-align: center;
-}
-
-.pms-summary-card h4 {
-    font-size: 11px;
-    font-weight: 600;
-    text-transform: uppercase;
-    color: var(--pms-text-light);
-    margin-bottom: 8px;
-}
-
-.pms-summary-card .amount,
-.pms-summary-card .score {
-    font-size: 28px;
-    font-weight: 700;
-}
-
-.pms-summary-success {
-    border-top: 4px solid var(--pms-success);
-}
-
-.pms-summary-success .amount {
-    color: var(--pms-success);
-}
-
-.pms-summary-info {
-    border-top: 4px solid var(--pms-primary);
-}
-
-.pms-summary-info .score {
-    color: var(--pms-primary);
-}
-
-.pms-summary-primary {
-    border-top: 4px solid var(--pms-warning);
-}
-
-/* ================================================================
-   EXPORT SECTION
-   ================================================================ */
-
-.pms-export-section {
-    background: var(--pms-bg-card);
-    border: 1px solid var(--pms-border);
-    border-radius: var(--pms-radius);
-    overflow: hidden;
-}
-
-.pms-export-header {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 14px 20px;
-    background: var(--pms-bg);
-    border-bottom: 1px solid var(--pms-border);
-    font-weight: 700;
-    font-size: 13px;
-    text-transform: uppercase;
-    color: var(--pms-text-dark);
-}
-
-.pms-export-header i {
-    font-size: 18px;
-    color: var(--pms-primary);
-}
-
-.pms-export-section group {
-    padding: 18px;
-}
-
-/* ================================================================
-   RESPONSIVE
-   ================================================================ */
-
-@media (max-width: 1024px) {
-    .pms-advanced-grid,
-    .pms-calculation-grid {
-        grid-template-columns: 1fr;
-        gap: 16px;
-    }
-    
-    .pms-bonus-summary {
-        grid-template-columns: 1fr;
-    }
-}
-
+/* Responsive */
 @media (max-width: 768px) {
-    .pms-engine-header {
+    .pfb-action-row {
         flex-direction: column;
-        align-items: stretch;
     }
     
-    .pms-eligibility-header,
-    .pms-formula-header,
-    .pms-advanced-header,
-    .pms-results-header {
-        padding: 12px 16px;
+    .pfb-action-row button {
+        width: 100%;
     }
     
-    .pms-eligibility-body,
-    .pms-formula-body,
-    .pms-advanced-grid,
-    .pms-calculation-card-body {
+    .pfb-var-chip {
+        padding: 8px 16px;
+        font-size: 12px;
+    }
+    
+    .pfb-section-bd {
         padding: 14px;
     }
     
-    .pms-adv-row {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-    
-    .pms-adv-row .pms-adv-input {
-        width: 100%;
+    .pfb-expr-tokens {
+        padding: 14px;
     }
 }

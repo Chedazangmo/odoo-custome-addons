@@ -2,115 +2,48 @@
 <odoo>
 
     <!-- ============================================================
-         1. COMPETENCY SCORE — LIST VIEW (inline in both appraisal forms)
+         1. GROUP FORM VIEW
          ============================================================ -->
 
-    <record id="view_appraisal_competency_score_list" model="ir.ui.view">
-        <field name="name">appraisal.competency.score.list</field>
-        <field name="model">appraisal.competency.score</field>
+    <record id="view_competency_group_form" model="ir.ui.view">
+        <field name="name">competency.framework.group.form</field>
+        <field name="model">competency.framework.group</field>
         <field name="arch" type="xml">
-            <list
-                string="Competency Scores"
-                editable="bottom"
-                class="o_appraisal_competency_table"
-                default_group_by="group_id"
-                create="0"
-                delete="0">
-
-                <!-- Hidden ordering/grouping fields -->
-                <field name="group_id" column_invisible="1" />
-                <field name="group_sequence" column_invisible="1" />
-                <field name="group_hr_code" column_invisible="1" />
-                <field name="line_sequence" column_invisible="1" />
-
-                <!-- Visible columns -->
-                <field name="line_full_code"
-                    string="Code"
-                    readonly="1"
-                    width="70px" />
-
-                <field name="line_name"
-                    string="Competency"
-                    readonly="1" />
-
-                <field name="line_description"
-                    string="Targets"
-                    readonly="1"
-                    optional="show" />
-
-                <field name="line_points"
-                    string="Max Pts"
-                    readonly="1"
-                    width="80px"
-                    sum="Total Max Points" />
-
-                <!-- Employee self-scoring (no remarks column) -->
-                <field name="self_score"
-                    string="Emp Score"
-                    width="90px"
-                    sum="Total Emp Score"
-                    readonly="not parent.can_employee_self_rate" />
-
-                <!-- Supervisor scoring (no remarks column) -->
-                <field name="supervisor_score"
-                    string="Sup Score"
-                    width="90px"
-                    sum="Total Sup Score"
-                    readonly="not parent.can_supervisor_rate" />
-
-                <!-- Secondary supervisor scoring (no remarks column) -->
-                <field name="secondary_supervisor_score"
-                    string="2nd Sup Score"
-                    width="100px"
-                    sum="Total 2nd Sup Score"
-                    optional="show"
-                    readonly="not parent.can_secondary_supervisor_rate" />
-
-                <!-- Reviewer scoring (no remarks column) -->
-                <field name="reviewer_score"
-                    string="Rev Score"
-                    width="90px"
-                    sum="Total Rev Score"
-                    readonly="not parent.can_reviewer_rate" />
-
-            </list>
-        </field>
-    </record>
-
-
-    <!-- ============================================================
-         2. COMPETENCY SCORE — FORM VIEW (popup when clicking a row)
-         ============================================================ -->
-
-    <record id="view_appraisal_competency_score_form" model="ir.ui.view">
-        <field name="name">appraisal.competency.score.form</field>
-        <field name="model">appraisal.competency.score</field>
-        <field name="arch" type="xml">
-            <form string="Competency Score">
+            <form string="Competency Group" auto_save="1" class="o_competency_group_form">
                 <sheet>
-                    <group string="Competency Details">
-                        <field name="group_name" string="Group" readonly="1" />
-                        <field name="line_full_code" string="Code" readonly="1" />
-                        <field name="line_name" string="Competency" readonly="1" />
-                        <field name="line_points" string="Max Points" readonly="1" />
-                        <field name="line_description" string="Targets" readonly="1" widget="text" />
+                    <group>
+                        <field name="name" string="Competency Group" />
+                        <field name="description" string="Define Competency Targets" />
+                        <field name="points" string="Total Points" />
                     </group>
-                    <group string="Employee Self-Rating">
-                        <field name="self_score" string="Score" />
-                        <field name="self_remarks" string="Remarks" widget="text" />
-                    </group>
-                    <group string="Supervisor Rating">
-                        <field name="supervisor_score" string="Score" />
-                        <field name="supervisor_remarks" string="Remarks" widget="text" />
-                    </group>
-                    <group string="2nd Supervisor Rating">
-                        <field name="secondary_supervisor_score" string="Score" />
-                        <field name="secondary_supervisor_remarks" string="Remarks" widget="text" />
-                    </group>
-                    <group string="Reviewer Rating">
-                        <field name="reviewer_score" string="Score" />
-                        <field name="reviewer_remarks" string="Remarks" widget="text" />
-                    </group>
+                    <div class="o_grp_lines_section">
+                        <div class="o_grp_lines_heading">
+                            <i class="fa fa-list-ul me-2" /> Competency Lines </div>
+                        <field name="line_ids" nolabel="1">
+                            <list class="o_competency_lines_table" editable="bottom"
+                                decoration-danger="group_points_status == 'over'"
+                                decoration-warning="group_points_status == 'under'">
+                                <field name="sequence" widget="handle" />
+                                <field name="name" string="Competency" class="o_line_col_name" />
+                                <field name="description" string="Competency Targets"
+                                    class="o_line_col_targets" />
+                                <field name="points" string="Points" widget="float"
+                                    class="o_line_col_pts" />
+                                <field name="group_points_status" column_invisible="1" />
+                            </list>
+                        </field>
+                        <p class="text-muted mt-1 mb-0"
+                            invisible="points_status == 'exact'"
+                            style="font-size:0.82em;padding:6px 8px;">
+                            <i class="fa fa-info-circle me-1" />
+                            <span invisible="points_status != 'under'"> Remaining: <field
+                                    name="remaining_points" readonly="1" /> pt(s). Assign all <field
+                                    name="points" readonly="1" /> pts before saving. </span>
+                            <span invisible="points_status != 'over'" style="color:#b91c1c;">
+                                <i class="fa fa-exclamation-triangle me-1" /> Line total exceeds
+                                group points. Reduce before saving. </span>
+                        </p>
+                    </div>
                 </sheet>
             </form>
         </field>
@@ -118,63 +51,260 @@
 
 
     <!-- ============================================================
-         3a. INJECT competency_score_ids DATA FIELD — EMPLOYEE FORM
-             Inherits: view_employee_appraisal_form
-             Renders the field invisibly so the OWL widget can access
-             the data via props.record.data.competency_score_ids.
-             All visible rendering is handled by the kra_tabs_widget.
+         2. GROUPED TABULAR VIEW on competency.framework.line
          ============================================================ -->
 
-    <record id="view_pms_appraisal_competency_page_employee" model="ir.ui.view">
-        <field name="name">pms.appraisal.employee.form.competency.page</field>
-        <field name="model">pms.appraisal</field>
-        <field name="inherit_id" ref="hr_employee_evaluation.view_employee_appraisal_form" />
+    <record id="view_competency_line_grouped_list" model="ir.ui.view">
+        <field name="name">competency.framework.line.grouped.list</field>
+        <field name="model">competency.framework.line</field>
         <field name="arch" type="xml">
+            <list string="Competency Framework"
+                default_group_by="group_id"
+                class="o_competency_tabular"
+                decoration-warning="group_points_status == 'under'"
+                decoration-danger="group_points_status == 'over'">
+                <field name="group_id" column_invisible="1" />
+                <field name="group_points_status" column_invisible="1" />
+                <field name="name" string="Competency" />
+                <field name="description" string="Targets" class="o_col_targets" optional="show" />
+                <field name="points" string="Points" sum="Total Points" />
+                <field name="group_points" string="Group Points" readonly="1" />
+            </list>
+        </field>
+    </record>
 
-            <xpath expr="//field[@name='kra_ids']" position="before">
-                <!-- Invisible data carrier: loads competency_score_ids into the
-                     OWL record so the kra_tabs_widget can read it downstream.
-                     No visible HTML is rendered here. -->
-                <field name="competency_score_ids"
-                    invisible="1"
-                    list_view_ref="hr_employee_evaluation.view_appraisal_competency_score_list"
-                    form_view_ref="hr_employee_evaluation.view_appraisal_competency_score_form" />
-                <field name="competency_max_total" invisible="1" />
-                <field name="competency_self_total" invisible="1" />
-                <field name="competency_supervisor_total" invisible="1" />
-                <field name="competency_secondary_total" invisible="1" />
-                <field name="competency_reviewer_total" invisible="1" />
-            </xpath>
-
+    <record id="view_competency_line_grouped_search" model="ir.ui.view">
+        <field name="name">competency.framework.line.grouped.search</field>
+        <field name="model">competency.framework.line</field>
+        <field name="arch" type="xml">
+            <search string="Search Competencies">
+                <field name="name" string="Competency" />
+                <field name="group_id" string="Group" />
+                <separator />
+                <filter name="filter_under" string="Incomplete Groups"
+                    domain="[('group_points_status', '=', 'under')]" />
+                <filter name="filter_over" string="Over Limit"
+                    domain="[('group_points_status', '=', 'over')]" />
+                <filter name="filter_exact" string="Fully Assigned"
+                    domain="[('group_points_status', '=', 'exact')]" />
+                <separator />
+                <filter name="groupby_group" string="Group By: Competency Group"
+                    context="{'group_by': 'group_id'}" />
+            </search>
         </field>
     </record>
 
 
     <!-- ============================================================
-         3b. INJECT competency_score_ids DATA FIELD — SUPERVISOR FORM
-             Inherits: view_employee_appraisals_supervisor_form
+         3. TEMPLATE LIST VIEW
          ============================================================ -->
 
-    <record id="view_pms_appraisal_competency_page_supervisor" model="ir.ui.view">
-        <field name="name">pms.appraisal.supervisor.form.competency.page</field>
-        <field name="model">pms.appraisal</field>
-        <field name="inherit_id"
-            ref="hr_employee_evaluation.view_employee_appraisals_supervisor_form" />
+    <record id="view_competency_template_list" model="ir.ui.view">
+        <field name="name">competency.framework.template.list</field>
+        <field name="model">competency.framework.template</field>
         <field name="arch" type="xml">
+            <list string="Competency Templates"
+                class="o_competency_template_list"
+                decoration-warning="points_status == 'under'"
+                decoration-danger="points_status == 'over'"
+                decoration-success="points_status == 'exact'">
+                <field name="points_status" column_invisible="1" />
+                <field name="name" string="Template Name" class="o_tmpl_col_name" />
+                <field name="total_hr_points" string="Total Points" class="o_tmpl_col_pts"
+                    readonly="1" />
+                <field name="group_count" string="No. of Groups" class="o_tmpl_col_count"
+                    readonly="1" />
+            </list>
+        </field>
+    </record>
 
-            <xpath expr="//field[@name='kra_ids']" position="before">
-                <!-- Invisible data carrier — same rationale as the employee form. -->
-                <field name="competency_score_ids"
-                    invisible="1"
-                    list_view_ref="hr_employee_evaluation.view_appraisal_competency_score_list"
-                    form_view_ref="hr_employee_evaluation.view_appraisal_competency_score_form" />
-                <field name="competency_max_total" invisible="1" />
-                <field name="competency_self_total" invisible="1" />
-                <field name="competency_supervisor_total" invisible="1" />
-                <field name="competency_secondary_total" invisible="1" />
-                <field name="competency_reviewer_total" invisible="1" />
-            </xpath>
 
+    <!-- ============================================================
+         Action: grouped tabular view filtered to one template
+         ============================================================ -->
+
+    <record id="action_competency_lines_by_template" model="ir.actions.act_window">
+        <field name="name">Competency Lines</field>
+        <field name="res_model">competency.framework.line</field>
+        <field name="view_mode">list</field>
+        <field name="view_ids"
+            eval="[
+            (5, 0, 0),
+            (0, 0, {'view_mode': 'list', 'view_id': ref('view_competency_line_grouped_list')}),
+        ]" />
+        <field name="search_view_id" ref="view_competency_line_grouped_search" />
+        <field name="context">{'group_by': 'group_id', 'search_default_groupby_group': 1}</field>
+        <field name="domain">[('template_id', '=', active_id)]</field>
+    </record>
+
+
+    <!-- ============================================================
+         4. TEMPLATE FORM VIEW
+         Export buttons call Python methods (type="object") — no
+         external XML ID references, no load-order issues.
+         ============================================================ -->
+
+    <record id="view_competency_template_form" model="ir.ui.view">
+        <field name="name">competency.framework.template.form</field>
+        <field name="model">competency.framework.template</field>
+        <field name="arch" type="xml">
+            <form string="Competency Template" auto_save="1" class="o_competency_template_form">
+
+                <!-- Export / Print buttons in the header bar -->
+                <header>
+                    <button name="action_export_pdf"
+                        string="Export PDF"
+                        type="object"
+                        class="btn-secondary"
+                        icon="fa-file-pdf-o"
+                        invisible="not id" />
+                    <button name="action_export_excel"
+                        string="Export Excel"
+                        type="object"
+                        class="btn-secondary"
+                        icon="fa-file-excel-o"
+                        invisible="not id" />
+                </header>
+
+                <sheet>
+                    <group>
+                        <group string="Template Details">
+                            <field name="name" placeholder="e.g. Annual Competency Framework 2025" />
+                            <field name="description" placeholder="Optional description" />
+                        </group>
+                        <group string="Points Summary">
+                            <field name="total_hr_points" string="Total Assigned" readonly="1"
+                                help="Sum of all group points." />
+                            <field name="remaining_hr_points" string="Remaining" readonly="1"
+                                help="Points left before reaching the ceiling." />
+                            <field name="group_count" string="No. of Groups" readonly="1" />
+                        </group>
+                    </group>
+
+                    <!-- Incomplete banner -->
+                    <div class="alert alert-info o_hr_points_bar mb-0" role="alert"
+                        invisible="points_status != 'under' or not group_ids">
+                        <i class="fa fa-info-circle me-2" />
+                        <strong>Incomplete.</strong>
+                        <field
+                            name="total_hr_points" readonly="1" /> pts assigned — add <field
+                            name="remaining_hr_points" readonly="1" /> more pt(s) to enable saving. </div>
+
+                    <!-- Over limit banner -->
+                    <div class="alert alert-danger o_hr_points_bar mb-0" role="alert"
+                        invisible="points_status != 'over'">
+                        <i class="fa fa-times-circle me-2" />
+                        <strong>Over Limit!</strong>
+                        <field
+                            name="total_hr_points" readonly="1" /> pts assigned — reduce group
+                        points before saving. </div>
+
+                    <field name="points_status" invisible="1" />
+
+                    <notebook>
+
+                        <!-- TAB 1: COMPETENCY GROUPS -->
+                        <page string="Competency Groups" name="groups_page">
+                            <field name="group_ids"
+                                context="{'default_template_id': id}"
+                                mode="list"
+                                form_view_ref="competency_exact.view_competency_group_form">
+                                <list class="o_competency_groups_table"
+                                    decoration-warning="points_status == 'under'"
+                                    decoration-danger="points_status == 'over'"
+                                    decoration-success="points_status == 'exact'">
+                                    <field name="sequence" widget="handle" />
+                                    <field name="name" string="Competency Group"
+                                        class="o_grp_col_name" />
+                                    <field name="points" string="Group Points" class="o_grp_col_pts" />
+                                    <field name="line_count" string="No. of Lines" readonly="1"
+                                        class="o_grp_col_count" />
+                                    <field name="points_status" column_invisible="1" />
+                                </list>
+                            </field>
+                            <p class="text-muted mt-2" invisible="points_status == 'over'"
+                                style="font-size:0.85em;">
+                                <i class="fa fa-info-circle me-1" /> Click any group row to open it
+                                and add competency lines. All points must be distributed before the
+                                template can be saved. </p>
+                            <p class="text-muted mt-1 mb-0" invisible="points_status != 'over'"
+                                style="font-size:0.82em;padding:4px 8px;color:#b91c1c;">
+                                <i class="fa fa-exclamation-triangle me-1" /> Total exceeds ceiling
+                                — reduce group points before saving. </p>
+                        </page>
+
+                        <!-- TAB 2: COMPETENCY TABLE with export buttons -->
+                        <page string="Competency Table" name="table_page">
+                            <div
+                                style="display:flex; justify-content:flex-end; margin-bottom:12px; gap:8px;">
+                                <button name="action_export_pdf"
+                                    string="Export PDF"
+                                    type="object"
+                                    class="btn btn-sm btn-default"
+                                    icon="fa-file-pdf-o"
+                                    invisible="not id" />
+                                <button name="action_export_excel"
+                                    string="Export Excel"
+                                    type="object"
+                                    class="btn btn-sm btn-default"
+                                    icon="fa-file-excel-o"
+                                    invisible="not id" />
+                            </div>
+                            <field name="competency_table_html"
+                                widget="html"
+                                readonly="1"
+                                nolabel="1" />
+                        </page>
+
+                    </notebook>
+                </sheet>
+                <chatter />
+            </form>
+        </field>
+    </record>
+
+
+    <!-- ============================================================
+         5. SEARCH VIEW
+         ============================================================ -->
+
+    <record id="view_competency_template_search" model="ir.ui.view">
+        <field name="name">competency.framework.template.search</field>
+        <field name="model">competency.framework.template</field>
+        <field name="arch" type="xml">
+            <search string="Search Competency Templates">
+                <field name="name" string="Template" />
+                <separator />
+                <filter name="filter_exact" string="Complete"
+                    domain="[('points_status', '=', 'exact')]" />
+                <filter name="filter_under" string="Incomplete"
+                    domain="[('points_status', '=', 'under')]" />
+                <filter name="filter_over" string="Over Limit"
+                    domain="[('points_status', '=', 'over')]" />
+            </search>
+        </field>
+    </record>
+
+
+    <!-- ============================================================
+         6. WINDOW ACTION
+         ============================================================ -->
+
+    <record id="action_competency_template" model="ir.actions.act_window" forcecreate="True">
+        <field name="name">Competency Template</field>
+        <field name="res_model">competency.framework.template</field>
+        <field name="view_mode">list,form</field>
+        <field name="context">{}</field>
+        <field name="view_ids"
+            eval="[
+            (5, 0, 0),
+            (0, 0, {'view_mode': 'list', 'view_id': ref('view_competency_template_list')}),
+            (0, 0, {'view_mode': 'form', 'view_id': ref('view_competency_template_form')}),
+        ]" />
+        <field name="search_view_id" ref="view_competency_template_search" />
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">No competency templates found.</p>
+            <p>Create a template, add groups, and distribute points across them.</p>
         </field>
     </record>
 

@@ -1,7 +1,4 @@
 # models/score_allocation.py
-# ============================================================
-# COMPLETE FIXED VERSION with write() method
-# ============================================================
 
 from odoo import models, fields, api, _
 from odoo.exceptions import ValidationError
@@ -15,9 +12,6 @@ class PmsScoreAllocation(models.Model):
     Master allocation record that HR creates ONCE per evaluation cycle.
     It answers:  "KPI carries X points, Competency carries Y points,
                   and X + Y must equal 100."
-
-    One allocation can be shared across multiple appraisal templates
-    (e.g. different job-grade templates all follow the same 70/30 split).
     """
     _name        = 'pms.score.allocation'
     _description = 'Score Allocation (KPI vs Competency)'
@@ -29,7 +23,7 @@ class PmsScoreAllocation(models.Model):
         string='Allocation Name',
         required=True,
         tracking=True,
-        help='e.g. "Standard 70/30 – FY 2025"',
+        help='e.g. "Standard 70/30 – FY 2026"',
     )
     description = fields.Text(string='Description')
     active      = fields.Boolean(default=True)
@@ -96,16 +90,8 @@ class PmsScoreAllocation(models.Model):
     # ══════════════════════════════════════════════════════════
     # write() — Auto-sync competency ceilings when weights change
     # ══════════════════════════════════════════════════════════
-    # OPTIONAL ENHANCEMENT:
-    # If the competency_weight is updated, sync all linked competency
-    # templates' ceilings automatically. This ensures that if you change
-    # from 70/30 to 60/40, all existing competency frameworks update
-    # from 30-pt ceiling to 40-pt ceiling immediately.
-    #
-    # This complements the appraisal_template.write() method which syncs
-    # when the allocation is first linked to a template.
-    # ══════════════════════════════════════════════════════════
-
+    
+   
     def write(self, vals):
         """
         When competency_weight changes, sync all linked competency templates.
@@ -142,7 +128,7 @@ class PmsScoreAllocation(models.Model):
                 'title':   _('Over 100 pts'),
                 'message': _(
                     'KPI (%(k).2f) + Competency (%(c).2f) = %(t).2f — '
-                    '%(e).2f pt(s) over 100. Adjust before saving.'
+                    '%(e).2f point(s) over 100. Adjust before saving.'
                 ) % {
                     'k': self.kpi_weight or 0.0,
                     'c': self.competency_weight or 0.0,
@@ -155,7 +141,7 @@ class PmsScoreAllocation(models.Model):
                 'title':   _('Under 100 pts'),
                 'message': _(
                     'KPI (%(k).2f) + Competency (%(c).2f) = %(t).2f — '
-                    '%(r).2f pt(s) short of 100. Adjust before saving.'
+                    '%(r).2f point(s) short of 100. Adjust before saving.'
                 ) % {
                     'k': self.kpi_weight or 0.0,
                     'c': self.competency_weight or 0.0,
@@ -176,7 +162,7 @@ class PmsScoreAllocation(models.Model):
             if cmp > 0:
                 raise ValidationError(_(
                     '"%(name)s": KPI (%(k).2f) + Competency (%(c).2f) = %(t).2f '
-                    '— %(e).2f pt(s) over 100. Reduce one of the weights.'
+                    '— %(e).2f point(s) over 100. Reduce one of the weights.'
                 ) % {
                     'name': rec.name,
                     'k': rec.kpi_weight,
@@ -187,7 +173,7 @@ class PmsScoreAllocation(models.Model):
             if cmp < 0:
                 raise ValidationError(_(
                     '"%(name)s": KPI (%(k).2f) + Competency (%(c).2f) = %(t).2f '
-                    '— %(r).2f pt(s) short of 100. Adjust before saving.'
+                    '— %(r).2f point(s) short of 100. Adjust before saving.'
                 ) % {
                     'name': rec.name,
                     'k': rec.kpi_weight,
@@ -213,7 +199,7 @@ class PmsScoreAllocation(models.Model):
                 )
 
     # ══════════════════════════════════════════════════════════
-    # Action — jump to linked templates
+    # Action — linked templates
     # ══════════════════════════════════════════════════════════
 
     def action_view_templates(self):

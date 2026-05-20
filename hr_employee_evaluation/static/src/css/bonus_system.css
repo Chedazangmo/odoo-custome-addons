@@ -1,19 +1,29 @@
 /* ================================================================
-   PMS Bonus System - Complete Styling
+   PMS Bonus System
    ================================================================ */
 
-/* CSS Variables */
-:root {
-    --pms-primary: #6C4FD4;
-    --pms-primary-dark: #5a3db8;
-    --pms-primary-light: #EEEDFE;
+.pms-rating-list,
+.pms-bonus-engine-form,
+.pms-calculation-form,
+.pms-calculation-list,
+.pms-bonus-summary,
+.pms-export-section,
+.pms-my-bonus-form {
+    --pms-primary: #6366f1;
+    --pms-primary-dark: #4f46e5;
+    --pms-primary-light: #eef2ff;
+    --pms-primary-bg: #f5f3ff;
     --pms-success: #10b981;
-    --pms-success-light: #E1F5EE;
+    --pms-success-dark: #059669;
+    --pms-success-light: #d1fae5;
     --pms-warning: #f59e0b;
-    --pms-warning-light: #FEF3C7;
+    --pms-warning-light: #fef3c7;
     --pms-danger: #ef4444;
-    --pms-danger-light: #FEF2F2;
+    --pms-danger-light: #fee2e2;
+    --pms-info: #3b82f6;
+    --pms-info-light: #dbeafe;
     --pms-border: #e2e8f0;
+    --pms-border-dark: #cbd5e1;
     --pms-bg: #f8fafc;
     --pms-bg-card: #ffffff;
     --pms-text: #475569;
@@ -21,976 +31,1104 @@
     --pms-text-dark: #1e293b;
     --pms-radius: 16px;
     --pms-radius-sm: 12px;
-    --pms-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    --pms-radius-xs: 8px;
+    --pms-shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --pms-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
+    --pms-shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+    --pms-shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+    --pms-transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* ================================================================
-   SIDE-BY-SIDE FORMULA + RATING ELIGIBILITY TABLE LAYOUT
+   FULL WIDTH — My Bonus form
+   Uses compound selector (no space) so it only matches the exact
+   element that has BOTH classes — the o_form_view wrapper that
+   Odoo sets when the <form class="pms-my-bonus-form"> renders.
+   This prevents leaking into any other Odoo form view.
    ================================================================ */
 
-.pms-side-by-side {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 20px;
-    margin-bottom: 24px;
+.o_form_view.pms-my-bonus-form .o_form_sheet_bg {
+    max-width: 100% !important;
+    width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    background: var(--pms-bg) !important;
 }
 
-/* Formula Section */
-.pms-formula-section {
-    background: linear-gradient(135deg, #ffffff, #fefcf5);
-    border: 1px solid var(--pms-border);
+.o_form_view.pms-my-bonus-form .o_form_sheet {
+    max-width: 100% !important;
+    width: 100% !important;
+    padding: 0 !important;
+    margin: 0 auto !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+}
+
+/* ================================================================
+   RATING TIERS
+   ================================================================ */
+
+.pms-rating-list {
     border-radius: var(--pms-radius);
     overflow: hidden;
+    background: var(--pms-bg-card);
+    box-shadow: var(--pms-shadow);
+    margin-bottom: 20px;
 }
 
-.pms-formula-header {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 14px 20px;
-    background: linear-gradient(135deg, var(--pms-primary-light), #ffffff);
-    border-bottom: 1px solid var(--pms-border);
-    font-weight: 700;
-    font-size: 13px;
-    text-transform: uppercase;
-    color: var(--pms-primary-dark);
-}
-
-.pms-formula-header i {
-    font-size: 18px;
-    color: var(--pms-primary);
-}
-
-.pms-formula-body {
-    padding: 0;
-    width: 100%;
-}
-
-.pms-formula-body .pfb-root {
-    width: 100%;
-    max-width: 100%;
-    padding: 20px;
-}
-
-/* Rating Eligibility Table Section */
-.pms-eligibility-table-section {
-    background: #ffffff;
-    border: 1px solid var(--pms-border);
-    border-radius: var(--pms-radius);
-    overflow: hidden;
-}
-
-.pms-eligibility-header {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 14px 20px;
-    background: linear-gradient(135deg, var(--pms-success-light), #ffffff);
-    border-bottom: 1px solid var(--pms-border);
-    font-weight: 700;
-    font-size: 13px;
-    text-transform: uppercase;
-    color: #065f46;
-}
-
-.pms-eligibility-header i {
-    font-size: 18px;
-    color: var(--pms-success);
-}
-
-.pms-eligibility-body {
-    padding: 0;
-}
-
-.pms-eligibility-editable-table {
-    width: 100%;
-}
-
-.pms-eligibility-editable-table .o_list_table {
+.pms-rating-list .o_list_table {
     margin: 0;
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
 }
-
-.pms-eligibility-editable-table .o_list_table thead th {
-    background: var(--pms-bg);
-    font-size: 11px;
-    font-weight: 600;
-    padding: 12px 14px;
-    border-bottom: 2px solid var(--pms-border);
-}
-
-.pms-eligibility-editable-table .o_list_table tbody td {
-    padding: 10px 14px;
-    border-bottom: 1px solid var(--pms-border);
-}
-
-.pms-eligibility-editable-table .o_list_table tbody tr:hover td {
-    background: var(--pms-primary-light);
-}
-
-.pms-eligibility-info {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 12px 16px;
-    background: var(--pms-bg);
-    border-top: 1px solid var(--pms-border);
-    font-size: 12px;
-    color: var(--pms-text-light);
-}
-
-.pms-eligibility-info i {
-    color: var(--pms-primary);
-    font-size: 14px;
-}
-
-/* ================================================================
-   RATING TIERS - IMPROVED STYLING
-   ================================================================ */
 
 .pms-rating-list .o_list_table thead th {
-    background: var(--pms-bg);
+    background: linear-gradient(135deg, var(--pms-primary-bg), var(--pms-bg-card));
     font-size: 11px;
-    font-weight: 600;
+    font-weight: 800;
     text-transform: uppercase;
     letter-spacing: 0.05em;
     color: var(--pms-text-dark);
-    border-bottom: 2px solid var(--pms-border);
+    padding: 16px 20px;
+    border-bottom: 2px solid var(--pms-primary-light);
+    white-space: nowrap;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.pms-rating-list .o_list_table thead th:first-child {
+    border-top-left-radius: var(--pms-radius);
+}
+
+.pms-rating-list .o_list_table thead th:last-child {
+    border-top-right-radius: var(--pms-radius);
 }
 
 .pms-rating-list .o_list_table tbody td {
-    padding: 12px;
-    border-bottom: 1px solid var(--pms-border);
-}
-
-.pms-rating-list .o_list_table tbody tr:hover td {
-    background: var(--pms-primary-light);
-}
-
-/* Description Card */
-.pms-description-card {
-    background: var(--pms-bg);
-    border: 1px solid var(--pms-border);
-    border-radius: var(--pms-radius);
-    margin: 16px 0;
-    overflow: hidden;
-}
-
-.pms-description-header {
-    display: flex;
-    align-items: center;
-    gap: 10px;
     padding: 14px 20px;
-    background: var(--pms-bg-card);
     border-bottom: 1px solid var(--pms-border);
-    font-weight: 700;
     font-size: 13px;
-    text-transform: uppercase;
-    color: var(--pms-text-dark);
+    transition: var(--pms-transition);
+    vertical-align: middle;
 }
 
-.pms-description-header i {
-    font-size: 18px;
+.pms-rating-list .o_list_table tbody tr {
+    transition: var(--pms-transition);
+    cursor: pointer;
+}
+
+.pms-rating-list .o_list_table tbody tr:hover {
+    background: linear-gradient(90deg, var(--pms-primary-light) 0%, transparent 100%);
+    transform: scale(1.01);
+    box-shadow: var(--pms-shadow-sm);
+}
+
+.pms-rating-list .o_list_table tbody tr:last-child td:first-child {
+    border-bottom-left-radius: var(--pms-radius);
+}
+
+.pms-rating-list .o_list_table tbody tr:last-child td:last-child {
+    border-bottom-right-radius: var(--pms-radius);
+}
+
+/* Rating Name Column */
+.pms-rating-list td[name="name"] {
+    font-weight: 700;
+    color: var(--pms-primary-dark);
+    font-size: 14px;
+}
+
+/* Score Columns */
+.pms-rating-list td[name="min_score"],
+.pms-rating-list td[name="max_score"] {
+    background: transparent !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    text-align: left !important;
+    padding: 14px 20px !important;
+}
+
+.pms-rating-list td[name="min_score"] .o_field_widget,
+.pms-rating-list td[name="max_score"] .o_field_widget {
+    background: transparent !important;
+    border: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    display: inline-block;
+}
+
+.pms-rating-list td[name="min_score"] .o_field_float,
+.pms-rating-list td[name="max_score"] .o_field_float {
+    background: transparent !important;
+    border: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    font-weight: 600;
+    color: var(--pms-text);
+    display: inline;
+}
+
+.pms-rating-list td[name="min_score"] .o_avatar,
+.pms-rating-list td[name="min_score"] img,
+.pms-rating-list td[name="max_score"] .o_avatar,
+.pms-rating-list td[name="max_score"] img {
+    display: none !important;
+}
+
+/* Description Column */
+.pms-rating-list td[name="description"] {
+    color: var(--pms-text-light);
+    max-width: 250px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Sequence/Handle Column */
+.pms-rating-list td[name="sequence"] .o_handle {
+    cursor: move;
+    color: var(--pms-text-light);
+}
+
+.pms-rating-list td[name="sequence"] .o_handle:hover {
     color: var(--pms-primary);
 }
 
-.pms-description-card .o_field_text {
-    margin: 0;
-    padding: 16px;
+/* Active Toggle Column */
+.pms-rating-list td[name="active"] {
+    text-align: center;
+}
+
+.pms-rating-list td[name="active"] .o_checkbox {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.pms-rating-list .o_list_table .o_field_widget.o_editable {
+    background: transparent;
+    transition: var(--pms-transition);
+}
+
+.pms-rating-list .o_list_table .o_field_widget.o_editable:hover {
+    background: var(--pms-primary-light);
 }
 
 /* ================================================================
-   FORMULA BUILDER WIDGET STYLES (pfb-*)
+   BONUS ENGINE FORM
    ================================================================ */
 
-.pfb-root {
+.pms-bonus-engine-form .oe_title {
+    display: block !important;
+    visibility: visible !important;
+}
+
+.pms-bonus-engine-form .oe_title h1 {
+    font-size: 24px;
+    font-weight: 800;
+    margin-bottom: 8px;
+    color: var(--pms-primary-dark);
+}
+
+.pms-bonus-engine-form .oe_title .o_field_char,
+.pms-bonus-engine-form .oe_title .o_field_char input,
+.pms-bonus-engine-form .oe_title h1 .o_field_char,
+.pms-bonus-engine-form .oe_title h1 .o_field_char input,
+.pms-bonus-engine-form .oe_title h1 input {
+    -webkit-text-fill-color: unset !important;
+    color: var(--pms-text-dark) !important;
+    background: var(--pms-bg-card) !important;
+    background-clip: unset !important;
+    -webkit-background-clip: unset !important;
+    width: 100%;
+    padding: 8px 12px;
+    font-size: 20px;
+    font-weight: 700;
+    border: 2px solid var(--pms-border);
+    border-radius: var(--pms-radius-xs);
+}
+
+.pms-bonus-engine-form .oe_title .o_field_char:focus,
+.pms-bonus-engine-form .oe_title .o_field_char input:focus,
+.pms-bonus-engine-form .oe_title h1 input:focus {
+    outline: none;
+    border-color: var(--pms-primary);
+    box-shadow: 0 0 0 3px var(--pms-primary-light);
+}
+
+/* Engine Header */
+.pms-bonus-engine-form .pms-engine-header {
     display: flex;
-    flex-direction: column;
-    gap: 20px;
-    width: 100%;
-    max-width: 100%;
-    background: transparent;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 32px 16px 32px;
+    background: linear-gradient(135deg, var(--pms-bg-card) 0%, var(--pms-bg) 100%);
+    border-bottom: 2px solid var(--pms-border);
+    margin-bottom: 20px;
 }
 
-.pfb-section {
-    background: #ffffff;
-    border-radius: 16px;
-    border: 1px solid #eef2f6;
-    width: 100%;
-}
-
-.pfb-section-hd {
+.pms-bonus-engine-form .pms-engine-active {
     display: flex;
     align-items: center;
     gap: 12px;
-    padding: 14px 20px;
-    background: #fafcfe;
-    border-bottom: 1px solid #edf2f7;
-    font-size: 11px;
+    padding: 8px 16px;
+    background: var(--pms-bg-card);
+    border-radius: 100px;
+    border: 1px solid var(--pms-border);
+    box-shadow: var(--pms-shadow-sm);
+}
+
+.pms-bonus-engine-form .pms-active-label {
     font-weight: 700;
+    font-size: 11px;
+    color: var(--pms-text);
     text-transform: uppercase;
-    letter-spacing: 0.06em;
-    color: #334155;
+    letter-spacing: 1px;
 }
 
-.pfb-section-hd i {
-    font-size: 16px;
-    color: #6C4FD4;
+/* ================================================================
+   SIDE-BY-SIDE LAYOUT
+   ================================================================ */
+
+.pms-bonus-engine-form .pms-side-by-side {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 28px;
+    padding: 0 28px;
+    margin-bottom: 24px;
 }
 
-.pfb-section-bd {
-    padding: 18px 20px;
+.pms-bonus-engine-form .pms-formula-section {
+    background: var(--pms-bg-card);
+    border: 1px solid var(--pms-border);
+    border-radius: var(--pms-radius);
+    overflow: hidden;
+    box-shadow: var(--pms-shadow-sm);
 }
 
-.pfb-var-grid {
+.pms-bonus-engine-form .pms-formula-header,
+.pms-bonus-engine-form .pms-formula-header *,
+.pms-bonus-engine-form .pms-formula-header span,
+.pms-bonus-engine-form .pms-formula-header i,
+.pms-bonus-engine-form .pms-formula-header .fa,
+.pms-bonus-engine-form .pms-formula-header [class*="icon"],
+.pms-bonus-engine-form .pms-formula-header div,
+.pms-bonus-engine-form .pms-formula-header .o_field_char {
+    color: #000000 !important;
+    background-color: #f0f0f0 !important;
+}
+
+.pms-bonus-engine-form .pms-formula-header {
+    background: #e2e8f0 !important;
+    padding: 14px 24px !important;
+    border-bottom: 2px solid #cbd5e1 !important;
+}
+
+.pms-bonus-engine-form .pms-formula-header i {
+    color: #000000 !important;
+    font-size: 18px !important;
+}
+
+.pms-bonus-engine-form .pms-formula-header span {
+    color: #000000 !important;
+    font-weight: 900 !important;
+    font-size: 14px !important;
+}
+
+.pms-bonus-engine-form .pms-formula-body {
+    padding: 0;
+}
+
+.pms-bonus-engine-form .pms-formula-body .pfb-root {
+    width: 100%;
+    padding: 20px;
+}
+
+/* Rating Eligibility Section */
+.pms-bonus-engine-form .pms-eligibility-table-section {
+    background: var(--pms-bg-card);
+    border: 1px solid var(--pms-border);
+    border-radius: var(--pms-radius);
+    overflow: hidden;
+    box-shadow: var(--pms-shadow-sm);
+}
+
+.pms-bonus-engine-form .pms-eligibility-header {
     display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-}
-
-.pfb-var-chip {
-    display: inline-flex;
     align-items: center;
-    gap: 8px;
-    padding: 8px 18px;
-    background: #ffffff;
-    border: 1px solid #e2edff;
-    border-radius: 40px;
+    gap: 12px;
+    padding: 14px 24px;
+    background: linear-gradient(135deg, #f0fdf4 0%, #ffffff 100%) !important;
+    border-bottom: 2px solid #bbf7d0 !important;
+}
+
+.pms-bonus-engine-form .pms-eligibility-header i {
+    font-size: 20px;
+    color: var(--pms-success-dark) !important;
+}
+
+.pms-bonus-engine-form .pms-eligibility-header span {
+    font-weight: 800;
     font-size: 13px;
-    font-weight: 600;
-    color: #1e293b;
-    cursor: pointer;
-    transition: all 0.2s ease;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--pms-success-dark) !important;
 }
 
-.pfb-var-chip:hover {
-    background: #6C4FD4;
-    border-color: #6C4FD4;
-    color: white;
+/* Eligibility Table */
+.pms-bonus-engine-form .pms-eligibility-editable-table {
+    width: 100%;
+    overflow-x: visible;
 }
 
-.pfb-chip-icon {
-    font-size: 14px;
-    color: #6C4FD4;
+.pms-bonus-engine-form .pms-eligibility-editable-table .o_list_table {
+    margin: 0;
+    width: 100%;
+    table-layout: fixed;
 }
 
-.pfb-var-chip:hover .pfb-chip-icon {
-    color: white;
-}
-
-.pfb-ops-group {
-    margin-bottom: 12px;
-}
-
-.pfb-ops-label {
-    font-size: 10px;
-    font-weight: 600;
-    color: #64748b;
+.pms-bonus-engine-form .pms-eligibility-editable-table .o_list_table thead th {
+    background: linear-gradient(135deg, var(--pms-bg), var(--pms-bg-card));
+    font-size: 11px;
+    font-weight: 800;
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    margin-right: 12px;
+    padding: 14px 16px;
+    color: var(--pms-text-dark);
+    border-bottom: 2px solid var(--pms-border);
+    white-space: nowrap;
 }
 
-.pfb-ops-row {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin-top: 6px;
+.pms-bonus-engine-form .pms-eligibility-editable-table .o_list_table thead th:first-child {
+    width: 60%;
 }
 
-.pfb-op-btn {
-    padding: 6px 16px;
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
-    border-radius: 30px;
+.pms-bonus-engine-form .pms-eligibility-editable-table .o_list_table thead th:last-child {
+    width: 40%;
+}
+
+.pms-bonus-engine-form .pms-eligibility-editable-table .o_list_table tbody td {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--pms-border);
     font-size: 13px;
-    font-weight: 600;
-    color: #475569;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    font-family: monospace;
+    vertical-align: middle;
 }
 
-.pfb-op-btn:hover {
-    background: #f1f5f9;
-    border-color: #cbd5e1;
+.pms-bonus-engine-form .pms-eligibility-editable-table .o_list_table tbody tr:hover td {
+    background: linear-gradient(90deg, var(--pms-primary-light) 0%, transparent 100%);
 }
 
-.pfb-op-fn {
-    background: #fef3c7;
-    border-color: #fde68a;
-    color: #92400e;
-}
-
-.pfb-num-row {
-    display: flex;
-    gap: 10px;
-    margin-bottom: 16px;
-    flex-wrap: wrap;
-}
-
-.pfb-num-input {
-    flex: 2;
-    min-width: 160px;
-    padding: 8px 16px;
-    border: 1.5px solid #e2e8f0;
-    border-radius: 40px;
-    font-size: 14px;
-    background: #ffffff;
-}
-
-.pfb-num-input:focus {
-    outline: none;
-    border-color: #6C4FD4;
-    box-shadow: 0 0 0 3px rgba(108, 79, 212, 0.08);
-}
-
-.pfb-add-btn {
-    padding: 8px 24px;
-    background: #6C4FD4;
-    border: none;
-    border-radius: 40px;
-    font-weight: 600;
-    color: white;
-    cursor: pointer;
-}
-
-.pfb-add-btn:hover {
-    background: #5a3db8;
-}
-
-.pfb-preset-group {
-    margin-bottom: 12px;
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 10px;
-}
-
-.pfb-preset-label {
-    font-size: 10px;
-    font-weight: 600;
-    color: #64748b;
-    text-transform: uppercase;
-}
-
-.pfb-presets {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-}
-
-.pfb-preset {
-    padding: 5px 14px;
-    background: #f1f5f9;
-    border: 1px solid #e2e8f0;
-    border-radius: 30px;
-    font-size: 11px;
-    font-weight: 500;
-    color: #475569;
-    cursor: pointer;
-}
-
-.pfb-preset:hover {
-    background: #6C4FD4;
-    border-color: #6C4FD4;
-    color: white;
-}
-
-.pfb-expr-wrap {
-    background: #fefcf5;
-    border: 2px solid #f1e9d0;
-    border-radius: 20px;
-    overflow: hidden;
-    width: 100%;
-}
-
-.pfb-expr-hd {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 12px 20px;
-    background: #fffae6;
-    border-bottom: 2px solid #f3e5c2;
-}
-
-.pfb-expr-hd i {
-    font-size: 16px;
-    color: #f59e0b;
-}
-
-.pfb-expr-hd span {
-    font-size: 12px;
+.pms-bonus-engine-form .pms-eligibility-editable-table td[name="rating_name"] {
     font-weight: 700;
-    color: #92400e;
-    text-transform: uppercase;
-}
-
-.pfb-expr-hd-hint {
-    font-size: 11px;
-    color: #b45309;
-    margin-left: auto;
-}
-
-.pfb-expr-tokens {
-    min-height: 90px;
-    padding: 16px 20px;
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 10px;
-    background: #fefcf5;
-}
-
-.pfb-expr-placeholder {
+    color: var(--pms-primary-dark);
     font-size: 13px;
-    color: #94a3b8;
-    font-style: italic;
+    word-break: break-word;
 }
 
-.pfb-tok {
-    display: inline-flex;
+.pms-bonus-engine-form .pms-eligibility-editable-table td[name="eligibility_percentage"] {
+    min-width: 120px;
+    padding: 8px 16px;
+}
+
+.pms-bonus-engine-form .pms-eligibility-editable-table .o_progressbar {
+    background: var(--pms-bg);
+    border-radius: 30px;
+    height: 10px;
+    overflow: visible;
+    position: relative;
+    margin-bottom: 8px;
+}
+
+.pms-bonus-engine-form .pms-eligibility-editable-table .o_progressbar .progress {
+    background: linear-gradient(90deg, var(--pms-success), var(--pms-primary));
+    border-radius: 30px;
+    transition: width 0.5s ease;
+    height: 100%;
+}
+
+.pms-bonus-engine-form .pms-eligibility-editable-table td[name="eligibility_percentage"] .o_field_widget {
+    display: flex;
+    flex-direction: column;
     align-items: center;
     gap: 6px;
-    padding: 5px 10px 5px 15px;
-    border-radius: 50px;
-    font-size: 12px;
-    font-weight: 600;
-    background: white;
-    border: 1px solid #e9eef3;
 }
 
-.pfb-tok-var {
-    background: #EEEDFE;
-    border-color: #C7C1F0;
-    color: #3C3489;
-}
-
-.pfb-tok-op {
-    background: #f1f5f9;
-    border-color: #e2e8f0;
-    color: #1e293b;
-}
-
-.pfb-tok-num {
-    background: #E1F5EE;
-    border-color: #b2dfd0;
-    color: #0b5e42;
-}
-
-.pfb-tok-fn {
-    background: #FEF3C7;
-    border-color: #fde68a;
-    color: #92400e;
-}
-
-.pfb-tok-del-btn {
-    width: 18px;
-    height: 18px;
-    border: none;
-    background: rgba(0, 0, 0, 0.05);
-    border-radius: 50%;
-    cursor: pointer;
-    opacity: 0.5;
-    font-size: 9px;
-    color: inherit;
-}
-
-.pfb-tok-del-btn:hover {
-    opacity: 1;
-    background: rgba(0, 0, 0, 0.15);
-}
-
-.pfb-cursor {
-    display: inline-block;
-    width: 2px;
-    height: 20px;
-    background: #6C4FD4;
-    border-radius: 1px;
-    animation: blink 1s step-end infinite;
-    margin-left: 4px;
-}
-
-@keyframes blink {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0; }
-}
-
-.pfb-expr-preview {
-    padding: 10px 20px;
-    border-top: 1px solid #f0e4c0;
-    background: #fffae6;
-    font-family: monospace;
-    font-size: 12px;
-}
-
-.pfb-preview-label {
+.pms-bonus-engine-form .pms-eligibility-editable-table td[name="eligibility_percentage"] .o_field_float {
     font-weight: 700;
-    color: #6C4FD4;
-    margin-right: 8px;
+    color: var(--pms-primary-dark);
+    font-size: 14px;
+    text-align: center;
+    background: var(--pms-primary-light);
+    padding: 4px 10px;
+    border-radius: 20px;
+    display: inline-block;
+    min-width: 60px;
 }
 
-.pfb-action-row {
-    display: flex;
-    gap: 12px;
-    flex-wrap: wrap;
+/* ================================================================
+   BONUS ENGINE LIST VIEW
+   ================================================================ */
+
+.pms-engine-list {
+    border-radius: var(--pms-radius);
+    overflow: hidden;
+    background: var(--pms-bg-card);
+    box-shadow: var(--pms-shadow);
 }
 
-.pfb-btn-validate {
-    background: #6C4FD4;
-    border: none;
-    border-radius: 40px;
-    padding: 10px 28px;
-    font-weight: 600;
-    color: white;
-    cursor: pointer;
+.pms-engine-list .o_list_table thead th {
+    background: linear-gradient(135deg, var(--pms-primary-bg), var(--pms-bg-card));
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--pms-text-dark);
+    padding: 14px 20px;
+    border-bottom: 2px solid var(--pms-primary-light);
+    white-space: nowrap;
 }
 
-.pfb-btn-validate:hover {
-    background: #5a3db8;
-}
-
-.pfb-btn-secondary {
-    border-radius: 40px;
-    padding: 10px 28px;
-    font-weight: 500;
-    border: 1px solid #cbd5e1;
-    background: white;
-    cursor: pointer;
-}
-
-.pfb-btn-secondary:hover {
-    background: #f8fafc;
-}
-
-.pfb-status {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    border-radius: 12px;
-    padding: 10px 16px;
+.pms-engine-list .o_list_table tbody td {
+    padding: 12px 20px;
+    border-bottom: 1px solid var(--pms-border);
+    transition: var(--pms-transition);
     font-size: 13px;
 }
 
-.pfb-status-ok {
-    background: #E1F5EE;
-    border-left: 4px solid #10b981;
-    color: #065f46;
+.pms-engine-list .o_list_table tbody tr:hover td {
+    background: linear-gradient(90deg, var(--pms-primary-light) 0%, transparent 100%);
 }
 
-.pfb-status-err {
-    background: #FEF2F2;
-    border-left: 4px solid #ef4444;
-    color: #991b1b;
-}
-
-.pfb-preview-card {
-    background: linear-gradient(135deg, #f0f9ff, #ffffff);
-    border: 1px solid #bae6fd;
-    border-radius: 16px;
-    overflow: hidden;
-}
-
-.pfb-preview-hd {
-    background: #e0f2fe;
-    padding: 10px 16px;
-    font-size: 11px;
+.pms-engine-list td[name="name"] {
     font-weight: 700;
-    text-transform: uppercase;
-    color: #0369a1;
+    color: var(--pms-primary-dark);
 }
 
-.pfb-preview-body {
-    padding: 16px;
-}
-
-.pfb-preview-main {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 12px;
-    flex-wrap: wrap;
-    gap: 12px;
-}
-
-.pfb-preview-amount {
-    text-align: center;
-}
-
-.pfb-preview-amount .pfb-preview-label {
+.pms-engine-list td[name="formula"] {
+    font-family: monospace;
     font-size: 11px;
-    color: #64748b;
-    display: block;
-}
-
-.pfb-preview-value-large {
-    font-size: 28px;
-    font-weight: 700;
-    color: #10b981;
-}
-
-.pfb-preview-pct {
-    text-align: center;
-}
-
-.pfb-preview-pct .pfb-preview-label {
-    font-size: 11px;
-    color: #64748b;
-    display: block;
-}
-
-.pfb-preview-value {
-    font-size: 20px;
-    font-weight: 600;
-    color: #6C4FD4;
-}
-
-.pfb-preview-formula {
-    padding-top: 12px;
-    border-top: 1px solid #e2e8f0;
-    font-size: 11px;
-    word-break: break-all;
+    color: var(--pms-text);
 }
 
 /* ================================================================
    ADVANCED OPTIONS
    ================================================================ */
 
-.pms-advanced-section {
+.pms-bonus-engine-form .pms-advanced-section {
     background: var(--pms-bg-card);
     border: 1px solid var(--pms-border);
     border-radius: var(--pms-radius);
     overflow: hidden;
-    margin-top: 20px;
+    margin: 0 28px 24px 28px;
+    box-shadow: var(--pms-shadow-sm);
 }
 
-.pms-advanced-header {
+.pms-bonus-engine-form .pms-advanced-header {
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 14px 20px;
-    background: var(--pms-bg);
-    border-bottom: 1px solid var(--pms-border);
-    font-weight: 700;
-    font-size: 13px;
-    text-transform: uppercase;
-    color: var(--pms-text-dark);
+    gap: 12px;
+    padding: 14px 28px;
+    background: linear-gradient(135deg, var(--pms-bg) 0%, var(--pms-bg-card) 100%);
+    border-bottom: 2px solid var(--pms-border);
 }
 
-.pms-advanced-header i {
-    font-size: 16px;
+.pms-bonus-engine-form .pms-advanced-header i {
+    font-size: 20px;
     color: var(--pms-primary);
 }
 
-/* Side-by-side grid for advanced options */
-.pms-advanced-grid {
+.pms-bonus-engine-form .pms-advanced-header span {
+    font-weight: 800;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--pms-text-dark);
+}
+
+.pms-bonus-engine-form .pms-advanced-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: 20px;
     padding: 20px;
 }
 
-/* Simple card styling */
-.pms-adv-card {
+.pms-bonus-engine-form .pms-adv-card {
     background: var(--pms-bg-card);
     border: 1px solid var(--pms-border);
     border-radius: var(--pms-radius-sm);
     overflow: hidden;
+    transition: var(--pms-transition);
 }
 
-/* Simple header without gradients */
-.pms-adv-card-header {
+.pms-bonus-engine-form .pms-adv-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--pms-shadow-lg);
+}
+
+.pms-bonus-engine-form .pms-adv-card-header {
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 12px 16px;
-    font-weight: 600;
+    gap: 12px;
+    padding: 14px 20px;
+    font-weight: 700;
     font-size: 13px;
-    background: var(--pms-bg);
-    border-bottom: 1px solid var(--pms-border);
+    border-bottom: 3px solid;
 }
 
-.pms-adv-card-header i {
-    font-size: 14px;
+.pms-bonus-engine-form .pms-adv-card-header i {
+    font-size: 18px;
 }
 
-/* Simple color accents for headers */
-.pms-adv-purple {
-    color: var(--pms-primary-dark);
-}
-
-.pms-adv-purple i {
-    color: var(--pms-primary);
-}
-
-.pms-adv-teal {
-    color: #065f46;
-}
-
-.pms-adv-teal i {
-    color: var(--pms-success);
-}
-
-/* Simple body padding */
-.pms-adv-card-body {
-    padding: 16px;
-}
-
-/* Simple field spacing */
-.pms-adv-field {
-    margin-bottom: 14px;
-}
-
-.pms-adv-field:last-child {
-    margin-bottom: 0;
-}
-
-/* Simple label styling */
-.pms-adv-field label {
-    display: block;
-    font-size: 12px;
-    font-weight: 500;
-    color: var(--pms-text);
-    margin-bottom: 6px;
-}
-
-/* Checkbox label - inline */
-.pms-check-label {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    cursor: pointer;
-    margin: 0;
-}
-
-.pms-check-label span {
-    font-weight: 500;
-    color: var(--pms-text-dark);
-    font-size: 12px;
-}
-
-/* Simple input styling */
-.pms-adv-input {
-    width: 100%;
-    padding: 8px 12px;
-    border: 1px solid var(--pms-border);
-    border-radius: 8px;
-    font-size: 13px;
-    background: var(--pms-bg-card);
-    transition: all 0.2s ease;
-}
-
-.pms-adv-input:focus {
-    outline: none;
-    border-color: var(--pms-primary);
-    box-shadow: 0 0 0 2px rgba(108, 79, 212, 0.1);
-}
-
-/* Simple divider */
-.pms-adv-divider {
-    height: 1px;
-    background: var(--pms-border);
-    margin: 12px 0;
-}
-
-/* ================================================================
-   BONUS CALCULATION - CLEAN STYLING
-   ================================================================ */
-
-.pms-calculation-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 20px;
-    margin-bottom: 24px;
-}
-
-.pms-calculation-card {
-    background: var(--pms-bg-card);
-    border: 1px solid var(--pms-border);
-    border-radius: var(--pms-radius);
-    overflow: hidden;
-}
-
-.pms-calculation-card-header {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 14px 18px;
-    font-weight: 600;
-    font-size: 13px;
-    background: var(--pms-bg);
-    border-bottom: 1px solid var(--pms-border);
-}
-
-.pms-calculation-card-header i {
-    font-size: 16px;
-}
-
-.pms-calculation-card-body {
+.pms-bonus-engine-form .pms-adv-card-body {
     padding: 18px;
 }
 
-.pms-form-field {
+.pms-bonus-engine-form .pms-adv-purple {
+    background: linear-gradient(135deg, var(--pms-primary-bg), var(--pms-bg-card));
+    border-bottom-color: var(--pms-primary);
+    color: var(--pms-primary-dark);
+}
+
+.pms-bonus-engine-form .pms-adv-purple i {
+    color: var(--pms-primary);
+}
+
+.pms-bonus-engine-form .pms-adv-teal {
+    background: linear-gradient(135deg, var(--pms-success-light), var(--pms-bg-card));
+    border-bottom-color: var(--pms-success);
+    color: var(--pms-success-dark);
+}
+
+.pms-bonus-engine-form .pms-adv-teal i {
+    color: var(--pms-success);
+}
+
+.pms-bonus-engine-form .pms-adv-field {
     margin-bottom: 16px;
 }
 
-.pms-form-field label {
-    display: block;
-    font-size: 12px;
-    font-weight: 500;
-    color: var(--pms-text);
-    margin-bottom: 6px;
+.pms-bonus-engine-form .pms-adv-field:last-child {
+    margin-bottom: 0;
 }
 
-.pms-form-field .o_field_widget {
-    width: 100%;
-}
-
-/* Employee Selection - Minimal */
-.pms-selection-type {
-    margin-bottom: 16px;
-}
-
-.pms-selection-type .o_radio {
+.pms-bonus-engine-form .pms-adv-field > .o_checkbox {
     display: flex;
-    gap: 20px;
+    align-items: center;
+    gap: 12px;
     margin: 0;
 }
 
-.pms-employee-selector {
-    background: var(--pms-bg-card);
-    border-radius: var(--pms-radius-sm);
-    padding: 14px;
-    margin: 12px 0;
-    border: 1px solid var(--pms-border);
+.pms-bonus-engine-form .pms-check-label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 13px;
+    color: var(--pms-text-dark);
 }
 
-.pms-load-btn {
-    margin-top: 10px;
-    margin-right: 10px;
-}
-
-.pms-selection-count {
-    display: inline-block;
-    font-size: 12px;
+.pms-bonus-engine-form .pms-adv-field .o_form_label {
+    display: block;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
     color: var(--pms-text-light);
-    margin-left: 10px;
+    margin-bottom: 8px;
 }
 
-.pms-selection-help {
+.pms-bonus-engine-form .pms-adv-input {
+    width: 100%;
+    padding: 8px 12px;
+    border: 2px solid var(--pms-border);
+    border-radius: var(--pms-radius-xs);
+    font-size: 13px;
+    transition: var(--pms-transition);
+    background: var(--pms-bg-card);
+}
+
+.pms-bonus-engine-form .pms-adv-input:focus {
+    outline: none;
+    border-color: var(--pms-primary);
+    box-shadow: 0 0 0 3px var(--pms-primary-light);
+}
+
+.pms-bonus-engine-form .pms-adv-divider {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--pms-border), transparent);
+    margin: 16px 0;
+}
+
+/* ================================================================
+   BONUS CALCULATION LIST VIEW
+   ================================================================ */
+
+.pms-calculation-list {
+    border-radius: var(--pms-radius);
+    overflow: hidden;
+    background: var(--pms-bg-card);
+    box-shadow: var(--pms-shadow);
+}
+
+.pms-calculation-list .o_list_table {
+    margin: 0;
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.pms-calculation-list .o_list_table thead th {
+    background: linear-gradient(135deg, var(--pms-primary-bg), var(--pms-bg-card));
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--pms-text-dark);
+    padding: 14px 20px;
+    border-bottom: 2px solid var(--pms-primary-light);
+    white-space: nowrap;
+}
+
+.pms-calculation-list .o_list_table tbody td {
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--pms-border);
+    font-size: 13px;
+    transition: var(--pms-transition);
+    vertical-align: middle;
+}
+
+.pms-calculation-list .o_list_table tbody tr:hover {
+    background: linear-gradient(90deg, var(--pms-primary-light) 0%, transparent 100%);
+}
+
+.pms-calculation-list td[name="name"] {
+    font-weight: 700;
+    color: var(--pms-primary-dark);
+}
+
+.pms-calculation-list td[name="total_bonus_amount"] .o_monetary {
+    font-weight: 800;
+    color: var(--pms-success);
+    font-size: 14px;
+}
+
+.pms-calculation-list td[name="eligible_employee_count"] {
+    text-align: center;
+    font-weight: 600;
+    background: var(--pms-primary-light);
+    padding: 4px 12px;
+    display: inline-block;
+    min-width: 40px;
+    border-radius: 20px;
+}
+
+.pms-calculation-list .o_list_footer {
+    background: linear-gradient(135deg, var(--pms-bg), var(--pms-bg-card));
+    border-top: 2px solid var(--pms-border);
+}
+
+.pms-calculation-list .o_list_footer td:first-child:before {
+    content: "Total Bonus: ";
+    font-weight: 700;
+    color: var(--pms-text-dark);
+    margin-right: 8px;
+}
+
+/* ================================================================
+   BONUS CALCULATION FORM - Horizontal Setup
+   ================================================================ */
+
+.pms-calculation-form .pms-calculation-setup {
+    background: linear-gradient(135deg, var(--pms-bg-card), var(--pms-bg));
+    border-radius: var(--pms-radius);
+    margin: 20px 28px;
+    padding: 20px 28px;
+    border: 1px solid var(--pms-border);
+    box-shadow: var(--pms-shadow-sm);
+}
+
+.pms-calculation-form .pms-setup-row {
+    display: flex;
+    gap: 30px;
+    flex-wrap: wrap;
+}
+
+.pms-calculation-form .pms-setup-item {
+    flex: 1;
+    min-width: 200px;
+}
+
+.pms-calculation-form .pms-setup-label {
     display: flex;
     align-items: center;
     gap: 8px;
     font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
     color: var(--pms-text-light);
-    background: var(--pms-bg);
-    padding: 10px 12px;
-    border-radius: var(--pms-radius-sm);
-    margin-top: 12px;
+    margin-bottom: 8px;
 }
 
-.pms-selection-help i {
-    font-size: 12px;
+.pms-calculation-form .pms-setup-label i {
+    font-size: 13px;
     color: var(--pms-primary);
 }
 
-/* Results Section - Clean */
-.pms-results-section {
+.pms-calculation-form .pms-setup-field {
+    width: 100%;
+    border: 1px solid var(--pms-border);
+    border-radius: var(--pms-radius-xs);
+    padding: 8px 12px;
+    background: var(--pms-bg-card);
+    font-size: 13px;
+}
+
+.pms-calculation-form .pms-setup-field:focus {
+    outline: none;
+    border-color: var(--pms-primary);
+    box-shadow: 0 0 0 3px var(--pms-primary-light);
+}
+
+/* Results Section */
+.pms-calculation-form .pms-results-section {
     background: var(--pms-bg-card);
     border: 1px solid var(--pms-border);
     border-radius: var(--pms-radius);
     overflow: hidden;
+    margin: 0 28px 28px 28px;
+    box-shadow: var(--pms-shadow);
 }
 
-.pms-results-header {
+.pms-calculation-form .pms-results-header {
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 14px 20px;
-    background: var(--pms-bg);
-    border-bottom: 1px solid var(--pms-border);
-    font-weight: 700;
-    font-size: 13px;
-    text-transform: uppercase;
-    color: var(--pms-text-dark);
+    gap: 14px;
+    padding: 14px 28px;
+    background: linear-gradient(135deg, var(--pms-success-light), var(--pms-bg-card));
+    border-bottom: 3px solid var(--pms-success-light);
 }
 
-.pms-results-header i {
-    font-size: 18px;
-    color: var(--pms-primary);
-}
-
-.pms-bonus-results-table .o_list_table {
-    width: 100%;
-}
-
-.pms-bonus-results-table .o_list_table thead th {
-    background: var(--pms-bg);
-    font-size: 11px;
-    font-weight: 600;
-    padding: 12px 14px;
-    border-bottom: 2px solid var(--pms-border);
-}
-
-.pms-bonus-results-table .o_list_table tbody td {
-    padding: 12px 14px;
-    border-bottom: 1px solid var(--pms-border);
-}
-
-.pms-bonus-results-table .o_list_table tbody tr:hover td {
-    background: var(--pms-primary-light);
-}
-
-.pms-bonus-results-table td[name="score"] {
-    font-weight: 600;
-    text-align: center;
-}
-
-.pms-bonus-results-table td[name="bonus_amount"] .o_monetary {
-    font-weight: 600;
+.pms-calculation-form .pms-results-header i {
+    font-size: 20px;
     color: var(--pms-success);
 }
 
+.pms-calculation-form .pms-results-header span {
+    font-weight: 800;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--pms-success-dark);
+}
+
+/* Results Table */
+.pms-calculation-form .pms-bonus-results-table .o_list_table {
+    margin: 0;
+    width: 100%;
+}
+
+.pms-calculation-form .pms-bonus-results-table .o_list_table thead th {
+    background: linear-gradient(135deg, var(--pms-bg), var(--pms-bg-card));
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    padding: 14px 20px;
+    white-space: nowrap;
+}
+
+.pms-calculation-form .pms-bonus-results-table .o_list_table tbody td {
+    padding: 12px 20px;
+    font-size: 13px;
+}
+
+.pms-calculation-form .pms-bonus-results-table .o_list_table tbody tr:hover td {
+    background: linear-gradient(90deg, var(--pms-success-light) 0%, transparent 100%);
+}
+
+.pms-calculation-form .pms-bonus-results-table td[name="score"] {
+    font-weight: 800;
+    text-align: center;
+}
+
+.pms-calculation-form .pms-bonus-results-table td[name="bonus_amount"] .o_monetary {
+    font-weight: 800;
+    color: var(--pms-success);
+}
+
+/* Remove circular shape from employee column */
+.pms-calculation-form .pms-bonus-results-table td[name="employee_id"] {
+    background: transparent !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    padding: 12px 20px !important;
+}
+
+.pms-calculation-form .pms-bonus-results-table td[name="employee_id"] .o_field_widget {
+    background: transparent !important;
+    border: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+}
+
+.pms-calculation-form .pms-bonus-results-table td[name="employee_id"] .o_field_many2one {
+    background: transparent !important;
+    border: none !important;
+    padding: 0 !important;
+}
+
+.pms-calculation-form .pms-bonus-results-table td[name="employee_id"] .o_external_button {
+    display: none !important;
+}
+
+.pms-calculation-form .pms-bonus-results-table td[name="employee_id"] .o_avatar,
+.pms-calculation-form .pms-bonus-results-table td[name="employee_id"] .o_avatar img,
+.pms-calculation-form .pms-bonus-results-table td[name="employee_id"] .o_image,
+.pms-calculation-form .pms-bonus-results-table td[name="employee_id"] img {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+    opacity: 0 !important;
+}
+
+.pms-calculation-form .pms-bonus-results-table td[name="employee_id"] .o_image_64,
+.pms-calculation-form .pms-bonus-results-table td[name="employee_id"] .o_image_128,
+.pms-calculation-form .pms-bonus-results-table td[name="employee_id"] .o_image_avatar {
+    display: none !important;
+}
+
+.pms-calculation-form .pms-bonus-results-table td[name="employee_id"] .o_field_many2one .o_name {
+    background: transparent !important;
+    border: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    font-weight: 500;
+    color: var(--pms-text-dark);
+}
+
+.pms-calculation-form .pms-bonus-results-table td[name="employee_id"] .o_field_many2one {
+    padding-left: 0 !important;
+}
+
+.pms-calculation-form .pms-bonus-results-table td[name="rating_id"] .o_avatar,
+.pms-calculation-form .pms-bonus-results-table td[name="rating_id"] img {
+    display: none !important;
+}
+
 /* ================================================================
-   EMPLOYEE MY BONUS
+   MY BONUS - Employee View
    ================================================================ */
 
-.pms-my-bonus-list .o_list_table thead th {
+.pms-my-bonus-form {
     background: var(--pms-bg);
-    font-size: 11px;
-    font-weight: 600;
 }
+
+.pms-my-bonus-form .oe_title {
+    background: linear-gradient(135deg, var(--pms-primary-bg), var(--pms-bg-card));
+    padding: 24px 28px;
+    margin-bottom: 24px;
+    border-bottom: 1px solid var(--pms-border);
+}
+
+.pms-my-bonus-form .oe_title h1 {
+    font-size: 28px;
+    font-weight: 800;
+    margin-bottom: 8px;
+    color: var(--pms-primary-dark);
+}
+
+.pms-my-bonus-form .oe_subtitle_fs {
+    font-size: 14px;
+    color: var(--pms-text-light);
+    font-weight: 500;
+}
+
+/* My Bonus List View */
+.pms-my-bonus-list {
+    border-radius: var(--pms-radius);
+    overflow: hidden;
+    background: var(--pms-bg-card);
+    box-shadow: var(--pms-shadow);
+}
+
+.pms-my-bonus-list .o_list_table thead th {
+    background: linear-gradient(135deg, var(--pms-primary-bg), var(--pms-bg-card));
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 14px 20px;
+    white-space: nowrap;
+}
+
+.pms-my-bonus-list .o_list_table tbody tr:hover td {
+    background: linear-gradient(90deg, var(--pms-primary-light) 0%, transparent 100%);
+}
+
+/* ================================================================
+   Eligibility % in My Bonus list — progressbar widget
+   ================================================================ */
+
+.pms-my-bonus-list td[name="eligibility_percentage"] {
+    min-width: 130px;
+    padding: 8px 16px;
+    vertical-align: middle;
+}
+
+.pms-my-bonus-list td[name="eligibility_percentage"] .o_field_widget {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    width: 100%;
+}
+
+.pms-my-bonus-list td[name="eligibility_percentage"] .o_progressbar {
+    width: 100%;
+    background: var(--pms-bg);
+    border-radius: 30px;
+    height: 10px;
+    overflow: hidden;
+    position: relative;
+}
+
+.pms-my-bonus-list td[name="eligibility_percentage"] .o_progressbar_value,
+.pms-my-bonus-list td[name="eligibility_percentage"] .o_progressbar .progress,
+.pms-my-bonus-list td[name="eligibility_percentage"] .o_progressbar > div {
+    background: linear-gradient(90deg, var(--pms-success), var(--pms-primary)) !important;
+    border-radius: 30px;
+    height: 100%;
+    transition: width 0.5s ease;
+}
+
+.pms-my-bonus-list td[name="eligibility_percentage"] .o_progressbar_complete,
+.pms-my-bonus-list td[name="eligibility_percentage"] .o_progressbar span,
+.pms-my-bonus-list td[name="eligibility_percentage"] .o_field_progressbar span,
+.pms-my-bonus-list td[name="eligibility_percentage"] span.o_progressbar_value {
+    display: inline-block !important;
+    visibility: visible !important;
+    font-weight: 700 !important;
+    color: var(--pms-primary-dark) !important;
+    font-size: 12px !important;
+    background: var(--pms-primary-light) !important;
+    padding: 2px 8px !important;
+    border-radius: 20px !important;
+    margin-top: 4px !important;
+    min-width: 50px !important;
+    text-align: center !important;
+}
+
+.pms-my-bonus-list td[name="eligibility_percentage"] .o_field_float,
+.pms-my-bonus-list td[name="eligibility_percentage"] .o_field_progressbar .o_progress_text {
+    display: inline-block !important;
+    visibility: visible !important;
+    font-weight: 700 !important;
+    color: var(--pms-primary-dark) !important;
+    font-size: 12px !important;
+    background: var(--pms-primary-light) !important;
+    padding: 2px 8px !important;
+    border-radius: 20px !important;
+    min-width: 50px !important;
+    text-align: center !important;
+}
+
+/* ================================================================
+   Rating summary card — eligibility % shown below rating name
+   ================================================================ */
+
+/* Always show <small> tags inside summary cards */
+.pms-my-bonus-form .pms-summary-card small {
+    display: block !important;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    color: var(--pms-text-light) !important;
+    margin-top: 8px !important;
+}
+
+/* Make the field value inside <small> visible */
+.pms-my-bonus-form .pms-summary-primary small,
+.pms-my-bonus-form .pms-summary-primary small .o_field_float,
+.pms-my-bonus-form .pms-summary-primary small .o_field_widget,
+.pms-my-bonus-form .pms-summary-primary small .o_field_widget span {
+    display: inline !important;
+    visibility: visible !important;
+    color: var(--pms-text) !important;
+    font-weight: 700 !important;
+    font-size: 13px !important;
+}
+
+/* ================================================================
+   Bonus Summary Cards
+   ================================================================ */
 
 .pms-bonus-summary {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 16px;
-    margin-bottom: 24px;
+    gap: 24px;
+    margin-bottom: 32px;
+    padding: 0 28px;
 }
 
 .pms-summary-card {
     background: var(--pms-bg-card);
     border: 1px solid var(--pms-border);
     border-radius: var(--pms-radius);
-    padding: 20px;
+    padding: 28px 24px;
     text-align: center;
+    transition: var(--pms-transition);
+    box-shadow: var(--pms-shadow-sm);
+    position: relative;
+    overflow: hidden;
+}
+
+.pms-summary-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--pms-primary), var(--pms-success));
+    transform: scaleX(0);
+    transition: transform 0.3s ease;
+}
+
+.pms-summary-card:hover::before {
+    transform: scaleX(1);
+}
+
+.pms-summary-card:hover {
+    transform: translateY(-8px);
+    box-shadow: var(--pms-shadow-lg);
 }
 
 .pms-summary-card h4 {
     font-size: 11px;
-    font-weight: 600;
+    font-weight: 800;
     text-transform: uppercase;
+    letter-spacing: 1.5px;
     color: var(--pms-text-light);
-    margin-bottom: 8px;
+    margin-bottom: 16px;
 }
 
 .pms-summary-card .amount,
 .pms-summary-card .score {
-    font-size: 28px;
-    font-weight: 700;
+    font-size: 36px;
+    font-weight: 800;
+    line-height: 1.2;
+    margin-bottom: 0;
 }
 
 .pms-summary-success {
     border-top: 4px solid var(--pms-success);
+    background: linear-gradient(135deg, var(--pms-bg-card), var(--pms-success-light));
 }
 
 .pms-summary-success .amount {
@@ -999,6 +1137,7 @@
 
 .pms-summary-info {
     border-top: 4px solid var(--pms-primary);
+    background: linear-gradient(135deg, var(--pms-bg-card), var(--pms-primary-light));
 }
 
 .pms-summary-info .score {
@@ -1007,10 +1146,137 @@
 
 .pms-summary-primary {
     border-top: 4px solid var(--pms-warning);
+    background: linear-gradient(135deg, var(--pms-bg-card), var(--pms-warning-light));
 }
 
 /* ================================================================
-   EXPORT SECTION
+   Details Grid Layout
+   ================================================================ */
+
+.pms-details-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 28px;
+    padding: 0 28px;
+    margin-bottom: 28px;
+}
+
+.pms-details-card {
+    background: var(--pms-bg-card);
+    border: 1px solid var(--pms-border);
+    border-radius: var(--pms-radius);
+    overflow: hidden;
+    transition: var(--pms-transition);
+    box-shadow: var(--pms-shadow-sm);
+}
+
+.pms-details-card:hover {
+    box-shadow: var(--pms-shadow-md);
+    transform: translateY(-2px);
+}
+
+.pms-details-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 24px;
+    background: linear-gradient(135deg, var(--pms-bg), var(--pms-bg-card));
+    border-bottom: 2px solid var(--pms-border);
+}
+
+.pms-details-header i {
+    font-size: 20px;
+    color: var(--pms-primary);
+}
+
+.pms-details-header span {
+    font-weight: 800;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--pms-text-dark);
+}
+
+.pms-details-body {
+    padding: 20px 24px;
+}
+
+.pms-details-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.pms-details-table tr {
+    border-bottom: 1px solid var(--pms-border);
+}
+
+.pms-details-table tr:last-child {
+    border-bottom: none;
+}
+
+.pms-details-table td {
+    padding: 12px 8px;
+    font-size: 13px;
+}
+
+.pms-details-table td:first-child {
+    font-weight: 700;
+    color: var(--pms-text-dark);
+    width: 40%;
+}
+
+.pms-details-table td:last-child {
+    color: var(--pms-text);
+    font-weight: 500;
+}
+
+/* Financial Details List */
+.pms-financial-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.pms-financial-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--pms-border);
+}
+
+.pms-financial-item:last-child {
+    border-bottom: none;
+}
+
+.pms-financial-label {
+    font-weight: 700;
+    color: var(--pms-text-dark);
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.pms-financial-label i {
+    font-size: 14px;
+    color: var(--pms-primary);
+    width: 18px;
+}
+
+.pms-financial-value {
+    font-weight: 600;
+    color: var(--pms-text);
+    font-size: 14px;
+}
+
+.pms-financial-value .o_monetary {
+    font-weight: 700;
+    color: var(--pms-success);
+}
+
+/* ================================================================
+   EXPORT WIZARD
    ================================================================ */
 
 .pms-export-section {
@@ -1023,72 +1289,227 @@
 .pms-export-header {
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 14px 20px;
-    background: var(--pms-bg);
-    border-bottom: 1px solid var(--pms-border);
-    font-weight: 700;
-    font-size: 13px;
-    text-transform: uppercase;
-    color: var(--pms-text-dark);
+    gap: 14px;
+    padding: 14px 28px;
+    background: linear-gradient(135deg, var(--pms-info-light), var(--pms-bg-card));
+    border-bottom: 3px solid var(--pms-info-light);
 }
 
 .pms-export-header i {
-    font-size: 18px;
-    color: var(--pms-primary);
+    font-size: 20px;
+    color: var(--pms-info);
+}
+
+.pms-export-header span {
+    font-weight: 800;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--pms-info);
 }
 
 .pms-export-section group {
-    padding: 18px;
+    padding: 20px;
 }
 
 /* ================================================================
-   RESPONSIVE
+   BUTTON STYLES
+   ================================================================ */
+
+.pms-bonus-engine-form .btn-primary,
+.pms-calculation-form .btn-primary,
+.pms-calculation-list .btn-primary,
+.pms-my-bonus-list .btn-primary {
+    background: linear-gradient(135deg, var(--pms-primary), var(--pms-primary-dark));
+    border: none;
+    border-radius: var(--pms-radius-xs);
+    padding: 10px 24px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-size: 12px;
+    transition: var(--pms-transition);
+}
+
+.pms-bonus-engine-form .btn-primary:hover,
+.pms-calculation-form .btn-primary:hover,
+.pms-calculation-list .btn-primary:hover,
+.pms-my-bonus-list .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--pms-shadow-lg);
+}
+
+.pms-bonus-engine-form .btn-secondary,
+.pms-calculation-form .btn-secondary,
+.pms-calculation-list .btn-secondary,
+.pms-my-bonus-list .btn-secondary {
+    border: 2px solid var(--pms-border);
+    background: var(--pms-bg-card);
+    border-radius: var(--pms-radius-xs);
+    padding: 10px 24px;
+    font-weight: 600;
+    font-size: 12px;
+    transition: var(--pms-transition);
+}
+
+.pms-bonus-engine-form .btn-secondary:hover,
+.pms-calculation-form .btn-secondary:hover,
+.pms-calculation-list .btn-secondary:hover,
+.pms-my-bonus-list .btn-secondary:hover {
+    background: var(--pms-bg);
+    border-color: var(--pms-primary);
+    transform: translateY(-2px);
+}
+
+/* ================================================================
+   RESPONSIVE DESIGN
    ================================================================ */
 
 @media (max-width: 1024px) {
-    .pms-side-by-side,
-    .pms-advanced-grid,
-    .pms-calculation-grid {
+    .pms-bonus-engine-form .pms-side-by-side {
         grid-template-columns: 1fr;
-        gap: 16px;
+        gap: 20px;
     }
-    
-    .pms-bonus-summary {
+
+    .pms-bonus-engine-form .pms-advanced-grid {
         grid-template-columns: 1fr;
+        gap: 20px;
+    }
+
+    .pms-details-grid {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+
+    .pms-bonus-summary {
+        gap: 20px;
+        padding: 0 20px;
     }
 }
 
 @media (max-width: 768px) {
-    .pms-engine-header {
+    .pms-bonus-engine-form .pms-engine-header {
         flex-direction: column;
-        align-items: stretch;
+        align-items: flex-start;
+        gap: 16px;
+        padding: 16px;
     }
-    
-    .pms-formula-header,
-    .pms-eligibility-header,
-    .pms-advanced-header,
-    .pms-results-header {
-        padding: 12px 16px;
+
+    .pms-bonus-engine-form .pms-side-by-side,
+    .pms-bonus-engine-form .pms-advanced-grid {
+        padding: 0 16px;
     }
-    
-    .pms-formula-body,
-    .pms-eligibility-body,
-    .pms-advanced-grid,
-    .pms-calculation-card-body {
-        padding: 14px;
+
+    .pms-bonus-engine-form .pms-advanced-section {
+        margin-left: 16px;
+        margin-right: 16px;
     }
-    
-    .pfb-action-row {
+
+    .pms-bonus-summary {
+        grid-template-columns: 1fr;
+        padding: 0 16px;
+    }
+
+    .pms-details-grid {
+        padding: 0 16px;
+    }
+
+    .pms-my-bonus-form .oe_title {
+        padding: 16px 20px;
+    }
+
+    .pms-my-bonus-form .oe_title h1 {
+        font-size: 22px;
+    }
+
+    .pms-calculation-form .pms-setup-row {
         flex-direction: column;
+        gap: 16px;
     }
-    
-    .pfb-action-row button {
-        width: 100%;
+
+    .pms-calculation-form .pms-calculation-setup {
+        margin: 16px 20px;
+        padding: 16px;
     }
-    
-    .pfb-var-chip {
-        padding: 6px 14px;
-        font-size: 12px;
+
+    .pms-calculation-list,
+    .pms-rating-list,
+    .pms-bonus-engine-form .pms-eligibility-editable-table,
+    .pms-calculation-form .pms-bonus-results-table,
+    .pms-my-bonus-list {
+        overflow-x: auto;
+    }
+
+    .pms-calculation-list .o_list_table,
+    .pms-rating-list .o_list_table,
+    .pms-bonus-engine-form .pms-eligibility-editable-table .o_list_table,
+    .pms-calculation-form .pms-bonus-results-table .o_list_table,
+    .pms-my-bonus-list .o_list_table {
+        min-width: 800px;
     }
 }
+
+/* ================================================================
+   ANIMATIONS
+   ================================================================ */
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.pms-bonus-engine-form .pms-formula-section,
+.pms-bonus-engine-form .pms-eligibility-table-section,
+.pms-calculation-form .pms-calculation-setup,
+.pms-calculation-form .pms-results-section,
+.pms-calculation-list,
+.pms-bonus-summary .pms-summary-card,
+.pms-details-card,
+.pms-rating-list {
+    animation: fadeInUp 0.4s ease-out;
+}
+
+.pms-calculation-list .o_list_table tbody tr {
+    animation: slideIn 0.3s ease-out;
+    animation-fill-mode: backwards;
+}
+
+.pms-calculation-list .o_list_table tbody tr:nth-child(1) { animation-delay: 0.05s; }
+.pms-calculation-list .o_list_table tbody tr:nth-child(2) { animation-delay: 0.1s; }
+.pms-calculation-list .o_list_table tbody tr:nth-child(3) { animation-delay: 0.15s; }
+.pms-calculation-list .o_list_table tbody tr:nth-child(4) { animation-delay: 0.2s; }
+.pms-calculation-list .o_list_table tbody tr:nth-child(5) { animation-delay: 0.25s; }
+
+.pms-bonus-summary .pms-summary-card:nth-child(1) { animation-delay: 0.05s; }
+.pms-bonus-summary .pms-summary-card:nth-child(2) { animation-delay: 0.1s; }
+.pms-bonus-summary .pms-summary-card:nth-child(3) { animation-delay: 0.15s; }
+.pms-details-card:nth-child(1) { animation-delay: 0.2s; }
+.pms-details-card:nth-child(2) { animation-delay: 0.25s; }
+
+.pms-rating-list .o_list_table tbody tr {
+    animation: slideIn 0.3s ease-out;
+    animation-fill-mode: backwards;
+}
+
+.pms-rating-list .o_list_table tbody tr:nth-child(1) { animation-delay: 0.05s; }
+.pms-rating-list .o_list_table tbody tr:nth-child(2) { animation-delay: 0.1s; }
+.pms-rating-list .o_list_table tbody tr:nth-child(3) { animation-delay: 0.15s; }
+.pms-rating-list .o_list_table tbody tr:nth-child(4) { animation-delay: 0.2s; }
+.pms-rating-list .o_list_table tbody tr:nth-child(5) { animation-delay: 0.25s; }

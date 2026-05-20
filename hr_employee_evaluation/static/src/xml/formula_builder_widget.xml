@@ -34,7 +34,7 @@
                         <span class="pfb-ops-label">Basic</span>
                         <div class="pfb-ops-row">
                             <t t-foreach="basicOps" t-as="op" t-key="op.label">
-                                <button t-attf-class="pfb-op-btn" t-on-click="() => onOpClick(op)" t-esc="op.label"/>
+                                <button class="pfb-op-btn" t-on-click="() => onOpClick(op)" t-esc="op.label"/>
                             </t>
                         </div>
                     </div>
@@ -96,7 +96,6 @@
                 <div class="pfb-expr-hd">
                     <i class="fa fa-code" aria-hidden="true"/>
                     <span>YOUR FORMULA</span>
-                    <span class="pfb-expr-hd-hint">bonus_amount = </span>
                 </div>
                 <div class="pfb-expr-tokens">
                     <t t-if="state.tokens.length === 0">
@@ -126,7 +125,7 @@
             <div class="pfb-action-row">
                 <button class="pfb-btn-validate" t-on-click="onValidate">
                     <i class="fa fa-check-circle" aria-hidden="true"/>
-                    Validate &amp; Preview
+                    Validate
                 </button>
                 <button class="pfb-btn-secondary" t-on-click="onClear">
                     <i class="fa fa-eraser" aria-hidden="true"/>
@@ -138,50 +137,22 @@
                 </button>
             </div>
 
-            <!-- Validation Status Message -->
-            <t t-if="state.showPreview">
-                <t t-if="state.validationStatus === 'ok'">
-                    <div class="pfb-status pfb-status-ok">
-                        <i class="fa fa-check-circle" aria-hidden="true"/>
-                        <div>
-                            <strong>✓ Formula is valid</strong>
-                            <div class="pfb-status-desc">Ready to use in bonus calculations</div>
-                        </div>
+            <!-- Validation Status Message - Simplified -->
+            <t t-if="state.validationStatus === 'ok'">
+                <div class="pfb-status pfb-status-ok">
+                    <i class="fa fa-check-circle" aria-hidden="true"/>
+                    <div>
+                        <strong>✓ Formula is valid</strong>
+                        <div class="pfb-status-desc" t-esc="state.validationMsg"/>
                     </div>
-                </t>
-                <t t-if="state.validationStatus === 'error'">
-                    <div class="pfb-status pfb-status-err">
-                        <i class="fa fa-exclamation-circle" aria-hidden="true"/>
-                        <div>
-                            <strong>✗ Validation Error</strong>
-                            <div class="pfb-status-desc" t-esc="state.validationMsg"/>
-                        </div>
-                    </div>
-                </t>
+                </div>
             </t>
-
-            <!-- Preview Result -->
-            <t t-if="state.previewResult">
-                <div class="pfb-preview-card">
-                    <div class="pfb-preview-hd">
-                        <i class="fa fa-calculator" aria-hidden="true"/>
-                        <span>PREVIEW RESULT</span>
-                    </div>
-                    <div class="pfb-preview-body">
-                        <div class="pfb-preview-main">
-                            <div class="pfb-preview-amount">
-                                <span class="pfb-preview-label">Bonus Amount</span>
-                                <span class="pfb-preview-value-large">$ <t t-esc="state.previewResult.amount"/></span>
-                            </div>
-                            <div class="pfb-preview-pct">
-                                <span class="pfb-preview-label">% of Salary</span>
-                                <span class="pfb-preview-value" t-esc="state.previewResult.pct"/>%
-                            </div>
-                        </div>
-                        <div class="pfb-preview-formula">
-                            <span class="pfb-preview-label">Formula applied:</span>
-                            <code t-esc="state.previewResult.expr"/>
-                        </div>
+            <t t-if="state.validationStatus === 'error'">
+                <div class="pfb-status pfb-status-err">
+                    <i class="fa fa-exclamation-circle" aria-hidden="true"/>
+                    <div>
+                        <strong>✗ Validation Error</strong>
+                        <div class="pfb-status-desc" t-esc="state.validationMsg"/>
                     </div>
                 </div>
             </t>

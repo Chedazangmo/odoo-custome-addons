@@ -6,11 +6,11 @@ import { useService } from "@web/core/utils/hooks";
 import { standardFieldProps } from "@web/views/fields/standard_field_props";
 
 const AVAILABLE_VARS = [
-    { name: "score", icon: "ti-star", desc: "Appraisal score (0–100)" },
-    { name: "eligibility", icon: "ti-percentage", desc: "Rating-tier eligibility as a ratio (0–1)" },
-    { name: "base_salary", icon: "ti-wallet", desc: "Employee base salary" },
-    { name: "years_service", icon: "ti-calendar", desc: "Employee tenure in years" },
-    { name: "months_served", icon: "ti-calendar", desc: "Months served in current cycle (based on bonus date vs cycle start)" },
+    { name: "score", icon: "fa-star", desc: "Appraisal score (0–100)" },
+    { name: "eligibility", icon: "fa-percent", desc: "Rating-tier eligibility as a ratio (0–1)" },
+    { name: "base_salary", icon: "fa-wallet", desc: "Employee base salary" },
+    { name: "years_service", icon: "fa-calendar", desc: "Employee tenure in years" },
+    { name: "months_served", icon: "fa-calendar", desc: "Months served (12 for annual, 6 for semi-annual, 3 for probation)" },
 ];
 
 const OPERATORS = [
@@ -35,12 +35,21 @@ const RATE_PRESETS = [
 ];
 
 const CONSTANT_PRESETS = [
-    { label: "0", val: "0" }, { label: "1", val: "1" }, { label: "2", val: "2" }, { label: "100", val: "100" },
+    { label: "0", val: "0" }, { label: "1", val: "1" }, { label: "2", val: "2" }, 
+    { label: "5", val: "5" }, { label: "10", val: "10" }, { label: "100", val: "100" },
 ];
 
 const SAFE_BUILTINS = {
-    abs: Math.abs, round: Math.round, floor: Math.floor, ceil: Math.ceil,
-    min: Math.min, max: Math.max, sqrt: Math.sqrt, pow: Math.pow, int: parseInt, float: parseFloat,
+    abs: Math.abs, 
+    round: Math.round, 
+    floor: Math.floor, 
+    ceil: Math.ceil,
+    min: Math.min, 
+    max: Math.max, 
+    sqrt: Math.sqrt, 
+    pow: Math.pow, 
+    int: parseInt, 
+    float: parseFloat,
 };
 
 export class FormulaBuilderWidget extends Component {
@@ -206,7 +215,13 @@ export class FormulaBuilderWidget extends Component {
             return;
         }
 
-        const sample = { score: 85, eligibility: 0.75, base_salary: 50000, years_service: 5, months_served: 6 };
+        const sample = { 
+            score: 85, 
+            eligibility: 0.75, 
+            base_salary: 50000, 
+            years_service: 5, 
+            months_served: 12 
+        };
 
         try {
             const paramNames = [...Object.keys(sample), ...Object.keys(SAFE_BUILTINS)];
@@ -219,19 +234,13 @@ export class FormulaBuilderWidget extends Component {
                 throw new Error("Formula must evaluate to a finite number.");
             }
 
+            // Simplified success message - removed the result details
             this.state.validationStatus = "ok";
-            this.state.validationMsg = "Formula is valid! Ready to use in bonus calculations.";
-            this.state.previewResult = {
-                amount: result.toFixed(2),
-                pct: ((result / sample.base_salary) * 100).toFixed(2),
-                expr: expr
-            };
-            this.state.showPreview = true;
-            this.notification.add(this.state.validationMsg, { type: "success" });
+            this.state.validationMsg = "Ready to use in bonus calculations.";
+            this.notification.add("Formula is valid!", { type: "success" });
         } catch (e) {
             this.state.validationStatus = "error";
             this.state.validationMsg = e.message;
-            this.state.showPreview = true;
             this.notification.add(this.state.validationMsg, { type: "danger" });
         }
     }

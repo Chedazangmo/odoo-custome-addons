@@ -100,7 +100,7 @@
                 sequence="10" />
 
         <menuitem id="menu_pms_rating_definitions"
-                name="Rating Tiers &amp; Eligibility"
+                name="Rating Tiers"
                 parent="menu_pms_bonus_root"
                 action="action_pms_rating_definition"
                 groups="hr_employee_evaluation.group_pms_hr_manager"
@@ -114,7 +114,7 @@
                 sequence="2" />
 
         <menuitem id="menu_pms_bonus_calculation"
-                name="Automatic Bonus Calculation"
+                name="Bonus Calculation"
                 parent="menu_pms_bonus_root"
                 action="action_pms_bonus_calculation"
                 groups="hr_employee_evaluation.group_pms_hr_manager"

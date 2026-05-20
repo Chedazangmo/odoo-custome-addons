@@ -1,7 +1,9 @@
 from odoo import models, fields, api
 from odoo.exceptions import ValidationError, UserError
 from datetime import datetime, timedelta
-
+import io
+import base64
+import xlsxwriter
 
 class PMSAppraisal(models.Model):
     _name = 'pms.appraisal'
@@ -44,7 +46,7 @@ class PMSAppraisal(models.Model):
     template_id = fields.Many2one(
         'appraisal.template',
         string='Template Used',
-        required=True,
+        # required=True, remove it for now to remove any db inconsistencies
         ondelete='restrict',
         tracking=True
     )
@@ -186,6 +188,13 @@ class PMSAppraisal(models.Model):
     can_reviewer_rate = fields.Boolean(
         string='Can Reviewer Rate',
         compute='_compute_access_flags',
+    )
+
+    planning_total_score = fields.Float( #planning here
+        string='Planning Total Score',
+        compute='_compute_planning_total_score',
+        store=True,
+        help='Sum of weightages of all selected KPIs during the planning phase'
     )
 
     active = fields.Boolean(string='Active', default=True)
@@ -642,6 +651,13 @@ class PMSAppraisal(models.Model):
                     f'An appraisal for {record.employee_id.name} in cycle '
                     f'{record.cycle_id.name} already exists.'
                 )
+    
+
+    @api.depends('kra_ids.kpi_ids.is_selected', 'kra_ids.kpi_ids.weightage')
+    def _compute_planning_total_score(self):
+        for record in self:
+            selected_kpis = record.kra_ids.mapped('kpi_ids').filtered(lambda k: k.is_selected)
+            record.planning_total_score = sum(selected_kpis.mapped('weightage'))
 
     # ─────────────────────────────────────────────────────────────
     # ORM overrides
@@ -1527,23 +1543,23 @@ class PMSAppraisal(models.Model):
     # Report actions
     # ─────────────────────────────────────────────────────────────
 
-    def action_view_plan_summary(self):
-        self.ensure_one()
-        report = self.env.ref('hr_employee_evaluation.action_report_plan_summary')
-        return {
-            'type': 'ir.actions.act_url',
-            'url': '/report/html/%s/%s' % (report.report_name, self.id),
-            'target': 'new',
-        }
+    # def action_view_plan_summary(self):
+    #     self.ensure_one()
+    #     report = self.env.ref('hr_employee_evaluation.action_report_plan_summary')
+    #     return {
+    #         'type': 'ir.actions.act_url',
+    #         'url': '/report/html/%s/%s' % (report.report_name, self.id),
+    #         'target': 'new',
+    #     }
 
-    def action_view_appraisal_summary(self):
-        self.ensure_one()
-        report = self.env.ref('hr_employee_evaluation.action_report_appraisal_summary')
-        return {
-            'type': 'ir.actions.act_url',
-            'url': '/report/html/%s/%s' % (report.report_name, self.id),
-            'target': 'new',
-        }
+    # def action_view_appraisal_summary(self):
+    #     self.ensure_one()
+    #     report = self.env.ref('hr_employee_evaluation.action_report_appraisal_summary')
+    #     return {
+    #         'type': 'ir.actions.act_url',
+    #         'url': '/report/html/%s/%s' % (report.report_name, self.id),
+    #         'target': 'new',
+    #     }
 
     # ─────────────────────────────────────────────────────────────
     # Appraisal phase actions with validation
@@ -1794,3 +1810,121 @@ class PMSAppraisal(models.Model):
             message_type='notification',
         )
         return True
+    
+
+    def action_view_plan_summary(self):
+        self.ensure_one()
+        self._generate_excel_attachment('plan')
+        report = self.env.ref('hr_employee_evaluation.action_report_plan_summary')
+        return {
+            'type': 'ir.actions.act_url',
+            'url': '/report/html/%s/%s' % (report.report_name, self.id),
+            'target': 'new',
+        }
+
+    def action_view_appraisal_summary(self):
+        self.ensure_one()
+        self._generate_excel_attachment('appraisal')
+        report = self.env.ref('hr_employee_evaluation.action_report_appraisal_summary')
+        return {
+            'type': 'ir.actions.act_url',
+            'url': '/report/html/%s/%s' % (report.report_name, self.id),
+            'target': 'new',
+        }
+
+    def _generate_excel_attachment(self, report_type):
+        """Silently generates an Excel file and saves it as an Odoo attachment"""
+        if not xlsxwriter:
+            return
+            
+        output = io.BytesIO()
+        workbook = xlsxwriter.Workbook(output, {'in_memory': True})
+        
+        header_format = workbook.add_format({'bold': True, 'bg_color': '#f8f9fa', 'border': 1, 'align': 'center', 'valign': 'vcenter'})
+        cell_format = workbook.add_format({'border': 1, 'text_wrap': True, 'valign': 'top'})
+        cell_center = workbook.add_format({'border': 1, 'text_wrap': True, 'valign': 'top', 'align': 'center'})
+        kra_format = workbook.add_format({'bold': True, 'bg_color': '#f1f3f5', 'border': 1, 'text_wrap': True, 'valign': 'top'})
+
+        if report_type == 'plan':
+            sheet = workbook.add_worksheet('Plan Summary')
+            
+            headers = ['KRA Name', 'KPI Name', 'Description', 'Criteria', 'Target', 'Score']
+            for col, head in enumerate(headers):
+                sheet.write(0, col, head, header_format)
+            sheet.set_column(0, 1, 20)
+            sheet.set_column(2, 4, 35)
+            sheet.set_column(5, 5, 10)
+
+            row = 1
+            for kra in self.kra_ids:
+                active_kpis = kra.kpi_ids.filtered(lambda k: k.is_selected)
+                for kpi in active_kpis:
+                    sheet.write(row, 0, kra.name or '', kra_format)
+                    sheet.write(row, 1, kpi.name or '', cell_format)
+                    sheet.write(row, 2, kpi.description or '', cell_format)
+                    sheet.write(row, 3, kpi.criteria or '', cell_format)
+                    sheet.write(row, 4, kpi.target or '', cell_format)
+                    sheet.write(row, 5, kpi.weightage or 0.0, cell_center)
+                    row += 1
+                    
+            filename = f'Plan_Summary_{self.employee_id.name.replace(" ", "_")}.xlsx'
+            
+        else: # Appraisal
+            sheet = workbook.add_worksheet('Appraisal Summary')
+            
+            headers = ['KRA Name', 'KPI Name', 'Criteria', 'Target', 'Max', 'Emp Score', 'Sup Score']
+            if self.secondary_supervisor_id: headers.append('2nd Sup Score')
+            if self.reviewer_id: headers.append('Rev Score')
+
+            for col, head in enumerate(headers):
+                sheet.write(0, col, head, header_format)
+
+            sheet.set_column(0, 1, 20)
+            sheet.set_column(2, 3, 35)
+            sheet.set_column(4, len(headers)-1, 12)
+
+            row = 1
+            for kra in self.kra_ids:
+                active_kpis = kra.kpi_ids.filtered(lambda k: k.is_selected)
+                for kpi in active_kpis:
+                    sheet.write(row, 0, kra.name or '', kra_format)
+                    sheet.write(row, 1, kpi.name or '', cell_format)
+                    sheet.write(row, 2, kpi.criteria or '', cell_format)
+                    sheet.write(row, 3, kpi.target or '', cell_format)
+                    sheet.write(row, 4, kpi.weightage or 0.0, cell_center)
+                    sheet.write(row, 5, kpi.self_score or 0.0, cell_center)
+                    sheet.write(row, 6, kpi.supervisor_score or 0.0, cell_center)
+                    col = 7
+                    if self.secondary_supervisor_id:
+                        sheet.write(row, col, kpi.secondary_supervisor_score or 0.0, cell_center)
+                        col += 1
+                    if self.reviewer_id:
+                        sheet.write(row, col, kpi.reviewer_score or 0.0, cell_center)
+                    row += 1
+                    
+            filename = f'Appraisal_Summary_{self.employee_id.name.replace(" ", "_")}.xlsx'
+
+        workbook.close()
+        output.seek(0)
+        file_data = base64.b64encode(output.read())
+        output.close()
+
+        # Delete old excel attachments
+        old_attachments = self.env['ir.attachment'].search([
+            ('res_model', '=', 'pms.appraisal'),
+            ('res_id', '=', self.id),
+            ('name', '=', filename)
+        ])
+        old_attachments.unlink()
+
+        # Create new native Odoo attachment
+        self.env['ir.attachment'].create({
+            'name': filename,
+            'type': 'binary',
+            'datas': file_data,
+            'res_model': 'pms.appraisal',
+            'res_id': self.id,
+            'mimetype': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        })
+
+        
