@@ -1172,6 +1172,7 @@
                 <div class="d-flex align-items-center gap-3">
                    <span class="fs-2"><i class="fa fa-check-circle text-success"/></span>
                     <div>
+
                         <h4 class="mb-0"><t t-esc="state.selected_completed_cycle.name"/></h4>
                         <small class="text-muted">
                             <t t-esc="state.selected_completed_cycle.start_date"/> to <t t-esc="state.selected_completed_cycle.end_date"/>
