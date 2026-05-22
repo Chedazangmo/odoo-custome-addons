@@ -1,0 +1,420 @@
+// ─────────────────────────────────────────────────────────────────────────────
+//  PMS Plan Header — Employee profile + stat cards + inline statusbar
+//  Light theme - Planning Phase (Matches Appraisal Phase)
+// ─────────────────────────────────────────────────────────────────────────────
+
+.pms_plan_header {
+    width: 100%;
+}
+
+// ── Profile Row: Avatar + Info + Statusbar ───────────────────────────────────
+
+.pms_plan_profile_row {
+    display: flex;
+    align-items: flex-start;
+    gap: 20px;
+    width: 100%;
+}
+
+// Avatar styling
+.pms_plan_avatar_field {
+    flex-shrink: 0 !important;
+    min-width: 100px !important;
+    max-width: 100px !important;
+    height: 100px !important;
+    border: 2px solid #e9ecef !important;
+    border-radius: 50% !important;
+    overflow: hidden !important;
+    display: block !important;
+    position: relative !important;
+
+    img, .o_m2o_avatar {
+        width: 100% !important;
+        height: 100% !important;
+        object-fit: cover !important;
+        margin: 0 !important;
+        border-radius: 50% !important;
+        position: absolute !important;
+        top: 0 !important;
+        left: 0 !important;
+    }
+
+    span, a {
+        display: none !important;
+    }
+}
+
+// Profile info container
+.pms_plan_profile_info {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-width: 0;
+    gap: 8px;
+    flex: 1;
+}
+
+// Employee name
+.pms_plan_emp_name {
+    .o_field_widget,
+    a,
+    span {
+        font-size: 1.5rem !important;
+        font-weight: 600 !important;
+        color: #1a1a2e !important;
+        text-decoration: none !important;
+        pointer-events: none;
+        line-height: 1.2;
+    }
+}
+
+// Meta info row (job, department, group)
+.pms_plan_meta_row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 8px;
+    font-size: 0.85rem;
+    color: #6c757d;
+
+    .o_field_widget, span, a {
+        color: #6c757d !important;
+        text-decoration: none !important;
+        font-size: 0.85rem;
+        pointer-events: none;
+    }
+}
+
+.pms_plan_meta_sep { 
+    color: #dee2e6; 
+}
+
+.pms_plan_meta_item { 
+    display: inline-flex; 
+    align-items: center; 
+    gap: 5px; 
+    white-space: nowrap;
+    
+    i {
+        font-size: 0.8rem;
+    }
+}
+
+// Statusbar row
+.pms_plan_status_row {
+    width: 100%;
+}
+
+// Inline statusbar styling - connected buttons style
+.pms_inline_statusbar {
+    display: inline-flex !important;
+    flex-wrap: wrap !important;
+    align-items: stretch !important;
+    border-radius: 8px !important;
+    overflow: hidden !important;
+    background: #f8f9fa !important;
+    
+    .o_statusbar_status {
+        display: flex !important;
+        flex-wrap: wrap !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+    
+    button, .o_arrow_button {
+        position: relative;
+        display: inline-flex !important;
+        align-items: center !important;
+        padding: 8px 18px 8px 28px !important;
+        font-size: 0.7rem !important;
+        font-weight: 600 !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.5px !important;
+        background: #f8f9fa !important;
+        color: #6c757d !important;
+        border: none !important;
+        margin-left: -1px !important;
+        
+        &:first-child {
+            margin-left: 0 !important;
+            padding-left: 18px !important;
+        }
+        
+        // Arrow effect between buttons
+        &::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 0;
+        }
+    }
+    
+    // Current/active state
+    .o_arrow_button_current {
+        background: #7367f0 !important;
+        color: #fff !important;
+        z-index: 1;
+        box-shadow: none !important;
+    }
+    
+    .btn-primary, .o_arrow_button_current {
+        background: #7367f0 !important;
+        color: #fff !important;
+    }
+    
+    // Hide dropdown toggles
+    .dropdown-toggle {
+        display: none !important;
+    }
+    
+    .dropdown-menu {
+        position: static !important;
+        display: inline-flex !important;
+        background: transparent !important;
+        border: none !important;
+        padding: 0 !important;
+        box-shadow: none !important;
+    }
+    
+    // Completed states (previous steps)
+    button:not(.o_arrow_button_current):not(.dropdown-toggle) {
+        background: #e9ecef !important;
+        color: #495057 !important;
+    }
+}
+
+// ── Stats Row ─────────────────────────────────────────────────────────────────
+
+.pms_plan_stats_row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-top: 24px;
+}
+
+.pms_plan_stat_card {
+    flex: 1;
+    min-width: 130px;
+    background: #f8f9fa;
+    border-radius: 12px;
+    padding: 14px 18px;
+    border: 1px solid #e9ecef;
+    transition: all 0.2s ease;
+    
+    &:hover {
+        border-color: #dee2e6;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    }
+    
+    .pms_stat_label {
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        font-weight: 600;
+        color: #6c757d;
+        letter-spacing: 0.8px;
+        margin-bottom: 6px;
+    }
+    
+    .pms_stat_value {
+        font-size: 1.4rem;
+        font-weight: 700;
+        color: #1a1a2e;
+        
+        .o_field_widget, .o_field_float, .o_field_date, span {
+            font-size: inherit !important;
+            font-weight: inherit !important;
+            color: inherit !important;
+        }
+    }
+}
+
+// Score matching styling
+.pms_stat_score_current .pms_stat_value {
+    .text-success, &.text-success { 
+        color: #28a745 !important; 
+    }
+    .text-danger, &.text-danger { 
+        color: #dc3545 !important; 
+    }
+}
+
+// ── Two Column Layout ────────────────────────────────────────────────────────
+
+.pms_plan_two_col_wrapper {
+    display: flex;
+    gap: 40px;
+    margin-top: 8px;
+}
+
+.pms_plan_left_col {
+    flex: 2;
+    min-width: 0;
+}
+
+.pms_plan_right_col {
+    flex: 1;
+    min-width: 280px;
+    max-width: 340px;
+}
+
+// ── Details Card ─────────────────────────────────────────────────────────────
+
+.pms_details_card {
+    background: #f8f9fa;
+    border-radius: 12px;
+    padding: 18px 20px;
+    border: 1px solid #e9ecef;
+}
+
+.pms_details_section_title {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: #6c757d;
+    margin-bottom: 14px;
+    letter-spacing: 1px;
+}
+
+.pms_detail_row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid #e9ecef;
+    
+    &:last-child {
+        border-bottom: none;
+        padding-bottom: 0;
+    }
+    
+    &:first-child {
+        padding-top: 0;
+    }
+}
+
+.pms_detail_label {
+    font-size: 0.8rem;
+    color: #6c757d;
+    font-weight: 500;
+}
+
+.pms_detail_value {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #1a1a2e;
+    text-align: right;
+    
+    .o_field_widget, .o_field_many2one, span, a {
+        font-size: inherit !important;
+        font-weight: inherit !important;
+        color: inherit !important;
+        text-decoration: none !important;
+        pointer-events: none;
+    }
+}
+
+// ── Alert Warning ────────────────────────────────────────────────────────────
+
+.alert-warning {
+    background-color: #fff3cd;
+    border-color: #ffeeba;
+    color: #856404;
+    border-radius: 10px;
+    padding: 12px 16px;
+    font-size: 0.85rem;
+    
+    i {
+        margin-right: 8px;
+    }
+}
+
+// ── Responsive Design ────────────────────────────────────────────────────────
+
+@media (max-width: 992px) {
+    .pms_plan_two_col_wrapper {
+        flex-direction: column;
+        gap: 24px;
+    }
+    
+    .pms_plan_right_col {
+        max-width: 100%;
+    }
+}
+
+@media (max-width: 768px) {
+    .pms_plan_profile_row {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+    
+    .pms_plan_profile_info {
+        align-items: center;
+    }
+    
+    .pms_plan_meta_row {
+        justify-content: center;
+    }
+    
+    .pms_plan_stats_row {
+        flex-direction: column;
+        gap: 12px;
+    }
+    
+    .pms_plan_stat_card {
+        min-width: auto;
+    }
+    
+    .pms_details_card {
+        padding: 14px 16px;
+    }
+}
+
+@media (max-width: 480px) {
+    .pms_plan_avatar_field {
+        min-width: 80px !important;
+        max-width: 80px !important;
+        height: 80px !important;
+    }
+    
+    .pms_plan_emp_name .o_field_widget,
+    .pms_plan_emp_name a,
+    .pms_plan_emp_name span {
+        font-size: 1.25rem !important;
+    }
+    
+    .pms_inline_statusbar button, 
+    .pms_inline_statusbar .o_arrow_button {
+        padding: 6px 12px 6px 20px !important;
+        font-size: 0.6rem !important;
+    }
+}
+
+// ── Appraisal Layout Support (if needed for other phases) ────────────────────
+
+.pms_appraisal_layout {
+    display: flex !important;
+    gap: 40px !important;
+    margin-top: 8px !important;
+    
+    > div:first-child {
+        flex: 2 !important;
+        min-width: 0 !important;
+    }
+    
+    > div:last-child {
+        flex: 1 !important;
+        min-width: 280px !important;
+        max-width: 340px !important;
+    }
+    
+    @media (max-width: 992px) {
+        flex-direction: column !important;
+        
+        > div:last-child {
+            max-width: 100% !important;
+        }
+    }
+}

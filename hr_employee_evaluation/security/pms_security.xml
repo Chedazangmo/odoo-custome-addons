@@ -1,0 +1,218 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="module_category_pms" model="ir.module.category">
+        <field name="name">Performance Management</field>
+        <field name="description">Manage performance appraisal access rights</field>
+        <field name="sequence">16</field>
+    </record>
+
+    <record id="privilege_pms_employee" model="res.groups.privilege">
+        <field name="name">Employee</field>
+        <field name="category_id" ref="module_category_pms" />
+        <field name="sequence">10</field>
+    </record>
+
+    <record id="privilege_pms_supervisor" model="res.groups.privilege">
+        <field name="name">Supervisor</field>
+        <field name="category_id" ref="module_category_pms" />
+        <field name="sequence">20</field>
+    </record>
+
+    <record id="privilege_pms_secondary_supervisor" model="res.groups.privilege">
+        <field name="name">Secondary Supervisor</field>
+        <field name="category_id" ref="module_category_pms" />
+        <field name="sequence">25</field>
+    </record>
+
+    <record id="privilege_pms_reviewer" model="res.groups.privilege">
+        <field name="name">Reviewer</field>
+        <field name="category_id" ref="module_category_pms" />
+        <field name="sequence">30</field>
+    </record>
+
+    <record id="privilege_pms_hr_manager" model="res.groups.privilege">
+        <field name="name">HR Manager</field>
+        <field name="category_id" ref="module_category_pms" />
+        <field name="sequence">40</field>
+    </record>
+
+    <!-- Employee Group -->
+    <record id="group_pms_employee" model="res.groups">
+        <field name="name">Employee: Own Appraisals</field>
+        <field name="privilege_id" ref="privilege_pms_employee" />
+        <field name="implied_ids" eval="[(4, ref('base.group_user'))]" />
+    </record>
+
+    <!-- Supervisor Group -->
+    <record id="group_pms_supervisor" model="res.groups">
+        <field name="name">Supervisor: Team Appraisals</field>
+        <field name="privilege_id" ref="privilege_pms_supervisor" />
+        <field name="implied_ids" eval="[(4, ref('group_pms_employee'))]" />
+    </record>
+
+    <!-- Secondary Supervisor Group -->
+    <record id="group_pms_secondary_supervisor" model="res.groups">
+        <field name="name">Secondary Supervisor: Team Appraisals</field>
+        <field name="privilege_id" ref="privilege_pms_secondary_supervisor" />
+        <field name="implied_ids" eval="[(4, ref('group_pms_employee'))]" />
+    </record>
+
+    <!-- Reviewer Group - Only implies employee, NOT supervisor -->
+    <record id="group_pms_reviewer" model="res.groups">
+        <field name="name">Reviewer: Final Approval</field>
+        <field name="privilege_id" ref="privilege_pms_reviewer" />
+        <field name="implied_ids" eval="[(4, ref('group_pms_employee'))]" />
+    </record>
+
+    <!-- HR Manager Group - Implies both supervisor and reviewer -->
+    <record id="group_pms_hr_manager" model="res.groups">
+        <field name="name">HR Manager: Full Access</field>
+        <field name="privilege_id" ref="privilege_pms_hr_manager" />
+        <field name="implied_ids"
+            eval="[
+            (4, ref('group_pms_supervisor')),
+            (4, ref('group_pms_secondary_supervisor')),
+            (4, ref('group_pms_reviewer')),
+            (4, ref('hr.group_hr_manager'))
+        ]" />
+    </record>
+
+    <!-- ============================================================
+         RECORD RULES for pms.appraisal
+    ============================================================ -->
+
+    <!-- Employee: See only their own appraisals -->
+    <record id="rule_pms_appraisal_employee_own" model="ir.rule">
+        <field name="name">PMS Appraisal: Employee sees own</field>
+        <field name="model_id" ref="model_pms_appraisal" />
+        <field name="groups" eval="[(4, ref('group_pms_employee'))]" />
+        <field name="global" eval="False" />
+        <field name="domain_force">[('employee_id.user_id', '=', user.id)]</field>
+        <field name="perm_read" eval="True" />
+        <field name="perm_write" eval="True" />
+        <field name="perm_create" eval="False" />
+        <field name="perm_unlink" eval="False" />
+    </record>
+
+    <!-- Supervisor: See appraisals where they are the supervisor -->
+    <record id="rule_pms_appraisal_supervisor" model="ir.rule">
+        <field name="name">PMS Appraisal: Supervisor sees team</field>
+        <field name="model_id" ref="model_pms_appraisal" />
+        <field name="groups" eval="[(4, ref('group_pms_supervisor'))]" />
+        <field name="global" eval="False" />
+        <field name="domain_force">[('supervisor_id.user_id', '=', user.id)]</field>
+        <field name="perm_read" eval="True" />
+        <field name="perm_write" eval="True" />
+        <field name="perm_create" eval="False" />
+        <field name="perm_unlink" eval="False" />
+    </record>
+
+    <!-- Secondary Supervisor: See appraisals where they are secondary supervisor -->
+    <record id="rule_pms_appraisal_secondary_supervisor" model="ir.rule">
+        <field name="name">PMS Appraisal: Secondary Supervisor sees team</field>
+        <field name="model_id" ref="model_pms_appraisal" />
+        <field name="groups" eval="[(4, ref('group_pms_secondary_supervisor'))]" />
+        <field name="global" eval="False" />
+        <field name="domain_force">[('secondary_supervisor_id.user_id', '=', user.id)]</field>
+        <field name="perm_read" eval="True" />
+        <field name="perm_write" eval="True" />
+        <field name="perm_create" eval="False" />
+        <field name="perm_unlink" eval="False" />
+    </record>
+
+    <!-- Reviewer: See appraisals pending their review -->
+    <record id="rule_pms_appraisal_reviewer" model="ir.rule">
+        <field name="name">PMS Appraisal: Reviewer sees pending</field>
+        <field name="model_id" ref="model_pms_appraisal" />
+        <field name="groups" eval="[(4, ref('group_pms_reviewer'))]" />
+        <field name="global" eval="False" />
+        <field name="domain_force">[('reviewer_id.user_id', '=', user.id)]</field>
+        <field name="perm_read" eval="True" />
+        <field name="perm_write" eval="True" />
+        <field name="perm_create" eval="False" />
+        <field name="perm_unlink" eval="False" />
+    </record>
+
+    <!-- HR Manager: See all appraisals -->
+    <record id="rule_pms_appraisal_hr_all" model="ir.rule">
+        <field name="name">PMS Appraisal: HR sees all</field>
+        <field name="model_id" ref="model_pms_appraisal" />
+        <field name="groups" eval="[(4, ref('group_pms_hr_manager'))]" />
+        <field name="global" eval="False" />
+        <field name="domain_force">[(1, '=', 1)]</field>
+        <field name="perm_read" eval="True" />
+        <field name="perm_write" eval="True" />
+        <field name="perm_create" eval="True" />
+        <field name="perm_unlink" eval="True" />
+    </record>
+
+    <!-- ============================================================
+         RECORD RULES for appraisal.competency.score
+    ============================================================ -->
+
+    <!-- Employee: See own competency scores -->
+    <record id="rule_competency_score_employee_own" model="ir.rule">
+        <field name="name">Competency Score: Employee sees own</field>
+        <field name="model_id" ref="model_appraisal_competency_score" />
+        <field name="groups" eval="[(4, ref('group_pms_employee'))]" />
+        <field name="global" eval="False" />
+        <field name="domain_force">[('appraisal_id.employee_id.user_id', '=', user.id)]</field>
+        <field name="perm_read" eval="True" />
+        <field name="perm_write" eval="True" />
+        <field name="perm_create" eval="False" />
+        <field name="perm_unlink" eval="False" />
+    </record>
+
+    <!-- Supervisor: See competency scores of direct reports -->
+    <record id="rule_competency_score_supervisor" model="ir.rule">
+        <field name="name">Competency Score: Supervisor sees team</field>
+        <field name="model_id" ref="model_appraisal_competency_score" />
+        <field name="groups" eval="[(4, ref('group_pms_supervisor'))]" />
+        <field name="global" eval="False" />
+        <field name="domain_force">[('appraisal_id.supervisor_id.user_id', '=', user.id)]</field>
+        <field name="perm_read" eval="True" />
+        <field name="perm_write" eval="True" />
+        <field name="perm_create" eval="False" />
+        <field name="perm_unlink" eval="False" />
+    </record>
+
+    <!-- Secondary Supervisor: See competency scores -->
+    <record id="rule_competency_score_secondary_supervisor" model="ir.rule">
+        <field name="name">Competency Score: Secondary Supervisor sees team</field>
+        <field name="model_id" ref="model_appraisal_competency_score" />
+        <field name="groups" eval="[(4, ref('group_pms_secondary_supervisor'))]" />
+        <field name="global" eval="False" />
+        <field name="domain_force">[('appraisal_id.secondary_supervisor_id.user_id', '=', user.id)]</field>
+        <field name="perm_read" eval="True" />
+        <field name="perm_write" eval="True" />
+        <field name="perm_create" eval="False" />
+        <field name="perm_unlink" eval="False" />
+    </record>
+
+    <!-- Reviewer: See competency scores for review -->
+    <record id="rule_competency_score_reviewer" model="ir.rule">
+        <field name="name">Competency Score: Reviewer sees pending</field>
+        <field name="model_id" ref="model_appraisal_competency_score" />
+        <field name="groups" eval="[(4, ref('group_pms_reviewer'))]" />
+        <field name="global" eval="False" />
+        <field name="domain_force">[('appraisal_id.reviewer_id.user_id', '=', user.id)]</field>
+        <field name="perm_read" eval="True" />
+        <field name="perm_write" eval="True" />
+        <field name="perm_create" eval="False" />
+        <field name="perm_unlink" eval="False" />
+    </record>
+
+    <!-- HR Manager: See all competency scores -->
+    <record id="rule_competency_score_hr_all" model="ir.rule">
+        <field name="name">Competency Score: HR sees all</field>
+        <field name="model_id" ref="model_appraisal_competency_score" />
+        <field name="groups" eval="[(4, ref('group_pms_hr_manager'))]" />
+        <field name="global" eval="False" />
+        <field name="domain_force">[(1, '=', 1)]</field>
+        <field name="perm_read" eval="True" />
+        <field name="perm_write" eval="True" />
+        <field name="perm_create" eval="True" />
+        <field name="perm_unlink" eval="True" />
+    </record>
+
+</odoo>

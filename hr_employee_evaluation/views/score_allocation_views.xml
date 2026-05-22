@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ═══════════════════════════════════════════════════════
+         LIST VIEW
+         ═══════════════════════════════════════════════════════ -->
+    <record id="view_pms_score_allocation_list" model="ir.ui.view">
+        <field name="name">pms.score.allocation.list</field>
+        <field name="model">pms.score.allocation</field>
+        <field name="arch" type="xml">
+            <list string="Score Allocations"
+                decoration-success="allocation_status == 'exact'"
+                decoration-warning="allocation_status == 'under'"
+                decoration-danger="allocation_status == 'over'">
+
+                <field name="allocation_status" column_invisible="1" />
+                <field name="name" />
+                <field name="kpi_weight" string="KPI Weight" />
+                <field name="competency_weight" string="Competency Weight" />
+                <field name="grand_total" string="Grand Total" readonly="1" />
+                <field name="template_count" string="Templates" readonly="1" />
+            </list>
+        </field>
+    </record>
+
+    <!-- ═══════════════════════════════════════════════════════
+         FORM VIEW
+         ═══════════════════════════════════════════════════════ -->
+    <record id="view_pms_score_allocation_form" model="ir.ui.view">
+        <field name="name">pms.score.allocation.form</field>
+        <field name="model">pms.score.allocation</field>
+        <field name="arch" type="xml">
+            <form string="Score Allocation">
+                <sheet>
+
+                    <!-- Smart button: linked templates -->
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_templates"
+                            type="object"
+                            class="oe_stat_button"
+                            icon="fa-file-text-o"
+                            invisible="template_count == 0">
+                            <field name="template_count" widget="statinfo"
+                                string="Templates" />
+                        </button>
+                    </div>
+
+                    <group>
+                        <group string="Allocation Details">
+                            <field name="name"
+                                placeholder="e.g. Standard 70/30 – FY 2026" />
+                            <field name="description" />
+                        </group>
+                        <group string="Weight Summary">
+                            <field name="kpi_weight"
+                                string="KPI Total Weight"
+                                help="Max points available for all KPI items." />
+                            <field name="competency_weight"
+                                string="Competency Total Weight"
+                                help="Max points available for all competency items." />
+                            <field name="grand_total"
+                                string="Grand Total"
+                                readonly="1" />
+                        </group>
+                    </group>
+
+                    <!-- Status banners -->
+                    <div class="alert alert-success mb-0" role="alert"
+                        invisible="allocation_status != 'exact'">
+                        <i class="fa fa-check-circle me-2" />
+                        <strong>Valid. </strong> KPI (<field
+                            name="kpi_weight" readonly="1" />) + Competency (<field
+                            name="competency_weight" readonly="1" />) = 100 pts. </div>
+
+                    <div class="alert alert-warning mb-0" role="alert"
+                        invisible="allocation_status != 'under'">
+                        <i class="fa fa-exclamation-triangle me-2" />
+                        <strong>Under 100.</strong>
+                        Grand total is <field name="grand_total" readonly="1" /> — add <field
+                            name="competency_weight"
+                            readonly="1"
+                            invisible="1" /> more point(s) to reach 100 before saving. </div>
+
+                    <div class="alert alert-danger mb-0" role="alert"
+                        invisible="allocation_status != 'over'">
+                        <i class="fa fa-times-circle me-2" />
+                        <strong>Over 100!</strong> Grand total
+                        is <field name="grand_total" readonly="1" /> — reduce one of the weights
+                        before saving. </div>
+
+                    <!-- Internal field for banner visibility -->
+                    <field name="allocation_status" invisible="1" />
+
+                </sheet>
+                <chatter />
+            </form>
+        </field>
+    </record>
+
+    <!-- ═══════════════════════════════════════════════════════
+         SEARCH VIEW
+         ═══════════════════════════════════════════════════════ -->
+    <record id="view_pms_score_allocation_search" model="ir.ui.view">
+        <field name="name">pms.score.allocation.search</field>
+        <field name="model">pms.score.allocation</field>
+        <field name="arch" type="xml">
+            <search string="Search Score Allocations">
+                <field name="name" />
+                <separator />
+                <filter name="filter_exact" string="Valid (= 100)"
+                    domain="[('allocation_status', '=', 'exact')]" />
+                <filter name="filter_under" string="Under 100"
+                    domain="[('allocation_status', '=', 'under')]" />
+                <filter name="filter_over" string="Over 100"
+                    domain="[('allocation_status', '=', 'over')]" />
+            </search>
+        </field>
+    </record>
+
+    <!-- ═══════════════════════════════════════════════════════
+         ACTION
+         ═══════════════════════════════════════════════════════ -->
+    <record id="action_pms_score_allocation" model="ir.actions.act_window">
+        <field name="name">Score Allocations</field>
+        <field name="res_model">pms.score.allocation</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_pms_score_allocation_search" />
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create your first score allocation
+            </p>
+            <p>
+                Define how 100 pts are split between KPI and Competency.
+                Then link this allocation to one or more appraisal templates.
+            </p>
+        </field>
+    </record>
+
+</odoo>

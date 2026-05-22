@@ -1,0 +1,1062 @@
+/* =============================================================================
+   COMPETENCY FRAMEWORK — MASTER STYLESHEET  (v5 — Full Width + Hard Clamp UI)
+   Palette:  Navy #1a3c5e  ·  Gold #e8a020  ·  Slate #f1f5f9
+
+ 
+   ─────────────────────────────────────────────────────────────────────────────
+   • Group dialog opens FULL-WIDTH (100vw minus safe margins)
+   • Visual feedback when points are server-clamped (shake + flash)
+   • Max-allowed hint shown beneath the points column header
+   • Remaining capacity badge in the group header panel
+   • Tightened allocation progress bar
+   ============================================================================= */
+
+/* =============================================================================
+   1.  TEMPLATE LIST VIEW
+   ============================================================================= */
+
+.o_competency_template_list.o_list_view { border: none; }
+
+.o_competency_template_list thead tr { background-color: #1a3c5e !important; }
+.o_competency_template_list thead th {
+    background-color: #1a3c5e !important;
+    color:            #94a3b8 !important;
+    font-size:        0.68rem !important;
+    font-weight:      700 !important;
+    text-transform:   uppercase !important;
+    letter-spacing:   0.09em !important;
+    padding:          15px 20px !important;
+    border-bottom:    3px solid #e8a020 !important;
+    border-top:       none !important;
+    border-right:     1px solid rgba(255,255,255,0.08) !important;
+    white-space:      nowrap !important;
+    vertical-align:   middle !important;
+}
+.o_competency_template_list thead th:last-child { border-right: none !important; }
+.o_competency_template_list thead th *          { color: #94a3b8 !important; }
+
+.o_competency_template_list th.o_tmpl_col_name,
+.o_competency_template_list td.o_tmpl_col_name  { min-width: 200px; width: auto; }
+
+.o_competency_template_list th.o_tmpl_col_pts,
+.o_competency_template_list td.o_tmpl_col_pts {
+    min-width: 180px !important; width: 180px !important;
+    white-space: nowrap !important; text-align: right !important; padding-right: 28px !important;
+}
+.o_competency_template_list td.o_tmpl_col_pts {
+    font-variant-numeric: tabular-nums; font-weight: 600; color: #1a3c5e;
+}
+
+.o_competency_template_list th.o_tmpl_col_count,
+.o_competency_template_list td.o_tmpl_col_count {
+    min-width: 160px !important; width: 160px !important;
+    white-space: nowrap !important; text-align: center !important;
+}
+.o_competency_template_list td.o_tmpl_col_count { color: #475569; }
+
+.o_competency_template_list .o_data_row td {
+    padding: 14px 20px !important; font-size: 0.875rem !important;
+    vertical-align: middle !important; border-bottom: 1px solid #e8edf3 !important; color: #1e293b;
+}
+.o_competency_template_list .o_data_row td.o_tmpl_col_name {
+    font-weight: 600; color: #1a3c5e; font-size: 0.9rem !important;
+}
+
+.o_competency_template_list .o_data_row:nth-child(even) td { background-color: #f8fafc; }
+.o_competency_template_list .o_data_row:nth-child(odd)  td { background-color: #ffffff; }
+.o_competency_template_list .o_data_row:hover           td { background-color: #eff6ff !important; cursor: pointer; }
+
+.o_competency_template_list .o_data_row.text-success td:first-child { border-left: 4px solid #16a34a !important; }
+.o_competency_template_list .o_data_row.text-warning td:first-child { border-left: 4px solid #d97706 !important; }
+.o_competency_template_list .o_data_row.text-danger  td:first-child { border-left: 4px solid #dc2626 !important; }
+
+.o_competency_template_list .o_data_row.text-success td { background-color: #f0fdf4 !important; }
+.o_competency_template_list .o_data_row.text-warning td { background-color: #fffbeb !important; }
+.o_competency_template_list .o_data_row.text-danger  td { background-color: #fff1f2 !important; }
+
+.o_competency_template_list .o_data_row.text-success:hover td { background-color: #dcfce7 !important; }
+.o_competency_template_list .o_data_row.text-warning:hover td { background-color: #fef3c7 !important; }
+.o_competency_template_list .o_data_row.text-danger:hover  td { background-color: #fee2e2 !important; }
+
+
+/* =============================================================================
+   2.  STATUS BADGES
+   ============================================================================= */
+
+.o_competency_template_list .badge.text-bg-success,
+.o_competency_template_form  .badge.text-bg-success {
+    background-color: #dcfce7 !important; color: #15803d !important;
+    border: 1px solid #86efac !important; font-size: 0.72rem !important;
+    font-weight: 700 !important; padding: 5px 14px !important;
+    border-radius: 20px !important; letter-spacing: 0.02em !important; white-space: nowrap;
+}
+.o_competency_template_list .badge.text-bg-warning,
+.o_competency_template_form  .badge.text-bg-warning {
+    background-color: #fef3c7 !important; color: #b45309 !important;
+    border: 1px solid #fcd34d !important; font-size: 0.72rem !important;
+    font-weight: 700 !important; padding: 5px 14px !important;
+    border-radius: 20px !important; letter-spacing: 0.02em !important; white-space: nowrap;
+}
+.o_competency_template_list .badge.text-bg-danger,
+.o_competency_template_form  .badge.text-bg-danger {
+    background-color: #fee2e2 !important; color: #b91c1c !important;
+    border: 1px solid #fca5a5 !important; font-size: 0.72rem !important;
+    font-weight: 700 !important; padding: 5px 14px !important;
+    border-radius: 20px !important; letter-spacing: 0.02em !important; white-space: nowrap;
+}
+
+
+/* =============================================================================
+   3.  GROUPS LIST  (Template form → Competency Groups tab)
+   ============================================================================= */
+
+.o_competency_template_form .o_field_widget[name="group_ids"] thead th {
+    background-color: #1a3c5e !important; color: #94a3b8 !important;
+    font-size:        0.68rem !important; font-weight: 700 !important;
+    text-transform:   uppercase !important; letter-spacing: 0.09em !important;
+    padding:          13px 20px !important; border-bottom: 3px solid #e8a020 !important;
+    border-top:       none !important; border-right: 1px solid rgba(255,255,255,0.08) !important;
+    white-space:      nowrap !important; vertical-align: middle !important;
+    overflow:         visible !important;
+}
+.o_competency_template_form .o_field_widget[name="group_ids"] thead th:last-child { border-right: none !important; }
+.o_competency_template_form .o_field_widget[name="group_ids"] thead th * { color: #94a3b8 !important; }
+.o_competency_template_form .o_field_widget[name="group_ids"] thead tr { background-color: #1a3c5e !important; }
+
+.o_competency_template_form .o_field_widget[name="group_ids"] thead th.o_handle_cell,
+.o_competency_template_form .o_field_widget[name="group_ids"] thead th.o_list_actions_header {
+    background-color: #1a3c5e !important; border-right: none !important;
+}
+
+/* ── Explicit column widths so headers never truncate ── */
+/* Name column: flex/auto to fill remaining space */
+.o_competency_template_form .o_field_widget[name="group_ids"] th.o_grp_col_name,
+.o_competency_template_form .o_field_widget[name="group_ids"] td.o_grp_col_name {
+    min-width: 260px !important;
+    width:     auto !important;
+}
+
+/* Group Points: wide enough for "GROUP POINTS" header + numeric value */
+.o_competency_template_form .o_field_widget[name="group_ids"] th.o_grp_col_pts,
+.o_competency_template_form .o_field_widget[name="group_ids"] td.o_grp_col_pts {
+    min-width:  160px !important;
+    width:      160px !important;
+    text-align: right !important;
+}
+.o_competency_template_form .o_field_widget[name="group_ids"] td.o_grp_col_pts {
+    font-weight:          600 !important;
+    font-variant-numeric: tabular-nums !important;
+    color:                #1a3c5e !important;
+    padding-right:        24px !important;
+}
+
+/* No. of Lines: wide enough for "NO. OF LINES" text, never clips */
+.o_competency_template_form .o_field_widget[name="group_ids"] th.o_grp_col_count,
+.o_competency_template_form .o_field_widget[name="group_ids"] td.o_grp_col_count {
+    min-width:  150px !important;
+    width:      150px !important;
+    text-align: center !important;
+    white-space: nowrap !important;
+}
+.o_competency_template_form .o_field_widget[name="group_ids"] td.o_grp_col_count {
+    color: #475569 !important;
+}
+
+.o_competency_template_form .o_field_widget[name="group_ids"] .o_data_row td {
+    padding:        13px 20px !important; font-size: 0.875rem !important;
+    vertical-align: middle !important; border-bottom: 1px solid #e8edf3 !important;
+    color:          #1e293b !important; border-left: none !important;
+}
+.o_competency_template_form .o_field_widget[name="group_ids"] .o_data_row td.o_grp_col_name {
+    font-weight: 600 !important;
+    color:       #1a3c5e !important;
+}
+.o_competency_template_form .o_field_widget[name="group_ids"] .o_data_row:nth-child(odd)  td { background-color: #ffffff !important; }
+.o_competency_template_form .o_field_widget[name="group_ids"] .o_data_row:nth-child(even) td { background-color: #f8fafc !important; }
+.o_competency_template_form .o_field_widget[name="group_ids"] .o_data_row:hover           td { background-color: #eff6ff !important; }
+.o_competency_template_form .o_field_widget[name="group_ids"] .o_selected_row             td { background-color: #dbeafe !important; }
+
+.o_competency_template_form .o_field_widget[name="group_ids"] tr.text-success td { background-color: #f0fdf4 !important; }
+.o_competency_template_form .o_field_widget[name="group_ids"] tr.text-warning td { background-color: #fffbeb !important; }
+.o_competency_template_form .o_field_widget[name="group_ids"] tr.text-danger  td { background-color: #fff1f2 !important; }
+
+
+/* =============================================================================
+   4.  STATUS BANNERS  (Template & Group forms)
+   ============================================================================= */
+
+.o_competency_template_form .o_hr_points_bar,
+.o_competency_group_form    .o_hr_points_bar {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 0.865rem; font-weight: 500;
+    padding: 11px 20px; margin-bottom: 4px;
+    border-radius: 7px; border-left-width: 5px; border-left-style: solid; line-height: 1.5;
+}
+.o_competency_template_form .o_hr_points_bar .o_field_widget,
+.o_competency_group_form    .o_hr_points_bar .o_field_widget { display: inline; font-weight: 700; }
+
+.o_competency_template_form .alert-info.o_hr_points_bar    { background: #eff6ff; border-left-color: #2d6a9f; color: #1a3c5e; }
+.o_competency_template_form .alert-warning.o_hr_points_bar { background: #fef3c7; border-left-color: #d97706; color: #78350f; }
+.o_competency_template_form .alert-danger.o_hr_points_bar  { background: #fee2e2; border-left-color: #dc2626; color: #7f1d1d; }
+.o_competency_template_form .alert-success.o_hr_points_bar { background: #dcfce7; border-left-color: #16a34a; color: #14532d; }
+
+
+/* =============================================================================
+   5.  TEMPLATE FORM — POINTS SUMMARY SECTION
+   ============================================================================= */
+
+.o_competency_template_form .o_group>.o_inner_group  { row-gap: 14px !important; }
+.o_competency_template_form .o_group .o_field_widget { padding: 4px 0 !important; }
+.o_competency_template_form .o_group .o_form_label {
+    font-size: 0.78rem !important; font-weight: 700 !important;
+    text-transform: uppercase !important; letter-spacing: 0.06em !important;
+    color: #64748b !important; padding-top: 6px !important; white-space: nowrap !important;
+}
+.o_competency_template_form .o_group_label,
+.o_competency_template_form .o_inner_group>.o_group_label {
+    font-size: 0.7rem !important; font-weight: 800 !important;
+    text-transform: uppercase !important; letter-spacing: 0.09em !important;
+    color: #1a3c5e !important; border-bottom: 2px solid #e8a020 !important;
+    padding-bottom: 6px !important; margin-bottom: 14px !important;
+}
+
+
+/* =============================================================================
+   6.  GROUP POPUP DIALOG — FULL WIDTH
+   ─────────────────────────────────────────────────────────────────────────────
+   The dialog now opens as wide as possible (95vw) so the lines table
+   has ample space. A comfortable max-width of 1400px keeps it from
+   stretching too far on ultra-wide displays.
+   ============================================================================= */
+
+/* Override Odoo's default narrow dialog width */
+.o_dialog:has(.o_competency_group_form) {
+    /* Push the backdrop to cover the full viewport */
+    align-items: flex-start !important;
+    padding-top: 32px !important;
+}
+
+.o_dialog:has(.o_competency_group_form) .modal-dialog {
+    width:     95vw !important;
+    max-width: 1400px !important;
+    min-width: 680px !important;
+    margin:    0 auto !important;
+}
+
+.o_dialog:has(.o_competency_group_form) .modal-content {
+    border-radius: 14px !important;
+    overflow: hidden !important;
+    box-shadow: 0 25px 60px rgba(0,0,0,0.28), 0 8px 24px rgba(0,0,0,0.16) !important;
+    border: none !important;
+    /* Allow the dialog to grow vertically with content */
+    max-height: calc(100vh - 64px) !important;
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+/* Make the form body scrollable instead of the whole page */
+.o_dialog:has(.o_competency_group_form) .o_form_view {
+    flex: 1 !important;
+    overflow-y: auto !important;
+    background: #f1f5f9 !important;
+}
+
+.o_dialog:has(.o_competency_group_form) .modal-header {
+    background:    linear-gradient(135deg, #0f2744 0%, #1a3c5e 60%, #1e4976 100%) !important;
+    border-bottom: 3px solid #e8a020 !important;
+    padding:       20px 28px !important;
+    position:      relative !important;
+    flex-shrink:   0 !important;
+}
+/* Decorative geometric accent on header */
+.o_dialog:has(.o_competency_group_form) .modal-header::after {
+    content: "";
+    position: absolute;
+    top: -20px; right: -20px;
+    width: 100px; height: 100px;
+    background: radial-gradient(circle, rgba(232,160,32,0.12) 0%, transparent 70%);
+    border-radius: 50%;
+    pointer-events: none;
+}
+.o_dialog:has(.o_competency_group_form) .modal-header .modal-title {
+    color: #ffffff !important;
+    font-size: 0.95rem !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.04em !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+}
+.o_dialog:has(.o_competency_group_form) .modal-header .modal-title::before {
+    content: "";
+    display: inline-block;
+    width: 6px; height: 22px;
+    background: #e8a020;
+    border-radius: 3px;
+    flex-shrink: 0;
+}
+.o_dialog:has(.o_competency_group_form) .modal-header .btn-close,
+.o_dialog:has(.o_competency_group_form) .modal-header .o_dialog_close_button {
+    filter: invert(1) brightness(2) !important; opacity: 0.6 !important; transition: opacity 0.15s !important;
+}
+.o_dialog:has(.o_competency_group_form) .modal-header .btn-close:hover { opacity: 1 !important; }
+
+.o_dialog:has(.o_competency_group_form) .o_form_sheet {
+    background: #ffffff !important;
+    padding:    0 !important;
+    overflow:   visible !important;
+    border-radius: 0 !important;
+}
+
+
+/* =============================================================================
+   7.  GROUP FORM — NAVY HEADER PANEL  (full-width, no side-by-side columns)
+   ============================================================================= */
+
+.o_competency_group_form .o_form_sheet > .o_group:first-child,
+.o_dialog:has(.o_competency_group_form) .o_form_sheet > .o_group:first-child {
+    background:    linear-gradient(160deg, #1a3c5e 0%, #152e4a 100%) !important;
+    padding:       24px 32px 20px !important;
+    margin:        0 !important;
+    border-bottom: none !important;
+    border-radius: 0 !important;
+    /* Stretch to the full width of the modal */
+    width:         100% !important;
+    box-sizing:    border-box !important;
+    position:      relative !important;
+    overflow:      hidden !important;
+    display:       block !important;
+}
+
+/* Subtle pattern overlay */
+.o_competency_group_form .o_form_sheet > .o_group:first-child::before,
+.o_dialog:has(.o_competency_group_form) .o_form_sheet > .o_group:first-child::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at 90% 20%, rgba(232,160,32,0.08) 0%, transparent 55%),
+                radial-gradient(ellipse at 10% 80%, rgba(255,255,255,0.03) 0%, transparent 50%);
+    pointer-events: none;
+}
+
+/* Make the inner table layout horizontal and full-width */
+.o_competency_group_form .o_form_sheet > .o_group:first-child .o_inner_group,
+.o_dialog:has(.o_competency_group_form) .o_form_sheet > .o_group:first-child .o_inner_group {
+    background:  transparent !important;
+    padding:     0 !important;
+    margin:      0 !important;
+    width:       100% !important;
+    column-gap:  32px !important;
+    display:     grid !important;
+    /* Three-column layout: name | description | points pill */
+    grid-template-columns: 1fr 1fr auto !important;
+    align-items: start !important;
+}
+
+/* Each field row spans naturally in the grid */
+.o_competency_group_form .o_form_sheet > .o_group:first-child .o_inner_group > tbody,
+.o_dialog:has(.o_competency_group_form) .o_form_sheet > .o_group:first-child .o_inner_group > tbody {
+    display: contents !important;
+}
+
+.o_competency_group_form .o_form_sheet > .o_group:first-child .o_inner_group > tbody > tr,
+.o_dialog:has(.o_competency_group_form) .o_form_sheet > .o_group:first-child .o_inner_group > tbody > tr {
+    display: contents !important;
+}
+
+.o_competency_group_form .o_form_sheet > .o_group:first-child .o_form_label,
+.o_dialog:has(.o_competency_group_form) .o_form_sheet > .o_group:first-child .o_form_label {
+    font-size:      0.62rem !important;
+    font-weight:    700 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.13em !important;
+    color:          rgba(148,163,184,0.85) !important;
+    white-space:    nowrap !important;
+    padding-bottom: 4px !important;
+    display:        block !important;
+}
+
+/* Name input */
+.o_competency_group_form .o_form_sheet > .o_group:first-child .o_field_widget[name="name"],
+.o_dialog:has(.o_competency_group_form) .o_form_sheet > .o_group:first-child .o_field_widget[name="name"] {
+    width: 100% !important;
+}
+
+.o_competency_group_form .o_form_sheet > .o_group:first-child .o_field_widget[name="name"] input,
+.o_dialog:has(.o_competency_group_form) .o_form_sheet > .o_group:first-child .o_field_widget[name="name"] input {
+    border:         none !important;
+    border-bottom:  2px solid rgba(232,160,32,0.35) !important;
+    border-radius:  0 !important;
+    padding:        6px 0 !important;
+    font-size:      1.15rem !important;
+    font-weight:    700 !important;
+    color:          #ffffff !important;
+    background:     transparent !important;
+    box-shadow:     none !important;
+    width:          100% !important;
+    letter-spacing: 0.01em !important;
+    transition:     border-color 0.2s !important;
+    white-space:    normal !important;
+    word-break:     break-word !important;
+}
+.o_competency_group_form .o_form_sheet > .o_group:first-child .o_field_widget[name="name"] input::placeholder { color: rgba(148,163,184,0.45) !important; }
+.o_competency_group_form .o_form_sheet > .o_group:first-child .o_field_widget[name="name"] input:focus,
+.o_dialog:has(.o_competency_group_form) .o_form_sheet > .o_group:first-child .o_field_widget[name="name"] input:focus {
+    border-bottom-color: #e8a020 !important; outline: none !important; box-shadow: none !important;
+}
+
+/* Description textarea */
+.o_competency_group_form .o_form_sheet > .o_group:first-child .o_field_widget[name="description"] textarea,
+.o_dialog:has(.o_competency_group_form) .o_form_sheet > .o_group:first-child .o_field_widget[name="description"] textarea {
+    border:        1px solid rgba(148,163,184,0.2) !important;
+    border-radius: 8px !important;
+    padding:       8px 12px !important;
+    font-size:     0.855rem !important;
+    color:         rgba(226,232,240,0.88) !important;
+    background:    rgba(255,255,255,0.06) !important;
+    box-shadow:    none !important;
+    min-height:    54px !important;
+    width:         100% !important;
+    line-height:   1.55 !important;
+    transition:    border-color 0.2s, background 0.2s !important;
+    resize:        vertical !important;
+}
+.o_competency_group_form .o_form_sheet > .o_group:first-child .o_field_widget[name="description"] textarea::placeholder { color: rgba(148,163,184,0.38) !important; }
+.o_competency_group_form .o_form_sheet > .o_group:first-child .o_field_widget[name="description"] textarea:focus,
+.o_dialog:has(.o_competency_group_form) .o_form_sheet > .o_group:first-child .o_field_widget[name="description"] textarea:focus {
+    border-color: rgba(232,160,32,0.5) !important; background: rgba(255,255,255,0.10) !important;
+    outline: none !important; box-shadow: none !important;
+}
+
+/* Total Points — pill badge */
+.o_competency_group_form .o_form_sheet > .o_group:first-child .o_field_widget[name="points"],
+.o_dialog:has(.o_competency_group_form) .o_form_sheet > .o_group:first-child .o_field_widget[name="points"] {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+}
+
+.o_competency_group_form .o_form_sheet > .o_group:first-child .o_field_widget[name="points"] input,
+.o_dialog:has(.o_competency_group_form) .o_form_sheet > .o_group:first-child .o_field_widget[name="points"] input {
+    display:       inline-block !important;
+    width:         120px !important;
+    border:        2px solid #e8a020 !important;
+    border-radius: 50px !important;
+    text-align:    center !important;
+    font-size:     1.35rem !important;
+    font-weight:   800 !important;
+    color:         #ffffff !important;
+    background:    rgba(232,160,32,0.15) !important;
+    box-shadow:    0 0 0 6px rgba(232,160,32,0.08) !important;
+    padding:       10px 10px !important;
+    transition:    border-color 0.18s, box-shadow 0.18s, background 0.18s !important;
+    letter-spacing: 0.02em !important;
+}
+.o_competency_group_form .o_form_sheet > .o_group:first-child .o_field_widget[name="points"] input::-webkit-outer-spin-button,
+.o_competency_group_form .o_form_sheet > .o_group:first-child .o_field_widget[name="points"] input::-webkit-inner-spin-button,
+.o_dialog:has(.o_competency_group_form) .o_form_sheet > .o_group:first-child .o_field_widget[name="points"] input::-webkit-outer-spin-button,
+.o_dialog:has(.o_competency_group_form) .o_form_sheet > .o_group:first-child .o_field_widget[name="points"] input::-webkit-inner-spin-button {
+    -webkit-appearance: none !important; margin: 0 !important;
+}
+.o_competency_group_form .o_form_sheet > .o_group:first-child .o_field_widget[name="points"] input:focus,
+.o_dialog:has(.o_competency_group_form) .o_form_sheet > .o_group:first-child .o_field_widget[name="points"] input:focus {
+    border-color: #f5c842 !important; background: rgba(232,160,32,0.24) !important;
+    box-shadow: 0 0 0 8px rgba(232,160,32,0.13) !important; outline: none !important;
+}
+
+.o_competency_group_form .o_form_sheet > .o_group:first-child tr,
+.o_dialog:has(.o_competency_group_form) .o_form_sheet > .o_group:first-child tr { height: auto !important; }
+.o_competency_group_form .o_form_sheet > .o_group:first-child td,
+.o_dialog:has(.o_competency_group_form) .o_form_sheet > .o_group:first-child td {
+    padding-bottom: 14px !important; vertical-align: top !important;
+    background: transparent !important;
+}
+.o_competency_group_form .o_form_sheet > .o_group:first-child td:first-child,
+.o_dialog:has(.o_competency_group_form) .o_form_sheet > .o_group:first-child td:first-child { padding-top: 10px !important; }
+
+
+/* =============================================================================
+   8.  REMAINING CAPACITY BADGE
+   Shown next to the points pill to communicate how much is left to assign.
+   ============================================================================= */
+
+.cf-remaining-badge {
+    display:        inline-flex !important;
+    align-items:    center !important;
+    gap:            5px !important;
+    margin-top:     8px !important;
+    padding:        4px 12px !important;
+    border-radius:  20px !important;
+    font-size:      0.72rem !important;
+    font-weight:    700 !important;
+    letter-spacing: 0.05em !important;
+    white-space:    nowrap !important;
+    transition:     background 0.3s, color 0.3s !important;
+}
+
+.cf-remaining-badge.cf-rem-under {
+    background: rgba(59,130,246,0.18) !important;
+    color: #93c5fd !important;
+    border: 1px solid rgba(59,130,246,0.3) !important;
+}
+.cf-remaining-badge.cf-rem-exact {
+    background: rgba(34,197,94,0.18) !important;
+    color: #86efac !important;
+    border: 1px solid rgba(34,197,94,0.3) !important;
+}
+.cf-remaining-badge.cf-rem-over {
+    background: rgba(239,68,68,0.18) !important;
+    color: #fca5a5 !important;
+    border: 1px solid rgba(239,68,68,0.3) !important;
+    animation: cf-badge-pulse 1s ease-in-out infinite alternate !important;
+}
+@keyframes cf-badge-pulse {
+    from { box-shadow: 0 0 0 0 rgba(239,68,68,0); }
+    to   { box-shadow: 0 0 0 4px rgba(239,68,68,0.25); }
+}
+
+
+/* =============================================================================
+   9.  LIVE ALLOCATION TRACKER BAR
+   ============================================================================= */
+
+.cf-live-tracker {
+    background:    linear-gradient(135deg, #0e2035 0%, #152e4a 100%);
+    padding:       14px 32px 10px;
+    border-bottom: 3px solid #e8a020;
+    position:      relative;
+}
+
+.cf-tracker-header {
+    display:     flex;
+    align-items: center;
+    gap:         14px;
+    margin-bottom: 8px;
+}
+
+.cf-tracker-stat {
+    display:     flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap:         1px;
+    flex-shrink: 0;
+}
+.cf-tracker-stat-right { align-items: flex-end !important; }
+
+.cf-tracker-stat-label {
+    font-size:      0.58rem;
+    font-weight:    700;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color:          rgba(148,163,184,0.7);
+    line-height:    1;
+}
+
+.cf-tracker-val {
+    font-size:    1rem;
+    font-weight:  800;
+    color:        #e8a020;
+    font-variant-numeric: tabular-nums;
+    line-height:  1.1;
+    letter-spacing: 0.02em;
+    transition:   color 0.3s;
+}
+
+.cf-tracker-bar-wrap {
+    flex:             1;
+    height:           10px;
+    background:       rgba(255,255,255,0.08);
+    border-radius:    50px;
+    overflow:         hidden;
+    box-shadow:       inset 0 1px 3px rgba(0,0,0,0.3);
+    position:         relative;
+}
+
+.cf-tracker-fill {
+    height:           100%;
+    border-radius:    50px;
+    background:       linear-gradient(90deg, #2563eb 0%, #3b82f6 100%);
+    width:            0%;
+    transition:       width 0.35s cubic-bezier(0.34,1.56,0.64,1),
+                      background 0.3s;
+    box-shadow:       0 0 8px rgba(59,130,246,0.4);
+    position:         relative;
+}
+.cf-tracker-fill::after {
+    content:  "";
+    position: absolute;
+    top:      1px; left: 0; right: 0;
+    height:   4px;
+    background: rgba(255,255,255,0.25);
+    border-radius: 50px;
+}
+.cf-tracker-fill.cf-exact {
+    background: linear-gradient(90deg, #16a34a 0%, #22c55e 100%);
+    box-shadow: 0 0 10px rgba(34,197,94,0.5);
+}
+.cf-tracker-fill.cf-over {
+    background: linear-gradient(90deg, #b91c1c 0%, #ef4444 100%);
+    box-shadow: 0 0 10px rgba(239,68,68,0.5);
+    animation: cf-pulse-red 0.9s ease-in-out infinite alternate;
+}
+@keyframes cf-pulse-red {
+    from { box-shadow: 0 0 6px rgba(239,68,68,0.4); }
+    to   { box-shadow: 0 0 16px rgba(239,68,68,0.75); }
+}
+
+.cf-tracker-label {
+    font-size:    0.78rem;
+    font-weight:  600;
+    text-align:   center;
+    padding-top:  2px;
+    transition:   color 0.3s;
+    letter-spacing: 0.02em;
+}
+.cf-lbl-under { color: rgba(148,163,184,0.8); }
+.cf-lbl-exact { color: #4ade80; }
+.cf-lbl-over  { color: #f87171; font-weight: 700; }
+
+
+/* =============================================================================
+   10. CAP TOOLTIP  (.cf-cap-tip)
+   Fixed-position callout shown when a value is server-clamped
+   ============================================================================= */
+
+.cf-cap-tip {
+    position:       fixed;
+    z-index:        9999;
+    background:     #1e293b;
+    color:          #f1f5f9;
+    font-size:      0.78rem;
+    font-weight:    500;
+    padding:        7px 14px;
+    border-radius:  8px;
+    white-space:    nowrap;
+    box-shadow:     0 8px 24px rgba(0,0,0,0.3);
+    border-left:    3px solid #e8a020;
+    pointer-events: none;
+    opacity:        0;
+    transform:      translateY(4px);
+    transition:     opacity 0.18s, transform 0.18s;
+}
+.cf-cap-tip.cf-cap-tip-visible {
+    opacity:   1;
+    transform: translateY(0);
+}
+.cf-cap-icon {
+    margin-right: 5px;
+    font-size:    0.85rem;
+}
+.cf-cap-tip strong { color: #e8a020; font-weight: 800; }
+
+
+/* =============================================================================
+   11. GROUP FORM — COMPETENCY LINES SECTION heading + hint
+   ============================================================================= */
+
+.o_competency_group_form .o_grp_lines_section,
+.o_dialog:has(.o_competency_group_form) .o_grp_lines_section {
+    margin-top: 0 !important; border-top: none !important; padding-top: 0 !important;
+}
+
+.o_competency_group_form .o_grp_lines_heading,
+.o_dialog:has(.o_competency_group_form) .o_grp_lines_heading {
+    display:        flex !important;
+    align-items:    center !important;
+    gap:            8px !important;
+    font-size:      0.63rem !important;
+    font-weight:    800 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.14em !important;
+    color:          #94a3b8 !important;
+    background:     #1e293b !important;
+    padding:        10px 18px !important;
+    border-bottom:  2px solid rgba(232,160,32,0.5) !important;
+    margin-bottom:  0 !important;
+}
+.o_competency_group_form .o_grp_lines_heading .fa,
+.o_dialog:has(.o_competency_group_form) .o_grp_lines_heading .fa {
+    color: #e8a020 !important; font-size: 0.8em !important;
+}
+
+.o_competency_group_form .o_grp_lines_section > p,
+.o_dialog:has(.o_competency_group_form) .o_grp_lines_section > p {
+    margin: 0 !important; padding: 7px 18px !important;
+    font-size: 0.8em !important; border-left: 4px solid transparent !important;
+    line-height: 1.5 !important;
+}
+
+
+/* =============================================================================
+   12. LINES LIST — thead + "Max allowed" sub-label
+   ============================================================================= */
+
+.o_competency_group_form .o_field_widget[name="line_ids"] thead th,
+.o_dialog:has(.o_competency_group_form) .o_field_widget[name="line_ids"] thead th {
+    background-color: #1e293b !important;
+    color:            #64748b !important;
+    font-size:        0.63rem !important;
+    font-weight:      700 !important;
+    text-transform:   uppercase !important;
+    letter-spacing:   0.1em !important;
+    padding:          10px 14px !important;
+    border-bottom:    2px solid rgba(232,160,32,0.4) !important;
+    border-top:       none !important;
+    border-right:     1px solid rgba(255,255,255,0.05) !important;
+    white-space:      nowrap !important;
+}
+.o_competency_group_form .o_field_widget[name="line_ids"] thead tr,
+.o_dialog:has(.o_competency_group_form) .o_field_widget[name="line_ids"] thead tr { background-color: #1e293b !important; }
+.o_competency_group_form .o_field_widget[name="line_ids"] thead th *,
+.o_dialog:has(.o_competency_group_form) .o_field_widget[name="line_ids"] thead th * { color: #64748b !important; }
+.o_competency_group_form .o_field_widget[name="line_ids"] thead th.o_handle_cell,
+.o_dialog:has(.o_competency_group_form) .o_field_widget[name="line_ids"] thead th.o_handle_cell,
+.o_competency_group_form .o_field_widget[name="line_ids"] thead th.o_list_actions_header,
+.o_dialog:has(.o_competency_group_form) .o_field_widget[name="line_ids"] thead th.o_list_actions_header {
+    background-color: #1e293b !important; border-right: none !important;
+}
+
+/* Subtle "max" hint inside the Points column header */
+.o_dialog:has(.o_competency_group_form) .o_field_widget[name="line_ids"] thead th[data-field="points"]::after {
+    content:    attr(data-cf-max);
+    display:    block;
+    font-size:  0.55rem;
+    font-weight: 600;
+    color:      rgba(232,160,32,0.65);
+    letter-spacing: 0.06em;
+    margin-top: 2px;
+    text-transform: none;
+}
+
+/* ── Data rows ── */
+.o_competency_group_form .o_field_widget[name="line_ids"] .o_data_row td,
+.o_dialog:has(.o_competency_group_form) .o_field_widget[name="line_ids"] .o_data_row td {
+    padding:        8px 14px !important;
+    font-size:      0.855rem !important;
+    vertical-align: middle !important;
+    border-bottom:  1px solid #f0f4f8 !important;
+    color:          #1e293b !important;
+    border-left:    none !important;
+    line-height:    1.35 !important;
+    transition:     background-color 0.12s !important;
+}
+
+/* Description cell */
+.o_competency_group_form .o_field_widget[name="line_ids"] .o_data_row td[name="description"],
+.o_dialog:has(.o_competency_group_form) .o_field_widget[name="line_ids"] .o_data_row td[name="description"] {
+    padding-top:    8px !important;
+    padding-bottom: 8px !important;
+    vertical-align: top !important;
+    font-size:      0.83rem !important;
+    color:          #475569 !important;
+    line-height:    1.6 !important;
+    min-width:      200px !important;
+}
+
+/* Description textarea when editing */
+.o_competency_group_form .o_field_widget[name="line_ids"] .o_selected_row td[name="description"] .o_field_widget textarea,
+.o_dialog:has(.o_competency_group_form) .o_field_widget[name="line_ids"] .o_selected_row td[name="description"] .o_field_widget textarea {
+    min-height:  76px !important;
+    line-height: 1.6 !important;
+    font-size:   0.83rem !important;
+    padding:     7px 10px !important;
+}
+
+/* Row colours */
+.o_competency_group_form .o_field_widget[name="line_ids"] .o_data_row:nth-child(odd)  td,
+.o_dialog:has(.o_competency_group_form) .o_field_widget[name="line_ids"] .o_data_row:nth-child(odd)  td { background-color: #ffffff !important; }
+.o_competency_group_form .o_field_widget[name="line_ids"] .o_data_row:nth-child(even) td,
+.o_dialog:has(.o_competency_group_form) .o_field_widget[name="line_ids"] .o_data_row:nth-child(even) td { background-color: #f8fafc !important; }
+.o_competency_group_form .o_field_widget[name="line_ids"] .o_data_row:hover td,
+.o_dialog:has(.o_competency_group_form) .o_field_widget[name="line_ids"] .o_data_row:hover td { background-color: #eff6ff !important; }
+.o_competency_group_form .o_field_widget[name="line_ids"] .o_selected_row td,
+.o_dialog:has(.o_competency_group_form) .o_field_widget[name="line_ids"] .o_selected_row td { background-color: #dbeafe !important; }
+
+/* Status row tinting — edge-case guards after server clamping */
+.o_competency_group_form .o_field_widget[name="line_ids"] .o_data_row.text-danger  td,
+.o_dialog:has(.o_competency_group_form) .o_field_widget[name="line_ids"] .o_data_row.text-danger  td { background-color: #fff8f8 !important; }
+.o_competency_group_form .o_field_widget[name="line_ids"] .o_data_row.text-warning td,
+.o_dialog:has(.o_competency_group_form) .o_field_widget[name="line_ids"] .o_data_row.text-warning td { background-color: #fffbeb !important; }
+
+/* Points column */
+.o_competency_group_form .o_field_widget[name="line_ids"] td[name="points"],
+.o_dialog:has(.o_competency_group_form) .o_field_widget[name="line_ids"] td[name="points"] {
+    text-align:           right !important;
+    font-weight:          700 !important;
+    font-variant-numeric: tabular-nums !important;
+    color:                #1a3c5e !important;
+    white-space:          nowrap !important;
+    width:                100px !important;
+    min-width:            100px !important;
+}
+
+/* Inline editable inputs inside line rows */
+.o_competency_group_form .o_field_widget[name="line_ids"] .o_data_row td .o_field_widget input,
+.o_dialog:has(.o_competency_group_form) .o_field_widget[name="line_ids"] .o_data_row td .o_field_widget input {
+    border:        1px solid #e2e8f0 !important;
+    border-radius: 6px !important;
+    padding:       4px 8px !important;
+    font-size:     0.855rem !important;
+    background:    #ffffff !important;
+    transition:    border-color 0.15s, box-shadow 0.15s !important;
+}
+.o_competency_group_form .o_field_widget[name="line_ids"] .o_data_row td .o_field_widget input:focus,
+.o_dialog:has(.o_competency_group_form) .o_field_widget[name="line_ids"] .o_data_row td .o_field_widget input:focus {
+    border-color: #1a3c5e !important;
+    box-shadow:   0 0 0 3px rgba(26,60,94,0.12) !important;
+    outline:      none !important;
+}
+
+/* Points input specifically — gold focus ring */
+.o_competency_group_form .o_field_widget[name="line_ids"] .o_data_row td[name="points"] .o_field_widget input,
+.o_dialog:has(.o_competency_group_form) .o_field_widget[name="line_ids"] .o_data_row td[name="points"] .o_field_widget input {
+    text-align:    right !important;
+    font-weight:   700 !important;
+    border-color:  #cbd5e1 !important;
+    color:         #1a3c5e !important;
+    min-width:     80px !important;
+}
+.o_competency_group_form .o_field_widget[name="line_ids"] .o_data_row td[name="points"] .o_field_widget input:focus,
+.o_dialog:has(.o_competency_group_form) .o_field_widget[name="line_ids"] .o_data_row td[name="points"] .o_field_widget input:focus {
+    border-color: #e8a020 !important;
+    box-shadow:   0 0 0 3px rgba(232,160,32,0.15) !important;
+}
+
+/* ── CLAMPED FLASH ANIMATION ─────────────────────────────────
+   Triggered by JS after the server-side onchange returns a
+   clamped value, giving the user clear visual confirmation.
+   ──────────────────────────────────────────────────────────── */
+
+@keyframes cf-clamp-flash {
+    0%   { background-color: #fee2e2; border-color: #f87171; }
+    40%  { background-color: #fef3c7; border-color: #fbbf24; }
+    100% { background-color: #ffffff; border-color: #cbd5e1; }
+}
+
+.cf-clamped-input {
+    animation: cf-clamp-flash 1.4s ease-out forwards !important;
+}
+
+@keyframes cf-shake {
+    0%, 100% { transform: translateX(0); }
+    20%       { transform: translateX(-5px); }
+    40%       { transform: translateX(5px); }
+    60%       { transform: translateX(-4px); }
+    80%       { transform: translateX(3px); }
+}
+
+.cf-shake {
+    animation: cf-shake 0.4s ease-in-out !important;
+}
+
+/* "Add a line" footer */
+.o_competency_group_form .o_field_widget[name="line_ids"] .o_field_one2many_footer td,
+.o_dialog:has(.o_competency_group_form) .o_field_widget[name="line_ids"] .o_field_one2many_footer td {
+    background-color: #f8fafc !important;
+    border-top:       1px dashed #e2e8f0 !important;
+    padding:          7px 14px !important;
+}
+.o_competency_group_form .o_field_widget[name="line_ids"] .o_field_one2many_footer a,
+.o_dialog:has(.o_competency_group_form) .o_field_widget[name="line_ids"] .o_field_one2many_footer a {
+    color:       #1a3c5e !important;
+    font-weight: 600 !important;
+    font-size:   0.82rem !important;
+    transition:  color 0.15s !important;
+}
+.o_competency_group_form .o_field_widget[name="line_ids"] .o_field_one2many_footer a:hover,
+.o_dialog:has(.o_competency_group_form) .o_field_widget[name="line_ids"] .o_field_one2many_footer a:hover {
+    color: #e8a020 !important; text-decoration: none !important;
+}
+
+/* Column widths */
+.o_competency_lines_table th.o_line_col_name,
+.o_competency_lines_table td.o_line_col_name { min-width: 200px !important; width: 220px !important; }
+.o_competency_lines_table td.o_line_col_name { white-space: normal !important; word-break: break-word !important; vertical-align: top !important; }
+.o_competency_lines_table th.o_line_col_pts,
+.o_competency_lines_table td.o_line_col_pts  { min-width: 100px !important; width: 100px !important; text-align: right !important; }
+.o_competency_lines_table th.o_line_col_targets,
+.o_competency_lines_table td.o_line_col_targets { min-width: 240px !important; }
+
+
+/* =============================================================================
+   13. DIALOG FOOTER — Save / Discard buttons  (modern pill style)
+   ============================================================================= */
+
+.o_dialog:has(.o_competency_group_form) .modal-footer,
+.o_dialog:has(.o_competency_group_form) .o_dialog_footer {
+    background:     #f8fafc !important;
+    border-top:     1px solid #e8edf3 !important;
+    padding:        16px 24px !important;
+    display:        flex !important;
+    gap:            10px !important;
+    align-items:    center !important;
+    flex-direction: row-reverse !important;
+    flex-shrink:    0 !important;
+}
+
+.o_dialog:has(.o_competency_group_form) .modal-footer .btn-primary,
+.o_dialog:has(.o_competency_group_form) .o_dialog_footer .btn-primary {
+    background:    linear-gradient(135deg, #1a3c5e 0%, #1e4976 100%) !important;
+    border:        none !important;
+    border-radius: 8px !important;
+    font-weight:   700 !important;
+    font-size:     0.85rem !important;
+    letter-spacing: 0.04em !important;
+    padding:       10px 28px !important;
+    color:         #ffffff !important;
+    box-shadow:    0 3px 10px rgba(26,60,94,0.25) !important;
+    transition:    opacity 0.15s, transform 0.12s, box-shadow 0.15s !important;
+    position:      relative !important;
+    overflow:      hidden !important;
+}
+.o_dialog:has(.o_competency_group_form) .modal-footer .btn-primary::after {
+    content:  "";
+    position: absolute;
+    inset:    0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.06) 0%, transparent 60%);
+    pointer-events: none;
+}
+.o_dialog:has(.o_competency_group_form) .modal-footer .btn-primary:hover,
+.o_dialog:has(.o_competency_group_form) .o_dialog_footer .btn-primary:hover {
+    opacity:    0.9 !important;
+    transform:  translateY(-1px) !important;
+    box-shadow: 0 6px 18px rgba(26,60,94,0.30) !important;
+}
+.o_dialog:has(.o_competency_group_form) .modal-footer .btn-primary:active,
+.o_dialog:has(.o_competency_group_form) .o_dialog_footer .btn-primary:active {
+    opacity: 1 !important; transform: translateY(0) !important;
+    box-shadow: 0 2px 6px rgba(26,60,94,0.2) !important;
+}
+.o_dialog:has(.o_competency_group_form) .modal-footer .btn-primary[disabled],
+.o_dialog:has(.o_competency_group_form) .o_dialog_footer .btn-primary[disabled] {
+    background: linear-gradient(135deg, #64748b 0%, #475569 100%) !important;
+    box-shadow: none !important; opacity: 0.6 !important; cursor: not-allowed !important; transform: none !important;
+}
+
+.o_dialog:has(.o_competency_group_form) .modal-footer .btn-secondary,
+.o_dialog:has(.o_competency_group_form) .o_dialog_footer .btn-secondary {
+    background:    #ffffff !important;
+    border:        1.5px solid #e2e8f0 !important;
+    border-radius: 8px !important;
+    font-weight:   600 !important;
+    font-size:     0.85rem !important;
+    color:         #64748b !important;
+    padding:       10px 22px !important;
+    transition:    background 0.15s, border-color 0.15s, color 0.15s !important;
+}
+.o_dialog:has(.o_competency_group_form) .modal-footer .btn-secondary:hover,
+.o_dialog:has(.o_competency_group_form) .o_dialog_footer .btn-secondary:hover {
+    background: #f1f5f9 !important; border-color: #cbd5e1 !important; color: #1e293b !important;
+}
+
+
+/* =============================================================================
+   14. VALIDATION BANNER  (.cf_validation_banner)
+   ============================================================================= */
+
+.cf_validation_banner {
+    display:     flex;
+    align-items: stretch;
+    margin:      0;
+    padding:     0;
+    overflow:    hidden;
+    animation:   cf_banner_in 0.25s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes cf_banner_in {
+    from { opacity: 0; max-height: 0; transform: translateY(-6px); }
+    to   { opacity: 1; max-height: 200px; transform: translateY(0); }
+}
+
+.cf_banner_stripe { flex-shrink: 0; width: 5px; }
+.cf_banner_icon   {
+    flex-shrink: 0; display: flex; align-items: center;
+    justify-content: center; width: 52px; font-size: 1.2rem;
+}
+.cf_banner_body   { flex: 1; min-width: 0; padding: 13px 20px 13px 2px; }
+.cf_banner_title  {
+    font-size: 0.68rem; font-weight: 800; text-transform: uppercase;
+    letter-spacing: 0.1em; margin-bottom: 5px; line-height: 1.2;
+}
+.cf_banner_msg    { font-size: 0.845rem; font-weight: 400; line-height: 1.55; }
+
+/* Error */
+.cf_banner_error                       { background: #fff1f2; border-top: 1.5px solid #fecaca; border-bottom: 1.5px solid #fecaca; }
+.cf_banner_error .cf_banner_stripe     { background: #dc2626; }
+.cf_banner_error .cf_banner_icon       { color: #dc2626; background: rgba(220,38,38,0.07); }
+.cf_banner_error .cf_banner_title      { color: #991b1b; }
+.cf_banner_error .cf_banner_msg        { color: #7f1d1d; }
+
+/* Warning */
+.cf_banner_warning                     { background: #fffbeb; border-top: 1.5px solid #fde68a; border-bottom: 1.5px solid #fde68a; }
+.cf_banner_warning .cf_banner_stripe   { background: #d97706; }
+.cf_banner_warning .cf_banner_icon     { color: #d97706; background: rgba(217,119,6,0.07); }
+.cf_banner_warning .cf_banner_title    { color: #92400e; }
+.cf_banner_warning .cf_banner_msg      { color: #78350f; }
+
+
+/* =============================================================================
+   15. ODOO NOTIFICATION TOASTS
+   ============================================================================= */
+
+.o_notification.bg-warning,
+.o_notification_manager .o_notification.bg-warning {
+    background-color: #fffbeb !important; border: none !important;
+    border-left: 5px solid #d97706 !important; border-radius: 10px !important;
+    box-shadow: 0 6px 24px rgba(217,119,6,0.15) !important; padding: 14px 18px 14px 16px !important;
+}
+.o_notification.bg-warning .o_notification_title,
+.o_notification_manager .o_notification.bg-warning .o_notification_title {
+    font-size: 0.74rem !important; font-weight: 800 !important; text-transform: uppercase !important;
+    letter-spacing: 0.09em !important; color: #92400e !important; margin-bottom: 3px !important;
+}
+.o_notification.bg-warning .o_notification_content,
+.o_notification_manager .o_notification.bg-warning .o_notification_content { font-size: 0.845rem !important; color: #78350f !important; line-height: 1.5 !important; }
+
+.o_notification.bg-danger,
+.o_notification_manager .o_notification.bg-danger {
+    background-color: #fff1f2 !important; border: none !important;
+    border-left: 5px solid #dc2626 !important; border-radius: 10px !important;
+    box-shadow: 0 6px 24px rgba(220,38,38,0.15) !important; padding: 14px 18px 14px 16px !important;
+}
+.o_notification.bg-danger .o_notification_title,
+.o_notification_manager .o_notification.bg-danger .o_notification_title { font-size: 0.74rem !important; font-weight: 800 !important; text-transform: uppercase !important; letter-spacing: 0.09em !important; color: #991b1b !important; margin-bottom: 3px !important; }
+.o_notification.bg-danger .o_notification_content,
+.o_notification_manager .o_notification.bg-danger .o_notification_content { font-size: 0.845rem !important; color: #7f1d1d !important; line-height: 1.5 !important; }
+
+.o_notification.bg-success,
+.o_notification_manager .o_notification.bg-success {
+    background-color: #f0fdf4 !important; border: none !important;
+    border-left: 5px solid #16a34a !important; border-radius: 10px !important;
+    box-shadow: 0 6px 24px rgba(22,163,74,0.13) !important; padding: 14px 18px 14px 16px !important;
+}
+.o_notification.bg-success .o_notification_title,
+.o_notification_manager .o_notification.bg-success .o_notification_title { font-size: 0.74rem !important; font-weight: 800 !important; text-transform: uppercase !important; letter-spacing: 0.09em !important; color: #15803d !important; margin-bottom: 3px !important; }
+.o_notification.bg-success .o_notification_content,
+.o_notification_manager .o_notification.bg-success .o_notification_content { font-size: 0.845rem !important; color: #14532d !important; line-height: 1.5 !important; }
+
+.o_notification.bg-info,
+.o_notification_manager .o_notification.bg-info {
+    background-color: #eff6ff !important; border: none !important;
+    border-left: 5px solid #2563eb !important; border-radius: 10px !important;
+    box-shadow: 0 6px 24px rgba(37,99,235,0.11) !important; padding: 14px 18px 14px 16px !important;
+}
+.o_notification.bg-info .o_notification_title,
+.o_notification_manager .o_notification.bg-info .o_notification_title { font-size: 0.74rem !important; font-weight: 800 !important; text-transform: uppercase !important; letter-spacing: 0.09em !important; color: #1d4ed8 !important; margin-bottom: 3px !important; }
+.o_notification.bg-info .o_notification_content,
+.o_notification_manager .o_notification.bg-info .o_notification_content { font-size: 0.845rem !important; color: #1e3a8a !important; line-height: 1.5 !important; }
+
+.o_notification .o_notification_close,
+.o_notification_manager .o_notification .o_notification_close { opacity: 0.4 !important; transition: opacity 0.15s !important; }
+.o_notification .o_notification_close:hover { opacity: 1 !important; }
+
+
+/* =============================================================================
+   16.  GROUPED TABULAR VIEW  (competency.framework.line standalone)
+   ============================================================================= */
+
+.o_competency_tabular .o_group_header td {
+    background-color: #1a3c5e !important; color: #ffffff !important;
+    font-weight: 700; font-size: 0.8rem; text-transform: uppercase;
+    letter-spacing: 0.05em; padding: 11px 18px; border-bottom: 2px solid #e8a020;
+}
+.o_competency_tabular .o_group_header:hover td { background-color: #162f4a !important; }

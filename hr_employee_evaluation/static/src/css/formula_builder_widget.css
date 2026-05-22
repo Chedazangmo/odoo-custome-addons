@@ -1,0 +1,525 @@
+/* ================================================================
+   FORMULA BUILDER WIDGET - FULLY VISIBLE STYLES
+   All elements have visible base colors, not just on hover
+   ================================================================ */
+
+/* Main Container */
+.pfb-root {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    width: 100%;
+    max-width: 100%;
+    background: linear-gradient(135deg, #ffffff 0%, #fafbff 100%);
+    border-radius: 16px;
+    padding: 20px;
+    border: 1px solid #e2e8f0;
+}
+
+/* Section Cards */
+.pfb-section {
+    background: #ffffff;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.pfb-section:hover {
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    border-color: #c7d2fe;
+}
+
+.pfb-section-hd {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 20px;
+    background: linear-gradient(135deg, #eef2ff, #ffffff);
+    border-bottom: 2px solid #c7d2fe;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #5a3db8;
+}
+
+.pfb-section-hd i {
+    font-size: 18px;
+    color: #6C4FD4;
+    background: white;
+    padding: 6px;
+    border-radius: 10px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.pfb-section-bd {
+    padding: 20px;
+}
+
+/* Variables Grid - ALWAYS VISIBLE */
+.pfb-var-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.pfb-var-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 20px;
+    background: linear-gradient(135deg, #6C4FD4, #8b5cf6);
+    border: 1px solid #5a3db8;
+    border-radius: 50px;
+    font-size: 13px;
+    font-weight: 600;
+    color: white;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.pfb-var-chip:hover {
+    background: linear-gradient(135deg, #5a3db8, #6C4FD4);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.pfb-chip-icon {
+    font-size: 14px;
+    color: white;
+}
+
+/* Operators Section - ALWAYS VISIBLE */
+.pfb-ops-group {
+    margin-bottom: 16px;
+}
+
+.pfb-ops-group:last-child {
+    margin-bottom: 0;
+}
+
+.pfb-ops-label {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 700;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 10px;
+    padding: 4px 8px;
+    background: #f1f5f9;
+    border-radius: 6px;
+}
+
+.pfb-ops-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.pfb-op-btn {
+    padding: 8px 18px;
+    background: #3b82f6;
+    border: 1px solid #2563eb;
+    border-radius: 40px;
+    font-size: 13px;
+    font-weight: 600;
+    color: white;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    font-family: 'SF Mono', 'Monaco', 'Cascadia Code', monospace;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.pfb-op-btn:hover {
+    background: #2563eb;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.pfb-op-fn {
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    border-color: #b45309;
+    color: white;
+}
+
+.pfb-op-fn:hover {
+    background: linear-gradient(135deg, #d97706, #b45309);
+}
+
+/* Constants Section - ALWAYS VISIBLE */
+.pfb-num-row {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.pfb-num-input {
+    flex: 2;
+    min-width: 180px;
+    padding: 10px 18px;
+    border: 2px solid #cbd5e1;
+    border-radius: 40px;
+    font-size: 14px;
+    background: #ffffff;
+    transition: all 0.3s ease;
+    font-weight: 500;
+}
+
+.pfb-num-input:focus {
+    outline: none;
+    border-color: #6C4FD4;
+    box-shadow: 0 0 0 3px #e0e7ff;
+}
+
+.pfb-add-btn {
+    padding: 10px 28px;
+    background: linear-gradient(135deg, #10b981, #059669);
+    border: none;
+    border-radius: 40px;
+    font-weight: 600;
+    color: white;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.pfb-add-btn:hover {
+    transform: translateY(-2px);
+    background: linear-gradient(135deg, #059669, #047857);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Presets - ALWAYS VISIBLE */
+.pfb-preset-group {
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.pfb-preset-group:last-child {
+    margin-bottom: 0;
+}
+
+.pfb-preset-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+.pfb-presets {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.pfb-preset {
+    padding: 6px 16px;
+    background: #64748b;
+    border: 1px solid #475569;
+    border-radius: 30px;
+    font-size: 12px;
+    font-weight: 600;
+    color: white;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.pfb-preset:hover {
+    background: #475569;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Expression Builder Area */
+.pfb-expr-wrap {
+    background: #fefce8;
+    border: 2px solid #fde047;
+    border-radius: 12px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.pfb-expr-wrap:focus-within {
+    border-color: #6C4FD4;
+    box-shadow: 0 0 0 4px #e0e7ff;
+}
+
+.pfb-expr-hd {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 20px;
+    background: linear-gradient(135deg, #fef08a, #fef9c3);
+    border-bottom: 2px solid #fde047;
+}
+
+.pfb-expr-hd i {
+    font-size: 18px;
+    color: #ca8a04;
+}
+
+.pfb-expr-hd span {
+    font-size: 12px;
+    font-weight: 800;
+    color: #854d0e;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+.pfb-expr-tokens {
+    min-height: 100px;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    background: #fefce8;
+}
+
+.pfb-expr-placeholder {
+    font-size: 13px;
+    color: #94a3b8;
+    font-style: italic;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.pfb-expr-placeholder::before {
+    content: '💡';
+    font-size: 16px;
+}
+
+/* Token Styling - ALWAYS VISIBLE */
+.pfb-tok {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 12px 6px 18px;
+    border-radius: 40px;
+    font-size: 12px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    animation: pfbFadeIn 0.2s ease;
+}
+
+@keyframes pfbFadeIn {
+    from {
+        opacity: 0;
+        transform: scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.pfb-tok:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.pfb-tok-var {
+    background: #6C4FD4;
+    color: white;
+    border: 1px solid #5a3db8;
+}
+
+.pfb-tok-op {
+    background: #3b82f6;
+    color: white;
+    border: 1px solid #2563eb;
+    font-family: monospace;
+    font-size: 14px;
+}
+
+.pfb-tok-num {
+    background: #10b981;
+    color: white;
+    border: 1px solid #059669;
+}
+
+.pfb-tok-fn {
+    background: #f59e0b;
+    color: white;
+    border: 1px solid #d97706;
+}
+
+.pfb-tok-del-btn {
+    width: 20px;
+    height: 20px;
+    border: none;
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    cursor: pointer;
+    color: white;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.pfb-tok-del-btn:hover {
+    background: rgba(255, 255, 255, 0.5);
+    transform: scale(1.1);
+}
+
+.pfb-cursor {
+    display: inline-block;
+    width: 2px;
+    height: 22px;
+    background: linear-gradient(180deg, #6C4FD4, #8b5cf6);
+    border-radius: 2px;
+    animation: pfbBlink 1s step-end infinite;
+    margin-left: 6px;
+}
+
+@keyframes pfbBlink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+}
+
+.pfb-expr-preview {
+    padding: 12px 20px;
+    border-top: 1px solid #fde047;
+    background: #fefce8;
+    font-family: 'SF Mono', 'Monaco', monospace;
+    font-size: 12px;
+}
+
+.pfb-preview-label {
+    font-weight: 800;
+    color: #6C4FD4;
+    margin-right: 10px;
+    text-transform: uppercase;
+    font-size: 10px;
+    letter-spacing: 0.05em;
+}
+
+.pfb-preview-value {
+    color: #1e293b;
+    font-weight: 600;
+}
+
+/* Action Buttons - ALWAYS VISIBLE */
+.pfb-action-row {
+    display: flex;
+    gap: 14px;
+    flex-wrap: wrap;
+    margin-top: 8px;
+}
+
+.pfb-btn-validate {
+    background: linear-gradient(135deg, #6C4FD4, #8b5cf6);
+    border: none;
+    border-radius: 40px;
+    padding: 12px 32px;
+    font-weight: 700;
+    color: white;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.pfb-btn-validate:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.pfb-btn-validate:active {
+    transform: translateY(0);
+}
+
+.pfb-btn-secondary {
+    border-radius: 40px;
+    padding: 12px 28px;
+    font-weight: 600;
+    border: 1px solid #cbd5e1;
+    background: #ffffff;
+    color: #1e293b;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.pfb-btn-secondary:hover {
+    background: #f8fafc;
+    border-color: #6C4FD4;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+/* Status Messages */
+.pfb-status {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-radius: 12px;
+    padding: 14px 18px;
+    font-size: 13px;
+    animation: pfbSlideIn 0.3s ease;
+}
+
+@keyframes pfbSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.pfb-status-ok {
+    background: linear-gradient(135deg, #d1fae5, #ffffff);
+    border-left: 4px solid #10b981;
+    color: #065f46;
+}
+
+.pfb-status-err {
+    background: linear-gradient(135deg, #fee2e2, #ffffff);
+    border-left: 4px solid #ef4444;
+    color: #991b1b;
+}
+
+.pfb-status i {
+    font-size: 18px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .pfb-action-row {
+        flex-direction: column;
+    }
+    
+    .pfb-action-row button {
+        width: 100%;
+    }
+    
+    .pfb-var-chip {
+        padding: 8px 16px;
+        font-size: 12px;
+    }
+    
+    .pfb-section-bd {
+        padding: 14px;
+    }
+    
+    .pfb-expr-tokens {
+        padding: 14px;
+    }
+}
