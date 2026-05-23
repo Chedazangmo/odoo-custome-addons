@@ -43,11 +43,8 @@
                     <group>
                         <group string="Session Details">
                             <field name="template_id"
-                                   readonly="state != 'draft'"
-                                   groups="pms_360_feedback.group_pms_hr_admin"/>
-                            <field name="template_id" readonly="1"
-                                   groups="pms_360_feedback.group_pms_employee"
-                                   invisible="not template_id"/>
+                               readonly="state != 'draft'"
+                               options="{'no_create': True}"/>
                             <field name="date_start" readonly="state != 'draft'"/>
                             <field name="date_end" readonly="state != 'draft'"/>
                         </group>

@@ -134,7 +134,7 @@ export class FeedbackDashboard extends Component {
         </div>
     `;
 
-    static props = {};
+    static props = ["*"];
 
     setup() {
         this.orm = useService("orm");

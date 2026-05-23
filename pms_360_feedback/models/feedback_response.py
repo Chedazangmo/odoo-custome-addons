@@ -7,6 +7,14 @@ class FeedbackResponse(models.Model):
     _description = 'Feedback Response'
     _order = 'create_date desc'
 
+    _sql_constraints = [
+        (
+            'unique_reviewer_reviewee_session',
+            'UNIQUE(session_id, reviewer_employee_id, reviewee_employee_id)',
+            'You have already given feedback to this employee in this session.'
+        ),
+    ]
+
     name = fields.Char(string='Reference', compute='_compute_display_name_computed', store=True)
     display_name_computed = fields.Char(
         string='Display Name',
@@ -18,7 +26,7 @@ class FeedbackResponse(models.Model):
     template_id = fields.Many2one(related='session_id.template_id', string='Template',
                                    store=True, readonly=True)
     reviewee_employee_id = fields.Many2one('hr.employee', string='Employee Being Reviewed',
-                                            required=True)
+                                           required=True)
     reviewer_employee_id = fields.Many2one(
         'hr.employee',
         string='Reviewer',
@@ -81,6 +89,24 @@ class FeedbackResponse(models.Model):
                     raise ValidationError(
                         "You cannot give feedback about yourself. "
                         "Please select a different employee to review."
+                    )
+
+    @api.constrains('reviewer_employee_id', 'reviewee_employee_id', 'session_id')
+    def _check_duplicate_feedback(self):
+        for rec in self:
+            if rec.reviewer_employee_id and rec.reviewee_employee_id and rec.session_id:
+                duplicate = self.search([
+                    ('session_id', '=', rec.session_id.id),
+                    ('reviewer_employee_id', '=', rec.reviewer_employee_id.id),
+                    ('reviewee_employee_id', '=', rec.reviewee_employee_id.id),
+                    ('id', '!=', rec.id),
+                ])
+                if duplicate:
+                    raise ValidationError(
+                        f"You have already given feedback to "
+                        f"'{rec.reviewee_employee_id.name}' "
+                        f"in this session. You cannot submit feedback "
+                        f"for the same person twice."
                     )
 
     @api.constrains('reviewee_employee_id', 'session_id')

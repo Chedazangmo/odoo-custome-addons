@@ -12,7 +12,7 @@
         - Role-based access control
     """,
     'author': 'DrukSmart / CST',
-    'depends': ['hr', 'mail'],
+    'depends': ['hr', 'mail', 'employee_pms', 'hr_employee_evaluation'],
     'data': [
         'security/security.xml',
         'security/ir.model.access.csv',
@@ -20,6 +20,7 @@
         'views/feedback_template_views.xml',
         'views/feedback_session_views.xml',
         'views/feedback_response_views.xml',
+        'views/cycle_integration_views.xml',
         'views/menu_views.xml',
     ],
     'assets': {
