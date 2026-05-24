@@ -1,0 +1,19 @@
+<!-- <?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_pms_appraisal_submit_wizard_form" model="ir.ui.view">
+        <field name="name">pms.appraisal.submit.wizard.form</field>
+        <field name="model">pms.appraisal.submit.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Confirm Submission">
+                <field name="appraisal_id" invisible="1"/>
+                <field name="submit_action" invisible="1"/>
+                
+                <field name="message" readonly="1" nolabel="1" widget="html"/>
+                <footer>
+                    <button name="action_confirm" type="object" string="Submit" class="btn-primary"/>
+                    <button string="Discard" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+</odoo> -->
