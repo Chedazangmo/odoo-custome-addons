@@ -3,7 +3,7 @@
 
         <!-- ── Root ──────────────────────────────────────────────────── -->
         <menuitem id="menu_appraisal_root"
-                name="Employee Evaluation 1.0"
+                name="Employee Evaluation"
                 sequence="80"
                 web_icon="hr_employee_evaluation,static/description/icon.png" />
 

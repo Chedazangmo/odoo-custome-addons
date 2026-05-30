@@ -170,6 +170,12 @@ class PMSAppraisal(models.Model):
         string='Past Planning Deadline',
         compute='_compute_is_past_planning_deadline'
     )
+    self_planning_deadline = fields.Date(
+        string='Self-Planning Deadline',
+        compute='_compute_self_planning_deadline',
+        store=True,
+        help='Deadline for the employee to complete self-planning (5 days before the actual deadline).'
+    )
 
     # Appraisal phase access flags
     can_employee_self_rate = fields.Boolean(
@@ -262,9 +268,17 @@ class PMSAppraisal(models.Model):
         related='cycle_id.appraisal_start_date',
         string='Appraisal Start Date', store=False, readonly=True
     )
+    # Full cycle end date — kept for display / HR reference
     appraisal_end_date_display = fields.Date(
         related='cycle_id.end_date',
-        string='Appraisal End Date', store=False, readonly=True
+        string='Cycle End Date', store=False, readonly=True
+    )
+    # Employee-facing deadline: 10 days before the cycle ends
+    appraisal_end_date = fields.Date(
+        string='Appraisal Employee Deadline',
+        compute='_compute_appraisal_end_date',
+        store=True,
+        help='Last day an employee may submit self-ratings (cycle end − 10 days).'
     )
 
     self_has_zero_scores = fields.Boolean(
@@ -542,7 +556,9 @@ class PMSAppraisal(models.Model):
         'secondary_supervisor_id.user_id',
         'reviewer_id.user_id',
         'cycle_id.state',
-        'planning_end_date',  
+        'planning_end_date',
+        'self_planning_deadline',   # drives the employee planning cutoff
+        'appraisal_end_date',       # drives the employee self-rating cutoff
         'draft_reset_date',
         'resubmission_deadline',
     )
@@ -573,12 +589,17 @@ class PMSAppraisal(models.Model):
             record.is_secondary_supervisor_of_appraisal    = is_sec_sup
             record.is_reviewer_of_appraisal                = is_rev
 
-            # Check Employee Access based on individual deadline
+            # ── Planning edit window ──────────────────────────────────────
+            # Employee may edit only while self_planning_deadline has not passed.
+            # self_planning_deadline = planning_end_date − 5 days, so the last
+            # 5 days of the cycle planning window belong to supervisors only.
             if not is_own or not cycle_allows_planning or not has_started:
                 record.can_employee_edit = False
             elif record.state == 'approved':
                 record.can_employee_edit = False
-            elif record.planning_end_date and record.planning_end_date < today:
+            elif record.self_planning_deadline and record.self_planning_deadline < today:
+                # Past the employee deadline — only allow edits when still inside
+                # the resubmission window granted after an HR/supervisor reset.
                 if record.state == 'draft' and record.draft_reset_date and record.resubmission_deadline:
                     record.can_employee_edit = now <= record.resubmission_deadline
                 else:
@@ -602,7 +623,11 @@ class PMSAppraisal(models.Model):
             record.is_editable = record.can_employee_edit
 
             record.can_employee_self_rate = bool(
-                is_own and record.state == 'appraisal_draft' and cycle_in_appraisal
+                is_own
+                and record.state == 'appraisal_draft'
+                and cycle_in_appraisal
+                # Block once the employee self-rating window has closed
+                and (not record.appraisal_end_date or today <= record.appraisal_end_date)
             )
             record.can_supervisor_rate = bool(
                 is_sup and record.state == 'appraisal_pending_supervisor' and cycle_in_appraisal
@@ -623,16 +648,19 @@ class PMSAppraisal(models.Model):
                 and record.planning_end_date < today
             )
 
-    @api.depends('draft_reset_date', 'cycle_id.resubmission_days', 'planning_end_date')
+    @api.depends('draft_reset_date', 'cycle_id.resubmission_days', 'self_planning_deadline')
     def _compute_resubmission_deadline(self):
         for record in self:
             if record.draft_reset_date and record.cycle_id.resubmission_days:
                 reset_plus_days = record.draft_reset_date + timedelta(
                     days=record.cycle_id.resubmission_days
                 )
-                if record.planning_end_date:
+                # Use self_planning_deadline (employee cutoff, already −5 days from
+                # planning_end_date) as the lower bound of the max() so the employee
+                # never gets extra time beyond what the cycle intended.
+                if record.self_planning_deadline:
                     planning_dt = fields.Datetime.from_string(
-                        str(record.planning_end_date)
+                        str(record.self_planning_deadline)
                     )
                     record.resubmission_deadline = max(planning_dt, reset_plus_days)
                 else:
@@ -656,7 +684,24 @@ class PMSAppraisal(models.Model):
                     f'An appraisal for {record.employee_id.name} in cycle '
                     f'{record.cycle_id.name} already exists.'
                 )
-    
+            
+        
+    @api.depends('planning_end_date')
+    def _compute_self_planning_deadline(self):
+        for record in self:
+            if record.planning_end_date:
+                record.self_planning_deadline = record.planning_end_date - timedelta(days=5)
+            else:
+                record.self_planning_deadline = False
+
+    @api.depends('cycle_id.end_date')
+    def _compute_appraisal_end_date(self):
+        """Employee self-rating closes 10 days before the cycle end date."""
+        for record in self:
+            if record.cycle_id.end_date:
+                record.appraisal_end_date = record.cycle_id.end_date - timedelta(days=10)
+            else:
+                record.appraisal_end_date = False
 
     @api.depends('kra_ids.kpi_ids.is_selected', 'kra_ids.kpi_ids.weightage')
     def _compute_planning_total_score(self):
@@ -930,13 +975,13 @@ class PMSAppraisal(models.Model):
                     new_vals.append({
                         'appraisal_id': appraisal.id,
                         'competency_line_id': line.id,
-                        'self_score': 0.0,
+                        'self_score': False,
                         'self_remarks': '',
-                        'supervisor_score': 0.0,
+                        'supervisor_score': False,
                         'supervisor_remarks': '',
-                        'secondary_supervisor_score': 0.0,
+                        'secondary_supervisor_score': False,
                         'secondary_supervisor_remarks': '',
-                        'reviewer_score': 0.0,
+                        'reviewer_score': False,
                         'reviewer_remarks': '',
                     })
             if new_vals:
@@ -946,11 +991,7 @@ class PMSAppraisal(models.Model):
         """Returns competency framework data formatted for the frontend widget."""
         self.ensure_one()
 
-        # ── Guarantee every competency line has a score row ───────────────────
-        # _sync_competency_scores is idempotent: it only creates rows that are
-        # missing.  Calling it here ensures score_id is never False/0 for any
-        # rater (employee, supervisor, secondary supervisor, reviewer), even when
-        # the appraisal was created before a template change or a DB migration.
+       
         self.sudo()._sync_competency_scores()
         # ─────────────────────────────────────────────────────────────────────
 
@@ -1001,13 +1042,13 @@ class PMSAppraisal(models.Model):
                     'group_name': group.name or '',
                     'group_hr_code': group.hr_code or '',
                     'group_sequence': group.sequence or 0,
-                    'self_score': score_record.self_score if score_record else 0.0,
+                    'self_score': score_record.self_score if score_record and score_record.self_score else False,
+                    'supervisor_score': score_record.supervisor_score if score_record and score_record.supervisor_score else False,
+                    'secondary_supervisor_score': score_record.secondary_supervisor_score if score_record and score_record.secondary_supervisor_score else False,
+                    'reviewer_score': score_record.reviewer_score if score_record and score_record.reviewer_score else False,
                     'self_remarks': score_record.self_remarks if score_record and score_record.self_remarks else '',
-                    'supervisor_score': score_record.supervisor_score if score_record else 0.0,
                     'supervisor_remarks': score_record.supervisor_remarks if score_record and score_record.supervisor_remarks else '',
-                    'secondary_supervisor_score': score_record.secondary_supervisor_score if score_record else 0.0,
                     'secondary_supervisor_remarks': score_record.secondary_supervisor_remarks if score_record and score_record.secondary_supervisor_remarks else '',
-                    'reviewer_score': score_record.reviewer_score if score_record else 0.0,
                     'reviewer_remarks': score_record.reviewer_remarks if score_record and score_record.reviewer_remarks else '',
                 }
 
@@ -1151,13 +1192,13 @@ class PMSAppraisal(models.Model):
                         'target': kpi.target,
                         'planning_remarks': kpi.planning_remarks,
                         'is_selected': kpi.is_selected,
-                        'self_score': kpi.self_score,
+                        'self_score': kpi.self_score if kpi.self_score else False,
+                        'supervisor_score': kpi.supervisor_score if kpi.supervisor_score else False,
+                        'secondary_supervisor_score': kpi.secondary_supervisor_score if kpi.secondary_supervisor_score else False,
+                        'reviewer_score': kpi.reviewer_score if kpi.reviewer_score else False,
                         'self_remarks': kpi.self_remarks,
-                        'supervisor_score': kpi.supervisor_score,
                         'supervisor_remarks': kpi.supervisor_remarks,
-                        'secondary_supervisor_score': kpi.secondary_supervisor_score,
                         'secondary_supervisor_score_remarks': kpi.secondary_supervisor_score_remarks,
-                        'reviewer_score': kpi.reviewer_score,
                         'reviewer_remarks': kpi.reviewer_remarks,
                         'snapshot_employee_target': kpi.snapshot_employee_target,
                         'snapshot_employee_criteria': kpi.snapshot_employee_criteria,
@@ -1369,9 +1410,30 @@ class PMSAppraisal(models.Model):
         if any(k.weightage <= 0 for k in selected_kpis):
             raise UserError('All selected KPIs must have a weightage greater than zero.')
 
-        incomplete_kpis = selected_kpis.filtered(lambda k: not k.target)
-        if incomplete_kpis:
-            raise UserError('All selected KPIs must have a Target filled.')
+        # ── Detailed incomplete-KPI check 
+        errors = []
+        for kpi in selected_kpis:
+            missing = []
+            # We strip whitespace to ensure spaces aren't counted as filled data
+            tgt = str(kpi.target).strip() if kpi.target else ''
+            rem = str(kpi.planning_remarks).strip() if kpi.planning_remarks else ''
+            
+            if not tgt or tgt in ('<p><br></p>', 'False', 'None'):
+                missing.append('Target')
+ 
+                
+            if missing:
+                kra_name = kpi.kra_id.name or 'Unknown KRA'
+                missing_str = ' & '.join(missing)
+                errors.append(f'• [{kra_name}] → {kpi.name} ({missing_str} missing)')
+
+        if errors:
+            error_lines = '\n'.join(errors)
+            raise UserError(
+                f'Cannot submit. The following {len(errors)} KPI(s) are missing required fields:\n\n'
+                f'{error_lines}\n\n'
+                f'Please fill in all missing Targets and Remarks before submitting.'
+            )
 
         template_total = self.template_id.total_kpi_score
         employee_total = sum(selected_kpis.mapped('weightage'))
@@ -1806,24 +1868,24 @@ class PMSAppraisal(models.Model):
             raise UserError('Can only reset records that are in the appraisal phase.')
 
         self.kra_ids.mapped('kpi_ids').write({
-            'self_score': 0.0,
+            'self_score': False,
             'self_remarks': False,
-            'supervisor_score': 0.0,
+            'supervisor_score': False,
             'supervisor_remarks': False,
-            'secondary_supervisor_score': 0.0,
+            'secondary_supervisor_score': False,
             'secondary_supervisor_score_remarks': False,
-            'reviewer_score': 0.0,
+            'reviewer_score': False,
             'reviewer_remarks': False,
         })
 
         self.competency_score_ids.write({
-            'self_score': 0.0,
+            'self_score': False,
             'self_remarks': '',
-            'supervisor_score': 0.0,
+            'supervisor_score': False,
             'supervisor_remarks': '',
-            'secondary_supervisor_score': 0.0,
+            'secondary_supervisor_score': False,
             'secondary_supervisor_remarks': '',
-            'reviewer_score': 0.0,
+            'reviewer_score': False,
             'reviewer_remarks': '',
         })
 
@@ -1961,5 +2023,3 @@ class PMSAppraisal(models.Model):
             'res_id': self.id,
             'mimetype': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
         })
-
-        

@@ -14,11 +14,52 @@
 
                 <div class="o_kra_tabs_header" t-if="hasKras or (hasCompetencyData and isAppraisalPhase)">
                     <div class="o_kra_tabs_nav">
-                        <t t-foreach="kraRecords" t-as="kra" t-key="kra.id">
+                        <!-- <t t-foreach="kraRecords" t-as="kra" t-key="kra.id">
                             <div class="o_kra_tab"
                                  t-att-class="{ 'o_active_tab': isActiveTab(kra_index) and !isCompetencyTabActive }"
                                  t-on-click="() => this.setActiveKraTab(kra_index)">
                                 <span t-esc="kra.data.name || 'Unnamed KRA'"/>
+                            </div>
+                        </t> -->
+                        <t t-foreach="kraRecords" t-as="kra" t-key="kra.id">
+                            <div class="o_kra_tab"
+                                 t-att-class="{ 
+                                    'o_active_tab': isActiveTab(kra_index) and !isCompetencyTabActive,
+                                    'o_drag_over': state.dragOverKraId === kra.id
+                                 }"
+                                 t-att-draggable="isTemplateMode and isActiveTab(kra_index) ? 'true' : 'false'"
+                                 t-on-dragstart="(ev) => this.onDragStart(kra, ev)"
+                                 t-on-dragend="(ev) => this.onDragEnd(ev)"
+                                 t-on-dragover="(ev) => this.onDragOver(kra, ev)"
+                                 t-on-dragleave="(ev) => this.onDragLeave(kra, ev)"
+                                 t-on-drop="(ev) => this.onDrop(kra, ev)"
+                                 t-on-click="() => this.setActiveKraTab(kra_index)">
+                                
+                                <t t-if="state.editingKraId === kra.id">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <input type="text" class="form-control form-control-sm p-1 m-0 shadow-none border-primary"
+                                               style="min-width: 140px; font-size: inherit; font-weight: 500;"
+                                               t-att-value="state.kraEditName"
+                                               t-on-input="(ev) => state.kraEditName = ev.target.value"
+                                               t-on-keydown="(ev) => this.onKraNameKeydown(kra, ev)"
+                                               t-on-click.stop=""/>
+                                        <i class="fa fa-check text-success cursor-pointer fs-6" t-on-click.stop="(ev) => this.onSaveKraName(kra, ev)" title="Save"/>
+                                        <i class="fa fa-times text-danger cursor-pointer fs-6" t-on-click.stop="(ev) => this.onCancelEditKraName(ev)" title="Cancel"/>
+                                    </div>
+                                </t>
+                                
+                                <t t-else="">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <i t-if="isTemplateMode and isActiveTab(kra_index) and !isCompetencyTabActive"
+                                           class="fa fa-ellipsis-v text-muted cursor-grab" title="Drag to reorder"/>
+                                        
+                                        <span t-esc="kra.data.name || 'Unnamed KRA'"/>
+                                        
+                                        <i t-if="isTemplateMode and isActiveTab(kra_index) and !isCompetencyTabActive"
+                                           class="fa fa-pencil text-muted cursor-pointer hover-primary"
+                                           t-on-click.stop="(ev) => this.onEditKraName(kra, ev)" title="Edit Name"/>
+                                    </div>
+                                </t>
                             </div>
                         </t>
                         <t t-if="hasCompetencyData and isAppraisalPhase">
@@ -183,8 +224,8 @@
                                 <thead>
                                     <tr>
                                         <th style="min-width:140px;white-space:nowrap;">KPI Name</th>
-                                        <th style="min-width:160px;white-space:nowrap;">Description</th>
-                                        <th style="min-width:80px;white-space:nowrap;">Score</th>
+                                        <th style="min-width:220px;white-space:nowrap;">Description</th>
+                                        <th style="min-width:80px;max-width:100px;white-space:nowrap;">Score</th>
                                         <th style="min-width:150px;white-space:nowrap;">Criteria</th>
                                         <th style="min-width:30px;width:30px;"/>
                                         <th style="min-width:150px;white-space:nowrap;">Target</th>
@@ -236,8 +277,8 @@
                                 <thead>
                                     <tr>
                                         <th style="min-width:140px;white-space:nowrap;">KPI Name</th>
-                                        <th style="min-width:160px;white-space:nowrap;">Description</th>
-                                        <th style="min-width:80px;white-space:nowrap;">Score</th>
+                                        <th style="min-width:220px;white-space:nowrap;">Description</th>
+                                        <th style="min-width:80px;max-width:100px;white-space:nowrap;">Score</th>
                                         <th style="min-width:150px;white-space:nowrap;">Criteria</th>
                                         <th style="min-width:30px;width:30px;"/>
                                         <th style="min-width:150px;white-space:nowrap;">Target</th>
@@ -275,7 +316,7 @@
                                 <thead>
                                     <tr>
                                         <th style="min-width:140px;white-space:nowrap;">KPI Name</th>
-                                        <th style="min-width:80px;white-space:nowrap;">Score</th>
+                                        <th style="min-width:80px;max-width:100px;white-space:nowrap;">Score</th>
                                         <th style="min-width:150px;white-space:nowrap;">Criteria</th>
                                         <th style="min-width:150px;white-space:nowrap;">Target</th>
                                         <th style="min-width:90px;white-space:nowrap;">Emp Score</th>
@@ -306,8 +347,8 @@
                                             <td style="min-width:150px;white-space:pre-wrap;word-break:break-word;"><textarea class="form-control" rows="1" readonly="1" oninput="this.style.height='';this.style.height=this.scrollHeight+'px'" t-esc="kpi.data.criteria"/></td>
                                             <td style="min-width:150px;white-space:pre-wrap;word-break:break-word;"><textarea class="form-control" rows="1" readonly="1" oninput="this.style.height='';this.style.height=this.scrollHeight+'px'" t-esc="kpi.data.target"/></td>
                                             <td style="min-width:90px;">
-                                                <input t-if="!props.readonly and props.record.data.can_employee_self_rate" type="number" min="0" t-att-max="kpi.data.weightage" class="form-control text-end" t-att-value="kpi.data.self_score" t-on-change="(ev) => this.onKPIFieldChange(kpi,'self_score',ev)"/>
-                                                <input t-else="" type="number" class="form-control text-end" t-att-value="kpi.data.self_score" readonly="1"/>
+                                                <input t-if="!props.readonly and props.record.data.can_employee_self_rate" type="number" min="0" t-att-max="kpi.data.weightage" class="form-control text-end" t-att-value="kpi.data.self_score !== false ? kpi.data.self_score : ''" t-on-change="(ev) => this.onKPIFieldChange(kpi,'self_score',ev)"/>
+                                                <input t-else="" type="number" class="form-control text-end" t-att-value="kpi.data.self_score !== false ? kpi.data.self_score : ''" readonly="1"/>
                                             </td>
                                             <td style="min-width:130px;">
                                                 <textarea t-if="!props.readonly and props.record.data.can_employee_self_rate" class="form-control" rows="1" oninput="this.style.height='';this.style.height=this.scrollHeight+'px'" t-att-value="kpi.data.self_remarks" t-on-change="(ev) => this.onKPIFieldChange(kpi,'self_remarks',ev)"/>
@@ -315,17 +356,17 @@
                                             </td>
 
                                             <t t-if="props.record.data.state != 'appraisal_draft'">
-                                                <td style="min-width:90px;"><input type="number" class="form-control text-end" t-att-value="kpi.data.supervisor_score" readonly="1"/></td>
+                                                <td style="min-width:90px;"><input type="number" class="form-control text-end" t-att-value="kpi.data.supervisor_score !== false ? kpi.data.supervisor_score : ''" readonly="1"/></td>
                                                 <td style="min-width:130px;"><textarea class="form-control" rows="1" readonly="1" oninput="this.style.height='';this.style.height=this.scrollHeight+'px'" t-esc="kpi.data.supervisor_remarks"/></td>
                                             </t>
 
                                             <t t-if="props.record.data.secondary_supervisor_id and props.record.data.state != 'appraisal_draft' and props.record.data.state != 'appraisal_pending_supervisor'">
-                                                <td style="min-width:100px;"><input type="number" class="form-control text-end" t-att-value="kpi.data.secondary_supervisor_score" readonly="1"/></td>
+                                                <td style="min-width:100px;"><input type="number" class="form-control text-end" t-att-value="kpi.data.secondary_supervisor_score !== false ? kpi.data.secondary_supervisor_score : ''" readonly="1"/></td>
                                                 <td style="min-width:130px;"><textarea class="form-control" rows="1" readonly="1" oninput="this.style.height='';this.style.height=this.scrollHeight+'px'" t-esc="kpi.data.secondary_supervisor_score_remarks"/></td>
                                             </t>
 
                                             <t t-if="props.record.data.reviewer_id and (props.record.data.state == 'appraisal_pending_reviewer' or props.record.data.state == 'appraisal_approved')">
-                                                <td style="min-width:90px;"><input type="number" class="form-control text-end" t-att-value="kpi.data.reviewer_score" readonly="1"/></td>
+                                                <td style="min-width:90px;"><input type="number" class="form-control text-end" t-att-value="kpi.data.reviewer_score !== false ? kpi.data.reviewer_score : ''" readonly="1"/></td>
                                                 <td style="min-width:130px;"><textarea class="form-control" rows="1" readonly="1" oninput="this.style.height='';this.style.height=this.scrollHeight+'px'" t-esc="kpi.data.reviewer_remarks"/></td>
                                             </t>
                                         </tr>
@@ -373,13 +414,13 @@
                                             <td style="min-width:80px;"><input type="number" class="form-control text-end" t-att-value="kpi.data.weightage" readonly="1"/></td>
                                             <td style="min-width:150px;white-space:pre-wrap;word-break:break-word;"><textarea class="form-control" rows="1" readonly="1" oninput="this.style.height='';this.style.height=this.scrollHeight+'px'" t-esc="kpi.data.criteria"/></td>
                                             <td style="min-width:150px;white-space:pre-wrap;word-break:break-word;"><textarea class="form-control" rows="1" readonly="1" oninput="this.style.height='';this.style.height=this.scrollHeight+'px'" t-esc="kpi.data.target"/></td>
-                                            <td style="min-width:90px;"><input type="number" class="form-control text-end" t-att-value="kpi.data.self_score" readonly="1"/></td>
+                                            <td style="min-width:90px;"><input type="number" class="form-control text-end" t-att-value="kpi.data.self_score !== false ? kpi.data.self_score : ''" readonly="1"/></td>
                                             <td style="min-width:130px;"><textarea class="form-control" rows="1" readonly="1" oninput="this.style.height='';this.style.height=this.scrollHeight+'px'" t-esc="kpi.data.self_remarks"/></td>
 
                                             <t t-if="props.record.data.state != 'appraisal_draft'">
                                                 <td style="min-width:90px;">
-                                                    <input t-if="!props.readonly and props.record.data.can_supervisor_rate" type="number" min="0" t-att-max="kpi.data.weightage" class="form-control text-end" t-att-value="kpi.data.supervisor_score" t-on-change="(ev) => this.onKPIFieldChange(kpi,'supervisor_score',ev)"/>
-                                                    <input t-else="" type="number" class="form-control text-end" t-att-value="kpi.data.supervisor_score" readonly="1"/>
+                                                    <input t-if="!props.readonly and props.record.data.can_supervisor_rate" type="number" min="0" t-att-max="kpi.data.weightage" class="form-control text-end" t-att-value="kpi.data.supervisor_score !== false ? kpi.data.supervisor_score : ''" t-on-change="(ev) => this.onKPIFieldChange(kpi,'supervisor_score',ev)"/>
+                                                    <input t-else="" type="number" class="form-control text-end" t-att-value="kpi.data.supervisor_score !== false ? kpi.data.supervisor_score : ''" readonly="1"/>
                                                 </td>
                                                 <td style="min-width:130px;">
                                                     <textarea t-if="!props.readonly and props.record.data.can_supervisor_rate" class="form-control" rows="1" oninput="this.style.height='';this.style.height=this.scrollHeight+'px'" t-att-value="kpi.data.supervisor_remarks" t-on-change="(ev) => this.onKPIFieldChange(kpi,'supervisor_remarks',ev)"/>
@@ -389,8 +430,8 @@
 
                                             <t t-if="props.record.data.secondary_supervisor_id and props.record.data.state != 'appraisal_draft' and props.record.data.state != 'appraisal_pending_supervisor'">
                                                 <td style="min-width:100px;">
-                                                    <input t-if="!props.readonly and props.record.data.can_secondary_supervisor_rate" type="number" min="0" t-att-max="kpi.data.weightage" class="form-control text-end" t-att-value="kpi.data.secondary_supervisor_score" t-on-change="(ev) => this.onKPIFieldChange(kpi,'secondary_supervisor_score',ev)"/>
-                                                    <input t-else="" type="number" class="form-control text-end" t-att-value="kpi.data.secondary_supervisor_score" readonly="1"/>
+                                                    <input t-if="!props.readonly and props.record.data.can_secondary_supervisor_rate" type="number" min="0" t-att-max="kpi.data.weightage" class="form-control text-end" t-att-value="kpi.data.secondary_supervisor_score !== false ? kpi.data.secondary_supervisor_score : ''" t-on-change="(ev) => this.onKPIFieldChange(kpi,'secondary_supervisor_score',ev)"/>
+                                                    <input t-else="" type="number" class="form-control text-end" t-att-value="kpi.data.secondary_supervisor_score !== false ? kpi.data.secondary_supervisor_score : ''" readonly="1"/>
                                                 </td>
                                                 <td style="min-width:130px;">
                                                     <textarea t-if="!props.readonly and props.record.data.can_secondary_supervisor_rate" class="form-control" rows="1" oninput="this.style.height='';this.style.height=this.scrollHeight+'px'" t-att-value="kpi.data.secondary_supervisor_score_remarks" t-on-change="(ev) => this.onKPIFieldChange(kpi,'secondary_supervisor_score_remarks',ev)"/>
@@ -400,8 +441,8 @@
 
                                             <t t-if="props.record.data.reviewer_id and (props.record.data.state == 'appraisal_pending_reviewer' or props.record.data.state == 'appraisal_approved')">
                                                 <td style="min-width:90px;">
-                                                    <input t-if="!props.readonly and props.record.data.can_reviewer_rate" type="number" min="0" t-att-max="kpi.data.weightage" class="form-control text-end" t-att-value="kpi.data.reviewer_score" t-on-change="(ev) => this.onKPIFieldChange(kpi,'reviewer_score',ev)"/>
-                                                    <input t-else="" type="number" class="form-control text-end" t-att-value="kpi.data.reviewer_score" readonly="1"/>
+                                                    <input t-if="!props.readonly and props.record.data.can_reviewer_rate" type="number" min="0" t-att-max="kpi.data.weightage" class="form-control text-end" t-att-value="kpi.data.reviewer_score !== false ? kpi.data.reviewer_score : ''" t-on-change="(ev) => this.onKPIFieldChange(kpi,'reviewer_score',ev)"/>
+                                                    <input t-else="" type="number" class="form-control text-end" t-att-value="kpi.data.reviewer_score !== false ? kpi.data.reviewer_score : ''" readonly="1"/>
                                                 </td>
                                                 <td style="min-width:130px;">
                                                     <textarea t-if="!props.readonly and props.record.data.can_reviewer_rate" class="form-control" rows="1" oninput="this.style.height='';this.style.height=this.scrollHeight+'px'" t-att-value="kpi.data.reviewer_remarks" t-on-change="(ev) => this.onKPIFieldChange(kpi,'reviewer_remarks',ev)"/>
@@ -502,8 +543,8 @@
                                             <td style="min-width:80px;"><div class="appraisal-readonly-text text-end" t-esc="(row.data.line_points || 0).toFixed(2)"/></td>
 
                                             <td style="min-width:90px;">
-                                                <input t-if="!props.readonly and props.record.data.can_employee_self_rate" type="number" min="0" t-att-max="row.data.line_points" class="form-control text-end" t-att-value="row.data.self_score" t-on-change="(ev) => this.onCompetencyScoreChange(row,'self_score',ev)"/>
-                                                <div t-else="" class="appraisal-readonly-text text-end" t-esc="row.data.self_score"/>
+                                                <input t-if="!props.readonly and props.record.data.can_employee_self_rate" type="number" min="0" t-att-max="row.data.line_points" class="form-control text-end" t-att-value="row.data.self_score !== false ? row.data.self_score : ''" t-on-change="(ev) => this.onCompetencyScoreChange(row,'self_score',ev)"/>
+                                                <div t-else="" class="appraisal-readonly-text text-end" t-esc="row.data.self_score !== false ? row.data.self_score : ''"/>
                                             </td>
                                             <td style="min-width:130px;">
                                                 <textarea t-if="!props.readonly and props.record.data.can_employee_self_rate" class="form-control" rows="1" oninput="this.style.height='';this.style.height=this.scrollHeight+'px'" t-att-value="row.data.self_remarks" t-on-change="(ev) => this.onCompetencyScoreChange(row,'self_remarks',ev)"/>
@@ -512,8 +553,8 @@
 
                                             <t t-if="props.record.data.state != 'appraisal_draft'">
                                                 <td style="min-width:90px;">
-                                                    <input t-if="!props.readonly and props.record.data.can_supervisor_rate" type="number" min="0" t-att-max="row.data.line_points" class="form-control text-end" t-att-value="row.data.supervisor_score" t-on-change="(ev) => this.onCompetencyScoreChange(row,'supervisor_score',ev)"/>
-                                                    <div t-else="" class="appraisal-readonly-text text-end" t-esc="row.data.supervisor_score"/>
+                                                    <input t-if="!props.readonly and props.record.data.can_supervisor_rate" type="number" min="0" t-att-max="row.data.line_points" class="form-control text-end" t-att-value="row.data.supervisor_score !== false ? row.data.supervisor_score : ''" t-on-change="(ev) => this.onCompetencyScoreChange(row,'supervisor_score',ev)"/>
+                                                    <div t-else="" class="appraisal-readonly-text text-end" t-esc="row.data.supervisor_score !== false ? row.data.supervisor_score : ''"/>
                                                 </td>
                                                 <td style="min-width:130px;">
                                                     <textarea t-if="!props.readonly and props.record.data.can_supervisor_rate" class="form-control" rows="1" oninput="this.style.height='';this.style.height=this.scrollHeight+'px'" t-att-value="row.data.supervisor_remarks" t-on-change="(ev) => this.onCompetencyScoreChange(row,'supervisor_remarks',ev)"/>
@@ -523,8 +564,8 @@
 
                                             <t t-if="props.record.data.secondary_supervisor_id and props.record.data.state != 'appraisal_draft' and props.record.data.state != 'appraisal_pending_supervisor'">
                                                 <td style="min-width:100px;">
-                                                    <input t-if="!props.readonly and props.record.data.can_secondary_supervisor_rate" type="number" min="0" t-att-max="row.data.line_points" class="form-control text-end" t-att-value="row.data.secondary_supervisor_score" t-on-change="(ev) => this.onCompetencyScoreChange(row,'secondary_supervisor_score',ev)"/>
-                                                    <div t-else="" class="appraisal-readonly-text text-end" t-esc="row.data.secondary_supervisor_score"/>
+                                                    <input t-if="!props.readonly and props.record.data.can_secondary_supervisor_rate" type="number" min="0" t-att-max="row.data.line_points" class="form-control text-end" t-att-value="row.data.secondary_supervisor_score !== false ? row.data.secondary_supervisor_score : ''" t-on-change="(ev) => this.onCompetencyScoreChange(row,'secondary_supervisor_score',ev)"/>
+                                                    <div t-else="" class="appraisal-readonly-text text-end" t-esc="row.data.secondary_supervisor_score !== false ? row.data.secondary_supervisor_score : ''"/>
                                                 </td>
                                                 <td style="min-width:130px;">
                                                     <textarea t-if="!props.readonly and props.record.data.can_secondary_supervisor_rate" class="form-control" rows="1" oninput="this.style.height='';this.style.height=this.scrollHeight+'px'" t-att-value="row.data.secondary_supervisor_remarks" t-on-change="(ev) => this.onCompetencyScoreChange(row,'secondary_supervisor_remarks',ev)"/>
@@ -534,8 +575,8 @@
 
                                             <t t-if="props.record.data.reviewer_id and (props.record.data.state == 'appraisal_pending_reviewer' or props.record.data.state == 'appraisal_approved')">
                                                 <td style="min-width:90px;">
-                                                    <input t-if="!props.readonly and props.record.data.can_reviewer_rate" type="number" min="0" t-att-max="row.data.line_points" class="form-control text-end" t-att-value="row.data.reviewer_score" t-on-change="(ev) => this.onCompetencyScoreChange(row,'reviewer_score',ev)"/>
-                                                    <div t-else="" class="appraisal-readonly-text text-end" t-esc="row.data.reviewer_score"/>
+                                                    <input t-if="!props.readonly and props.record.data.can_reviewer_rate" type="number" min="0" t-att-max="row.data.line_points" class="form-control text-end" t-att-value="row.data.reviewer_score !== false ? row.data.reviewer_score : ''" t-on-change="(ev) => this.onCompetencyScoreChange(row,'reviewer_score',ev)"/>
+                                                    <div t-else="" class="appraisal-readonly-text text-end" t-esc="row.data.reviewer_score !== false ? row.data.reviewer_score : ''"/>
                                                 </td>
                                                 <td style="min-width:130px;">
                                                     <textarea t-if="!props.readonly and props.record.data.can_reviewer_rate" class="form-control" rows="1" oninput="this.style.height='';this.style.height=this.scrollHeight+'px'" t-att-value="row.data.reviewer_remarks" t-on-change="(ev) => this.onCompetencyScoreChange(row,'reviewer_remarks',ev)"/>
@@ -675,8 +716,8 @@
                                 <td style="min-width:180px;white-space:pre-wrap;word-break:break-word;"><div class="appraisal-readonly-text" t-esc="kpi.data.criteria"/></td>
                                 <td style="min-width:180px;white-space:pre-wrap;word-break:break-word;"><div class="appraisal-readonly-text" t-esc="kpi.data.target"/></td>
                                 <td style="min-width:90px;">
-                                    <input t-if="props.record.data.can_employee_self_rate" type="number" min="0" t-att-max="kpi.data.weightage" class="form-control text-end" t-att-value="kpi.data.self_score" t-on-change="(ev) => props.onFieldChange(kpi,'self_score',ev)"/>
-                                    <div t-else="" class="appraisal-readonly-text text-end" t-esc="kpi.data.self_score"/>
+                                    <input t-if="props.record.data.can_employee_self_rate" type="number" min="0" t-att-max="kpi.data.weightage" class="form-control text-end" t-att-value="kpi.data.self_score !== false ? kpi.data.self_score : ''" t-on-change="(ev) => props.onFieldChange(kpi,'self_score',ev)"/>
+                                    <div t-else="" class="appraisal-readonly-text text-end" t-esc="kpi.data.self_score !== false ? kpi.data.self_score : ''"/>
                                 </td>
                                 <td style="min-width:130px;">
                                     <textarea t-if="props.record.data.can_employee_self_rate" class="form-control" rows="1" oninput="this.style.height='';this.style.height=this.scrollHeight+'px'" t-att-value="kpi.data.self_remarks" t-on-change="(ev) => props.onFieldChange(kpi,'self_remarks',ev)"/>
@@ -685,8 +726,8 @@
 
                                 <t t-if="props.record.data.state != 'appraisal_draft'">
                                     <td style="min-width:90px;">
-                                        <input t-if="props.record.data.can_supervisor_rate" type="number" min="0" t-att-max="kpi.data.weightage" class="form-control text-end" t-att-value="kpi.data.supervisor_score" t-on-change="(ev) => props.onFieldChange(kpi,'supervisor_score',ev)"/>
-                                        <div t-else="" class="appraisal-readonly-text text-end" t-esc="kpi.data.supervisor_score"/>
+                                        <input t-if="props.record.data.can_supervisor_rate" type="number" min="0" t-att-max="kpi.data.weightage" class="form-control text-end" t-att-value="kpi.data.supervisor_score !== false ? kpi.data.supervisor_score : ''" t-on-change="(ev) => props.onFieldChange(kpi,'supervisor_score',ev)"/>
+                                        <div t-else="" class="appraisal-readonly-text text-end" t-esc="kpi.data.supervisor_score !== false ? kpi.data.supervisor_score : ''"/>
                                     </td>
                                     <td style="min-width:130px;">
                                         <textarea t-if="props.record.data.can_supervisor_rate" class="form-control" rows="1" oninput="this.style.height='';this.style.height=this.scrollHeight+'px'" t-att-value="kpi.data.supervisor_remarks" t-on-change="(ev) => props.onFieldChange(kpi,'supervisor_remarks',ev)"/>
@@ -696,8 +737,8 @@
 
                                 <t t-if="props.record.data.secondary_supervisor_id and props.record.data.state != 'appraisal_draft' and props.record.data.state != 'appraisal_pending_supervisor'">
                                     <td style="min-width:100px;">
-                                        <input t-if="props.record.data.can_secondary_supervisor_rate" type="number" min="0" t-att-max="kpi.data.weightage" class="form-control text-end" t-att-value="kpi.data.secondary_supervisor_score" t-on-change="(ev) => props.onFieldChange(kpi,'secondary_supervisor_score',ev)"/>
-                                        <div t-else="" class="appraisal-readonly-text text-end" t-esc="kpi.data.secondary_supervisor_score"/>
+                                        <input t-if="props.record.data.can_secondary_supervisor_rate" type="number" min="0" t-att-max="kpi.data.weightage" class="form-control text-end" t-att-value="kpi.data.secondary_supervisor_score !== false ? kpi.data.secondary_supervisor_score : ''" t-on-change="(ev) => props.onFieldChange(kpi,'secondary_supervisor_score',ev)"/>
+                                        <div t-else="" class="appraisal-readonly-text text-end" t-esc="kpi.data.secondary_supervisor_score !== false ? kpi.data.secondary_supervisor_score : ''"/>
                                     </td>
                                     <td style="min-width:130px;">
                                         <textarea t-if="props.record.data.can_secondary_supervisor_rate" class="form-control" rows="1" oninput="this.style.height='';this.style.height=this.scrollHeight+'px'" t-att-value="kpi.data.secondary_supervisor_score_remarks" t-on-change="(ev) => props.onFieldChange(kpi,'secondary_supervisor_score_remarks',ev)"/>
@@ -707,8 +748,8 @@
 
                                 <t t-if="props.record.data.reviewer_id and (props.record.data.state == 'appraisal_pending_reviewer' or props.record.data.state == 'appraisal_approved')">
                                     <td style="min-width:90px;">
-                                        <input t-if="props.record.data.can_reviewer_rate" type="number" min="0" t-att-max="kpi.data.weightage" class="form-control text-end" t-att-value="kpi.data.reviewer_score" t-on-change="(ev) => props.onFieldChange(kpi,'reviewer_score',ev)"/>
-                                        <div t-else="" class="appraisal-readonly-text text-end" t-esc="kpi.data.reviewer_score"/>
+                                        <input t-if="props.record.data.can_reviewer_rate" type="number" min="0" t-att-max="kpi.data.weightage" class="form-control text-end" t-att-value="kpi.data.reviewer_score !== false ? kpi.data.reviewer_score : ''" t-on-change="(ev) => props.onFieldChange(kpi,'reviewer_score',ev)"/>
+                                        <div t-else="" class="appraisal-readonly-text text-end" t-esc="kpi.data.reviewer_score !== false ? kpi.data.reviewer_score : ''"/>
                                     </td>
                                     <td style="min-width:130px;">
                                         <textarea t-if="props.record.data.can_reviewer_rate" class="form-control" rows="1" oninput="this.style.height='';this.style.height=this.scrollHeight+'px'" t-att-value="kpi.data.reviewer_remarks" t-on-change="(ev) => props.onFieldChange(kpi,'reviewer_remarks',ev)"/>
@@ -765,8 +806,8 @@
                                 <td style="min-width:180px;white-space:pre-wrap;word-break:break-word;"><div class="appraisal-readonly-text text-muted" t-esc="scoreRow.data.line_description || ''"/></td>
                                 <td style="min-width:80px;"><div class="appraisal-readonly-text text-end" t-esc="(scoreRow.data.line_points || 0).toFixed(2)"/></td>
                                 <td style="min-width:90px;">
-                                    <input t-if="props.record.data.can_employee_self_rate" type="number" min="0" t-att-max="scoreRow.data.line_points" class="form-control text-end" t-att-value="scoreRow.data.self_score" t-on-change="(ev) => props.onScoreChange(scoreRow,'self_score',ev)"/>
-                                    <div t-else="" class="appraisal-readonly-text text-end" t-esc="scoreRow.data.self_score"/>
+                                    <input t-if="props.record.data.can_employee_self_rate" type="number" min="0" t-att-max="scoreRow.data.line_points" class="form-control text-end" t-att-value="scoreRow.data.self_score !== false ? scoreRow.data.self_score : ''" t-on-change="(ev) => props.onScoreChange(scoreRow,'self_score',ev)"/>
+                                    <div t-else="" class="appraisal-readonly-text text-end" t-esc="scoreRow.data.self_score !== false ? scoreRow.data.self_score : ''"/>
                                 </td>
                                 <td style="min-width:130px;">
                                     <textarea t-if="props.record.data.can_employee_self_rate" class="form-control" rows="1" oninput="this.style.height='';this.style.height=this.scrollHeight+'px'" t-att-value="scoreRow.data.self_remarks" t-on-change="(ev) => props.onScoreChange(scoreRow,'self_remarks',ev)"/>
@@ -775,8 +816,8 @@
 
                                 <t t-if="props.record.data.state != 'appraisal_draft'">
                                     <td style="min-width:90px;">
-                                        <input t-if="props.record.data.can_supervisor_rate" type="number" min="0" t-att-max="scoreRow.data.line_points" class="form-control text-end" t-att-value="scoreRow.data.supervisor_score" t-on-change="(ev) => props.onScoreChange(scoreRow,'supervisor_score',ev)"/>
-                                        <div t-else="" class="appraisal-readonly-text text-end" t-esc="scoreRow.data.supervisor_score"/>
+                                        <input t-if="props.record.data.can_supervisor_rate" type="number" min="0" t-att-max="scoreRow.data.line_points" class="form-control text-end" t-att-value="scoreRow.data.supervisor_score !== false ? scoreRow.data.supervisor_score : ''" t-on-change="(ev) => props.onScoreChange(scoreRow,'supervisor_score',ev)"/>
+                                        <div t-else="" class="appraisal-readonly-text text-end" t-esc="scoreRow.data.supervisor_score !== false ? scoreRow.data.supervisor_score : ''"/>
                                     </td>
                                     <td style="min-width:130px;">
                                         <textarea t-if="props.record.data.can_supervisor_rate" class="form-control" rows="1" oninput="this.style.height='';this.style.height=this.scrollHeight+'px'" t-att-value="scoreRow.data.supervisor_remarks" t-on-change="(ev) => props.onScoreChange(scoreRow,'supervisor_remarks',ev)"/>
@@ -786,8 +827,8 @@
 
                                 <t t-if="props.record.data.secondary_supervisor_id and props.record.data.state != 'appraisal_draft' and props.record.data.state != 'appraisal_pending_supervisor'">
                                     <td style="min-width:100px;">
-                                        <input t-if="props.record.data.can_secondary_supervisor_rate" type="number" min="0" t-att-max="scoreRow.data.line_points" class="form-control text-end" t-att-value="scoreRow.data.secondary_supervisor_score" t-on-change="(ev) => props.onScoreChange(scoreRow,'secondary_supervisor_score',ev)"/>
-                                        <div t-else="" class="appraisal-readonly-text text-end" t-esc="scoreRow.data.secondary_supervisor_score"/>
+                                        <input t-if="props.record.data.can_secondary_supervisor_rate" type="number" min="0" t-att-max="scoreRow.data.line_points" class="form-control text-end" t-att-value="scoreRow.data.secondary_supervisor_score !== false ? scoreRow.data.secondary_supervisor_score : ''" t-on-change="(ev) => props.onScoreChange(scoreRow,'secondary_supervisor_score',ev)"/>
+                                        <div t-else="" class="appraisal-readonly-text text-end" t-esc="scoreRow.data.secondary_supervisor_score !== false ? scoreRow.data.secondary_supervisor_score : ''"/>
                                     </td>
                                     <td style="min-width:130px;">
                                         <textarea t-if="props.record.data.can_secondary_supervisor_rate" class="form-control" rows="1" oninput="this.style.height='';this.style.height=this.scrollHeight+'px'" t-att-value="scoreRow.data.secondary_supervisor_remarks" t-on-change="(ev) => props.onScoreChange(scoreRow,'secondary_supervisor_remarks',ev)"/>
@@ -797,8 +838,8 @@
 
                                 <t t-if="props.record.data.reviewer_id and (props.record.data.state == 'appraisal_pending_reviewer' or props.record.data.state == 'appraisal_approved')">
                                     <td style="min-width:90px;">
-                                        <input t-if="props.record.data.can_reviewer_rate" type="number" min="0" t-att-max="scoreRow.data.line_points" class="form-control text-end" t-att-value="scoreRow.data.reviewer_score" t-on-change="(ev) => props.onScoreChange(scoreRow,'reviewer_score',ev)"/>
-                                        <div t-else="" class="appraisal-readonly-text text-end" t-esc="scoreRow.data.reviewer_score"/>
+                                        <input t-if="props.record.data.can_reviewer_rate" type="number" min="0" t-att-max="scoreRow.data.line_points" class="form-control text-end" t-att-value="scoreRow.data.reviewer_score !== false ? scoreRow.data.reviewer_score : ''" t-on-change="(ev) => props.onScoreChange(scoreRow,'reviewer_score',ev)"/>
+                                        <div t-else="" class="appraisal-readonly-text text-end" t-esc="scoreRow.data.reviewer_score !== false ? scoreRow.data.reviewer_score : ''"/>
                                     </td>
                                     <td style="min-width:130px;">
                                         <textarea t-if="props.record.data.can_reviewer_rate" class="form-control" rows="1" oninput="this.style.height='';this.style.height=this.scrollHeight+'px'" t-att-value="scoreRow.data.reviewer_remarks" t-on-change="(ev) => props.onScoreChange(scoreRow,'reviewer_remarks',ev)"/>

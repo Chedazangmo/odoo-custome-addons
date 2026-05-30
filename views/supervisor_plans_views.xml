@@ -16,7 +16,7 @@
                 <field name="secondary_supervisor_id" string="Secondary Manager"/>
                 <field name="reviewer_id" string="Reviewer"/>
                 <field name="planning_start_date" string="Planning Start"/>
-                <field name="planning_end_date" string="Planning Deadline"/>
+                <field name="self_planning_deadline" string="Planning Deadline"/>
                 <field name="state"
                        widget="badge"
                        decoration-muted="state == 'draft'"
@@ -104,7 +104,7 @@
                     <field name="employee_department_id" string="Department" readonly="1" options="{'no_open': True}" invisible="1"/>
                     <field name="employee_evaluation_group_id" string="Evaluation Group" readonly="1" options="{'no_open': True}" invisible="1"/>
                     <field name="planning_start_date" string="Start Date" readonly="1" invisible="1"/>
-                    <field name="planning_end_date" string="Deadline" readonly="1" invisible="1"/>
+                    <field name="self_planning_deadline" string="Deadline" readonly="1" invisible="1"/>
                     <field name="template_total_score" string="Template Total" readonly="1" widget="float" invisible="1"/>
                     <field name="planning_total_score" string="Employee's Total" readonly="1" widget="float"
                         decoration-success="planning_total_score == template_total_score"
@@ -175,7 +175,7 @@
                                     <div class="pms_plan_stat_card pms_stat_date_end">
                                         <div class="pms_stat_label">Deadline</div>
                                         <div class="pms_stat_value">
-                                            <field name="planning_end_date" nolabel="1" readonly="1"/>
+                                            <field name="self_planning_deadline" nolabel="1" readonly="1"/>
                                         </div>
                                     </div>
                                 </div>

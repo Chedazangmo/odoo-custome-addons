@@ -104,11 +104,14 @@
                             <field name="sequence" readonly="1"/>
                             <field name="cycle_type" readonly="state != 'draft'"/>
                             <field name="start_date" readonly="state != 'draft'"/>
+                            <field name="appraisal_start_date"/>
                             <field name="end_date" readonly="state != 'draft'"/>
                         </group>
                         
                         <group string="Planning Settings">
-                            <field name="planning_duration" readonly="state != 'draft'"/>
+                            <field name="planning_duration"
+                                   readonly="state not in ('draft', 'planning', 'monitoring')"
+                                   help="Number of days from the cycle start date for the planning phase. After activation this can only be extended (never reduced). Extending during Monitoring will automatically move the cycle back to Planning."/>
                             <field name="planning_deadline"/>
                             <field name="resubmission_days"/>
                             <field name="final_score_selection" widget="radio" readonly="state != 'draft'"/>
@@ -169,6 +172,7 @@
                             </field>
                         </page>
                     </notebook> -->
+                    
                 </sheet>
                 
                 <chatter/>

@@ -300,17 +300,119 @@ class PMSCycle(models.Model):
                 
         return super().create(vals_list)
     
+    # def write(self, vals):
+    #     if not self.env.context.get('skip_cycle_edit_check'):
+    #         protected_fields = [
+    #             'cycle_type', 'start_date', 'apply_to', 
+    #             'employee_ids', 'final_score_selection' 
+    #         ]
+    #         if any(field in vals for field in protected_fields):
+    #             for record in self:
+    #                 if record.state != 'draft':
+    #                     raise UserError('Cannot modify cycle configuration after activation.')
+    #     return super().write(vals)
+
     def write(self, vals):
         if not self.env.context.get('skip_cycle_edit_check'):
             protected_fields = [
-                'cycle_type', 'start_date', 'apply_to', 
-                'employee_ids', 'final_score_selection' 
+                'cycle_type', 'start_date', 'apply_to',
+                'employee_ids', 'final_score_selection'
             ]
-            if any(field in vals for field in protected_fields):
+            if any(f in vals for f in protected_fields):
                 for record in self:
                     if record.state != 'draft':
-                        raise UserError('Cannot modify cycle configuration after activation.')
-        return super().write(vals)
+                        raise UserError(
+                            'Cannot modify cycle configuration after activation.'
+                        )
+
+        duration_snapshots = {}
+        if 'planning_duration' in vals:
+            new_duration = vals['planning_duration']
+            for cycle in self:
+                if cycle.state not in ('draft', 'planning', 'monitoring'):
+                    raise UserError(
+                        'Planning duration can only be changed while the cycle '
+                        'is in Draft, Planning, or Monitoring state.'
+                    )
+                if cycle.state != 'draft' and new_duration < cycle.planning_duration:
+                    raise UserError(
+                        f'Cannot reduce the planning duration after a cycle has '
+                        f'been activated.\n\n'
+                        f'Current duration: {cycle.planning_duration} days\n'
+                        f'Requested duration: {new_duration} days\n\n'
+                        f'You may only extend it.'
+                    )
+                duration_snapshots[cycle.id] = {
+                    'old_duration': cycle.planning_duration,
+                    'old_state':    cycle.state,
+                }
+
+        res = super().write(vals)
+
+        if duration_snapshots:
+            today = fields.Date.today()
+            for cycle in self:
+                snap         = duration_snapshots.get(cycle.id)
+                if not snap:
+                    continue
+                old_duration = snap['old_duration']
+                old_state    = snap['old_state']
+                new_duration = cycle.planning_duration       
+                delta        = new_duration - old_duration   
+
+                if delta == 0:
+                    continue
+
+                pending = cycle.appraisal_ids.filtered(
+                    lambda a: a.state != 'approved'
+                )
+
+                for appraisal in pending:
+                    update_vals = {}
+
+                    # Slide the main deadline forward by the exact delta
+                    if appraisal.planning_end_date:
+                        update_vals['planning_end_date'] = (
+                            appraisal.planning_end_date + relativedelta(days=delta)
+                        )
+
+                    if update_vals:
+                        appraisal.with_context(
+                            skip_edit_check=True
+                        ).write(update_vals)
+                    # Note: self_planning_deadline is a computed field, so it will 
+                    # automatically update itself based on the new planning_end_date!
+
+                moved_back = False
+                if (
+                    old_state == 'monitoring'
+                    and cycle.planning_deadline
+                    and cycle.planning_deadline > today
+                ):
+                    cycle.write({'state': 'planning'})
+                    moved_back = True
+
+                deadline_str = str(cycle.planning_deadline) if cycle.planning_deadline else '—'
+                if moved_back:
+                    body = (
+                        f'Planning duration extended from '
+                        f'{old_duration} to {new_duration} days '
+                        f'(new deadline: {deadline_str}).'
+                        f'Cycle automatically moved back to '
+                        f'Planning phase so employees can submit or '
+                        f'revise their plans.'
+                        f'{len(pending)} pending appraisal deadline(s) updated.'
+                    )
+                else:
+                    body = (
+                        f'Planning duration extended from '
+                        f'{old_duration} to {new_duration} days '
+                        f'(new deadline: {deadline_str}). '
+                        f'{len(pending)} pending appraisal deadline(s) updated.'
+                    )
+                cycle.message_post(body=body, message_type='notification')
+
+        return res
     
     # def write(self, vals):
     #     # Prevent editing fields when not in draft
@@ -337,7 +439,6 @@ class PMSCycle(models.Model):
         if self.state != 'draft':
             raise UserError('Only draft cycles can be activated.')
             
-        # ─── Prevent multiple active cycles of the same category ───
         active_states = ['planning', 'monitoring', 'appraisal']
         if self.cycle_type in ['annual', 'semi_annual']:
             # Check for active Regular cycles
@@ -356,7 +457,6 @@ class PMSCycle(models.Model):
                 ('id', '!=', self.id)
             ]):
                 raise UserError('Cannot activate: A Probation cycle is already active. Please complete or cancel it first.')
-        # ──────────────────────────────────────────────────────────────────
         
         if not self.start_date or not self.end_date:
             raise UserError('Start date and end date must be set.')
@@ -468,7 +568,6 @@ class PMSCycle(models.Model):
                 f"Probation cycles can ONLY include employees with the 'Probation' tag. "
                 f"Please remove these employees or update their tags:\n{names}\n"
             )
-        # ───────────────────────────────────────────
 
         active_appraisals = self.env['pms.appraisal'].search([
             ('employee_id', 'in', employees.ids),
@@ -683,13 +782,11 @@ class PMSCycle(models.Model):
             cycle.action_move_to_monitoring()
 
 
-
-    
     appraisal_start_date = fields.Date(
         string='Appraisal Start Date',
-        readonly=True,
+        required=True,
         tracking=True,
-        help='Date when HR manually moved the cycle to the Appraisal phase.'
+        help='Date when the cycle automatically moves to the Appraisal phase.'
     )
 
     def action_move_to_appraisal(self):
@@ -708,7 +805,7 @@ class PMSCycle(models.Model):
 
         self.write({
             'state': 'appraisal',
-            'appraisal_start_date': fields.Date.today()
+            # Removed the automatic 'today()' override here so your planned date stays
         })
         
         self.message_post(
@@ -716,6 +813,18 @@ class PMSCycle(models.Model):
             message_type='notification'
         )
         return True
+
+    @api.model
+    def _cron_auto_move_to_appraisal(self):
+        today = fields.Date.today()
+        # Move state to appraisal automatically after appraisal_start_date reaches
+        ready_appraisal_cycles = self.search([
+            ('state', '=', 'monitoring'),
+            ('appraisal_start_date', '<=', today)
+        ])
+        
+        for cycle in ready_appraisal_cycles:
+            cycle.action_move_to_appraisal()
     
     @api.constrains('state', 'cycle_type')
     def _check_concurrent_active_cycles(self):

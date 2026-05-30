@@ -75,6 +75,32 @@
             flex-shrink: 0;
             white-space: nowrap;
 
+            &.o_drag_over {
+                border-left: 3px solid #714B67; 
+                padding-left: calc(1rem - 3px); 
+                background-color: #f8f9fa;
+            }
+
+            .cursor-grab {
+                cursor: grab;
+                opacity: 0.5;
+                transition: opacity 0.2s;
+                
+                &:hover { opacity: 1; }
+                &:active { cursor: grabbing; opacity: 1; }
+            }
+
+            .cursor-pointer { cursor: pointer; }
+            
+            .hover-primary {
+                opacity: 0.5;
+                transition: all 0.2s;
+                &:hover { 
+                    opacity: 1;
+                    color: #714B67 !important; /* Change this hex to match your primary theme color */
+                }
+            }
+
             &:hover        { color: #9989C9; }
             &.o_active_tab { color: #9989C9; font-weight: 700; border-bottom-color: #9989C9; }
         }

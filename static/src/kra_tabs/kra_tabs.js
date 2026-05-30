@@ -114,7 +114,11 @@ export class KraTabs extends Component {
             competencyTotals: { max: 0, self: 0, supervisor: 0, secondary: 0, reviewer: 0 },
             hasCompetencyData: false,
             isLoading: true,
-            kraAttachments: {}, // <--- ADD THIS LINE
+            kraAttachments: {}, 
+            editingKraId: null,
+            kraEditName: "",
+            draggedKraId: null,
+            dragOverKraId: null,
         });
 
 
@@ -173,6 +177,7 @@ export class KraTabs extends Component {
                 });
             }, 0);
         });
+        
     }
 
     // ─── Internal: load from server and reset in-memory cache ────────────────
@@ -197,11 +202,6 @@ export class KraTabs extends Component {
             if (result) {
                 this.state.hasCompetencyData = result.has_competency_data || false;
 
-                // Build in-memory row objects. Each row keeps:
-                //   • id       — the competency.framework.line DB id (display/key only)
-                //   • score_id — the appraisal.competency.score DB id  ← THE KEY FIX
-                //                This is what save_competency_score() expects.
-                //   • data     — reactive object the template reads for display
                 const processedGroups = (result.competency_groups || []).map(group => ({
                     ...group,
                     rows: (group.rows || []).map(row => ({
@@ -212,13 +212,22 @@ export class KraTabs extends Component {
                             line_name: row.line_name || '',
                             line_description: row.line_description || '',
                             line_points: row.line_points || 0.0,
-                            self_score: row.self_score || 0.0,
+                            // self_score: row.self_score !== undefined && row.self_score !== false ? row.self_score : false,
+                            // self_remarks: row.self_remarks || '',
+                            // supervisor_score: row.supervisor_score !== undefined && row.supervisor_score !== false ? row.supervisor_score : false,
+                            // supervisor_remarks: row.supervisor_remarks || '',
+                            // secondary_supervisor_score: row.secondary_supervisor_score !== undefined && row.secondary_supervisor_score !== false ? row.secondary_supervisor_score : false,
+                            // secondary_supervisor_remarks: row.secondary_supervisor_remarks || '',
+                            // reviewer_score: row.reviewer_score !== undefined && row.reviewer_score !== false ? row.reviewer_score : false,
+                            // reviewer_remarks: row.reviewer_remarks || '',
+
+                            self_score: row.self_score || false,
                             self_remarks: row.self_remarks || '',
-                            supervisor_score: row.supervisor_score || 0.0,
+                            supervisor_score: row.supervisor_score || false,
                             supervisor_remarks: row.supervisor_remarks || '',
-                            secondary_supervisor_score: row.secondary_supervisor_score || 0.0,
+                            secondary_supervisor_score: row.secondary_supervisor_score || false,
                             secondary_supervisor_remarks: row.secondary_supervisor_remarks || '',
-                            reviewer_score: row.reviewer_score || 0.0,
+                            reviewer_score: row.reviewer_score || false,
                             reviewer_remarks: row.reviewer_remarks || '',
                         },
                     }))
@@ -301,8 +310,15 @@ export class KraTabs extends Component {
 
     // KRA helpers
     get kraRecords() {
-        return this.props.record.data[this.props.name]?.records || [];
+        const records = this.props.record.data.kra_ids?.records || [];
+
+        return [...records].sort((a, b) => {
+            const seqA = a.data.sequence || 0;
+            const seqB = b.data.sequence || 0;
+            return seqA - seqB;
+        });
     }
+
 
     get hasKras() { return this.kraRecords.length > 0; }
     get activeKRA() { return this.kraRecords[this.state.activeTabIndex] || null; }
@@ -346,22 +362,86 @@ export class KraTabs extends Component {
     setActiveCompGroup(idx) { this.state.activeCompGroup = idx; }
     isActiveCompGroup(idx) { return this.state.activeCompGroup === idx; }
 
-    // ─── Competency score change ──────────────────────────────────────────────
-    // Scores are persisted immediately via the dedicated `save_competency_score`
-    // method on pms.appraisal.
-    //
-    // IMPORTANT: we pass scoreRow.score_id (the appraisal.competency.score DB id)
-    // to the server method — NOT scoreRow.id (which is the competency.framework.line
-    // id and belongs to a completely different model).
-    //
-    // The local in-memory row.data is also updated immediately so switching
-    // KRA tabs never wipes unsaved values from the UI.
-    //
-    // FIX: If score_id is falsy (row was not yet synced when the page loaded),
-    // we reload competency data from the server first — which calls
-    // _sync_competency_scores() server-side — and then retry.  This ensures
-    // all raters (primary supervisor, secondary supervisor, reviewer) can score
-    // without hitting the "record not found" guard.
+    onEditKraName(kra, ev) {
+        ev.stopPropagation(); // Prevent tab from switching
+        this.state.editingKraId = kra.id;
+        this.state.kraEditName = kra.data.name || '';
+    }
+
+    async onSaveKraName(kra, ev) {
+        if (ev) ev.stopPropagation();
+        const newName = this.state.kraEditName.trim();
+        if (newName && newName !== kra.data.name) {
+            await kra.update({ name: newName });
+        }
+        this.state.editingKraId = null;
+    }
+
+    onCancelEditKraName(ev) {
+        if (ev) ev.stopPropagation();
+        this.state.editingKraId = null;
+    }
+
+    onKraNameKeydown(kra, ev) {
+        if (ev.key === "Enter") {
+            this.onSaveKraName(kra, ev);
+        } else if (ev.key === "Escape") {
+            this.onCancelEditKraName(ev);
+        }
+    }
+
+    // for kra drag and drop
+    onDragStart(kra, ev) {
+        if (!this.isTemplateMode) return;
+        this.state.draggedKraId = kra.id;
+        // Make the tab look semi-transparent while dragging
+        setTimeout(() => { ev.target.style.opacity = '0.4'; }, 0);
+    }
+
+    onDragEnd(ev) {
+        ev.target.style.opacity = '1';
+        this.state.draggedKraId = null;
+        this.state.dragOverKraId = null;
+    }
+
+    onDragOver(kra, ev) {
+        ev.preventDefault(); // Required to allow dropping
+        if (!this.isTemplateMode || this.state.draggedKraId === kra.id) return;
+        this.state.dragOverKraId = kra.id;
+    }
+
+    onDragLeave(kra, ev) {
+        if (this.state.dragOverKraId === kra.id) {
+            this.state.dragOverKraId = null;
+        }
+    }
+
+    async onDrop(targetKra, ev) {
+        ev.preventDefault();
+        const draggedId = this.state.draggedKraId;
+        this.state.dragOverKraId = null;
+
+        if (!draggedId || draggedId === targetKra.id) return;
+
+        const kras = this.kraRecords;
+        const draggedIndex = kras.findIndex(k => k.id === draggedId);
+        const targetIndex = kras.findIndex(k => k.id === targetKra.id);
+
+        if (draggedIndex === -1 || targetIndex === -1) return;
+
+        // Rearrange array logically
+        const reordered = [...kras];
+        const [draggedItem] = reordered.splice(draggedIndex, 1);
+        reordered.splice(targetIndex, 0, draggedItem);
+
+        // Save the new sequence to the database (10, 20, 30...)
+        for (let i = 0; i < reordered.length; i++) {
+            const newSeq = (i + 1) * 10;
+            if (reordered[i].data.sequence !== newSeq) {
+                await reordered[i].update({ sequence: newSeq });
+            }
+        }
+    }
 
     async onCompetencyScoreChange(scoreRow, fieldName, event) {
         if (this.props.readonly) return;
@@ -374,36 +454,43 @@ export class KraTabs extends Component {
         ];
 
         if (scoreFields.includes(fieldName)) {
-            value = parseFloat(value) || 0.0;
-            const maxPoints = scoreRow.data.line_points || 0;
-
-            if (value < 0) {
-                this.notification.add(
-                    `${fieldName.replace(/_/g, ' ')} cannot be negative.`,
-                    { type: 'warning' }
-                );
-                event.target.value = scoreRow.data[fieldName] || 0;
-                return;
+            // Allow blank (empty string) — store as false
+            if (value === '' || value === null || value === undefined) {
+                value = false;
+            } else {
+                value = parseFloat(value);
+                if (isNaN(value)) { value = false; }
             }
 
-            if (value > maxPoints) {
-                this.notification.add(
-                    `${fieldName.replace(/_/g, ' ')} cannot exceed ${maxPoints} points.`,
-                    { type: 'warning' }
-                );
-                event.target.value = scoreRow.data[fieldName] || 0;
-                return;
+            if (value !== false) {
+                const maxPoints = scoreRow.data.line_points || 0;
+
+                if (value < 0) {
+                    this.notification.add(
+                        `${fieldName.replace(/_/g, ' ')} cannot be negative.`,
+                        { type: 'warning' }
+                    );
+                    const prev = scoreRow.data[fieldName];
+                    event.target.value = (prev !== false && prev !== null) ? prev : '';
+                    return;
+                }
+
+                if (value > maxPoints) {
+                    this.notification.add(
+                        `${fieldName.replace(/_/g, ' ')} cannot exceed ${maxPoints} points.`,
+                        { type: 'warning' }
+                    );
+                    const prev = scoreRow.data[fieldName];
+                    event.target.value = (prev !== false && prev !== null) ? prev : '';
+                    return;
+                }
             }
         } else {
             // Remark text fields — keep as string
             value = String(value);
         }
 
-        // ── score_id guard with automatic recovery ────────────────────────────
-        // score_id should always be populated because get_competency_data now
-        // calls _sync_competency_scores() before returning.  But as a defensive
-        // measure we attempt a single server reload if score_id is still falsy,
-        // which will create any missing rows and refresh the in-memory state.
+    
         if (!scoreRow.score_id) {
             console.warn('score_id missing for competency row — attempting reload from server.');
             await this._loadCompetencyDataFromServer(this.props.record.resId, this.props.record);
@@ -423,22 +510,13 @@ export class KraTabs extends Component {
                 return;
             }
 
-            // Continue with the freshly loaded row that now has a valid score_id.
             scoreRow = refreshedRow;
         }
-        // ─────────────────────────────────────────────────────────────────────
 
-        // 1. Capture the previous value for rollback, then apply optimistic update.
         const previousValue = scoreRow.data[fieldName];
         scoreRow.data[fieldName] = value;
         this._recomputeCompetencyTotals();
 
-        // 2. Persist to the database via the dedicated appraisal method.
-        //    save_competency_score(score_id, field_name, value) runs sudo()
-        //    internally after verifying the current user is authorised for
-        //    the appraisal's current state.
-        //    We pass scoreRow.score_id — the appraisal.competency.score row id —
-        //    NOT scoreRow.id which is the competency.framework.line id.
         try {
             await this.orm.call(
                 'pms.appraisal',
@@ -451,7 +529,7 @@ export class KraTabs extends Component {
             // Roll back the optimistic local update so the UI is not misleading.
             scoreRow.data[fieldName] = previousValue;
             this._recomputeCompetencyTotals();
-            event.target.value = previousValue;
+            event.target.value = (previousValue !== false && previousValue !== null) ? previousValue : '';
             this.notification.add(
                 'Could not save the score. Please try again.',
                 { type: 'danger' }
@@ -476,32 +554,43 @@ export class KraTabs extends Component {
 
         if (['score', 'weightage', 'self_score', 'supervisor_score',
             'secondary_supervisor_score', 'reviewer_score'].includes(fieldName)) {
-            value = parseFloat(value) || 0.0;
-
-            let maxValue = 0;
-            if (['self_score', 'supervisor_score',
-                 'secondary_supervisor_score', 'reviewer_score'].includes(fieldName)) {
-                maxValue = kpiRecord.data.weightage || 0;
-            } else if (fieldName === 'score' || fieldName === 'weightage') {
-                maxValue = 999999;
+            
+            // Allow blank : store as false which defaults to 0 as a score
+            if (value === '' || value === null || value === undefined) {
+                value = false;
+            } else {
+                value = parseFloat(value);
+                if (isNaN(value)) { value = false; }
             }
 
-            if (value < 0) {
-                this.notification.add(
-                    `${fieldName.replace(/_/g, ' ')} cannot be negative.`,
-                    { type: 'warning' }
-                );
-                event.target.value = kpiRecord.data[fieldName] || 0;
-                return;
-            }
+            if (value !== false) {
+                let maxValue = 0;
+                if (['self_score', 'supervisor_score',
+                     'secondary_supervisor_score', 'reviewer_score'].includes(fieldName)) {
+                    maxValue = kpiRecord.data.weightage || 0;
+                } else if (fieldName === 'score' || fieldName === 'weightage') {
+                    maxValue = 999999;
+                }
 
-            if (maxValue > 0 && maxValue < 999999 && value > maxValue) {
-                this.notification.add(
-                    `${fieldName.replace(/_/g, ' ')} cannot exceed ${maxValue}.`,
-                    { type: 'warning' }
-                );
-                event.target.value = kpiRecord.data[fieldName] || 0;
-                return;
+                if (value < 0) {
+                    this.notification.add(
+                        `${fieldName.replace(/_/g, ' ')} cannot be negative.`,
+                        { type: 'warning' }
+                    );
+                    const prev = kpiRecord.data[fieldName];
+                    event.target.value = (prev !== false && prev !== null) ? prev : '';
+                    return;
+                }
+
+                if (maxValue > 0 && maxValue < 999999 && value > maxValue) {
+                    this.notification.add(
+                        `${fieldName.replace(/_/g, ' ')} cannot exceed ${maxValue}.`,
+                        { type: 'warning' }
+                    );
+                    const prev = kpiRecord.data[fieldName];
+                    event.target.value = (prev !== false && prev !== null) ? prev : '';
+                    return;
+                }
             }
         }
 
@@ -608,7 +697,6 @@ export class KraTabs extends Component {
             
             newAtts.push({ id: attId[0], name: file.name, file_size: file.size });
             
-            // USE COMMAND 4 (APPEND) instead of 6 (REPLACE ALL)
             commands.push([4, attId[0]]);
         }
 
