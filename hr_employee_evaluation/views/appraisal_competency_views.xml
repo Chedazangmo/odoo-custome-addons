@@ -1,0 +1,196 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <record id="view_competency_group_form" model="ir.ui.view">
+        <field name="name">competency.framework.group.form</field>
+        <field name="model">competency.framework.group</field>
+        <field name="arch" type="xml">
+            <form string="Competency Group" auto_save="1" class="o_competency_group_form">
+                <sheet>
+                    <group class="o_competency_header_fields">
+                        <field name="name" string="Competency Group" />
+                        <field name="description" string="Define Competency Targets" />
+                        <field name="points" string="Total Points" readonly="1" />
+                        <field name="template_ceiling" invisible="1" />
+                        <field name="template_remaining" invisible="1" />
+                        <field name="template_total_points" invisible="1" />
+                    </group>
+
+                    <div class="o_grp_lines_section">
+                        <field name="line_ids" nolabel="1">
+                            <list class="o_competency_lines_table" editable="bottom">
+                                <field name="sequence" widget="handle" />
+                                <field name="full_code" string="Sl. No" readonly="1"
+                                    class="o_line_col_code" />
+                                <field name="name" string="Competencies Lines"
+                                    class="o_line_col_name" />
+                                <field name="description" string="Competency Targets"
+                                    class="o_line_col_targets" />
+                                <field name="points" string="Points" widget="float"
+                                    class="o_line_col_pts" />
+                                <field name="template_ceiling" column_invisible="1" />
+                                <field name="template_remaining" column_invisible="1" />
+                                <field name="group_points_status" column_invisible="1" />
+                            </list>
+                        </field>
+                    </div>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_competency_line_grouped_list" model="ir.ui.view">
+        <field name="name">competency.framework.line.grouped.list</field>
+        <field name="model">competency.framework.line</field>
+        <field name="arch" type="xml">
+            <list string="Competency Framework" default_group_by="group_id"
+                class="o_competency_tabular">
+                <field name="group_id" column_invisible="1" />
+                <field name="group_points_status" column_invisible="1" />
+                <field name="full_code" string="Sl. No" />
+                <field name="name" string="Competency" />
+                <field name="description" string="Targets" class="o_col_targets" optional="show" />
+                <field name="points" string="Points" sum="Total Points" />
+                <field name="group_points" string="Group Points" readonly="1" />
+            </list>
+        </field>
+    </record>
+
+    <record id="view_competency_line_grouped_search" model="ir.ui.view">
+        <field name="name">competency.framework.line.grouped.search</field>
+        <field name="model">competency.framework.line</field>
+        <field name="arch" type="xml">
+            <search string="Search Competencies">
+                <field name="name" string="Competency" />
+                <field name="group_id" string="Group" />
+                <separator />
+                <filter name="groupby_group" string="Group By: Competency Group"
+                    context="{'group_by': 'group_id'}" />
+            </search>
+        </field>
+    </record>
+
+    <record id="view_competency_template_list" model="ir.ui.view">
+        <field name="name">competency.framework.template.list</field>
+        <field name="model">competency.framework.template</field>
+        <field name="arch" type="xml">
+            <list string="Competency Templates" class="o_competency_template_list">
+                <field name="name" string="Template Name" class="o_tmpl_col_name" />
+                <field name="points_progress" string="Points"
+                    class="o_tmpl_col_pts" readonly="1" />
+                <field name="group_count" string="No. of Groups" class="o_tmpl_col_count"
+                    readonly="1" />
+            </list>
+        </field>
+    </record>
+
+    <record id="action_competency_lines_by_template" model="ir.actions.act_window">
+        <field name="name">Competency Lines</field>
+        <field name="res_model">competency.framework.line</field>
+        <field name="view_mode">list</field>
+        <field name="view_ids"
+            eval="[
+                (5, 0, 0),
+                (0, 0, {'view_mode': 'list',
+                        'view_id': ref('view_competency_line_grouped_list')}),
+            ]" />
+        <field name="search_view_id" ref="view_competency_line_grouped_search" />
+        <field name="context">{'group_by': 'group_id', 'search_default_groupby_group': 1}</field>
+        <field name="domain">[('template_id', '=', active_id)]</field>
+    </record>
+
+    <record id="view_competency_template_form" model="ir.ui.view">
+        <field name="name">competency.framework.template.form</field>
+        <field name="model">competency.framework.template</field>
+        <field name="arch" type="xml">
+            <form string="Competency Template" auto_save="1" class="o_competency_template_form">
+                <sheet>
+                    <group>
+                        <group string="Template Details">
+                            <field name="name" placeholder="e.g. Annual Competency Framework 2026" />
+                            <field name="description" placeholder="Optional description" />
+                        </group>
+                        <group string="Points Summary">
+                            <field name="points_progress" string="Total Assigned" readonly="1" />
+                            <field name="group_count" string="No. of Groups" readonly="1" />
+                            <field name="competency_ceiling" invisible="1" />
+                            <field name="total_hr_points" invisible="1" />
+                            <field name="points_status" invisible="1" />
+                            <field name="is_skeleton" invisible="1" />
+                        </group>
+                    </group>
+
+                    <notebook>
+                        <page string="Competency Groups" name="groups_page">
+                            <field name="group_ids"
+                                context="{'default_template_id': id}"
+                                mode="list"
+                                form_view_ref="competency_exact.view_competency_group_form">
+                                <list class="o_competency_groups_table"
+                                    decoration-warning="points_status == 'under'"
+                                    decoration-danger="points_status == 'over'"
+                                    decoration-success="points_status == 'exact'">
+                                    <field name="sequence" widget="handle" />
+                                    <field name="hr_code" string="Sl. No" readonly="1"
+                                        class="o_grp_col_code" />
+                                    <field name="name" string="Competency Group"
+                                        class="o_grp_col_name" />
+                                    <field name="points" string="Group Points" readonly="1"
+                                        class="o_grp_col_pts" />
+                                    <field name="line_count" string="No. of Lines" readonly="1"
+                                        class="o_grp_col_count" />
+                                    <field name="points_status" column_invisible="1" />
+                                </list>
+                            </field>
+                        </page>
+
+                        <page string="Competency Table" name="table_page">
+                            <div class="cf-export-bar">
+                                <button type="button" id="cf-template-export-pdf"
+                                    class="cf-export-btn cf-export-btn-pdf btn btn-sm">
+                                    <i class="fa fa-file-pdf-o me-1" /> Export PDF </button>
+                                <button type="button" id="cf-template-export-excel"
+                                    class="cf-export-btn cf-export-btn-excel btn btn-sm">
+                                    <i class="fa fa-file-excel-o me-1" /> Export Excel</button>
+                            </div>
+                            <field name="competency_table_html" widget="html" readonly="1"
+                                nolabel="1" />
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter />
+            </form>
+        </field>
+    </record>
+
+    <record id="view_competency_template_search" model="ir.ui.view">
+        <field name="name">competency.framework.template.search</field>
+        <field name="model">competency.framework.template</field>
+        <field name="arch" type="xml">
+            <search string="Search Competency Templates">
+                <field name="name" string="Template" />
+            </search>
+        </field>
+    </record>
+
+    <record id="action_competency_template" model="ir.actions.act_window" forcecreate="True">
+        <field name="name">Competency Template</field>
+        <field name="res_model">competency.framework.template</field>
+        <field name="view_mode">list,form</field>
+        <field name="context">{}</field>
+        <field name="view_ids"
+            eval="[
+                (5, 0, 0),
+                (0, 0, {'view_mode': 'list',
+                        'view_id': ref('view_competency_template_list')}),
+                (0, 0, {'view_mode': 'form',
+                        'view_id': ref('view_competency_template_form')}),
+            ]" />
+        <field name="search_view_id" ref="view_competency_template_search" />
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">No competency templates found.</p>
+            <p>Create a template, add groups, and add competency lines to each group.</p>
+        </field>
+    </record>
+
+</odoo>

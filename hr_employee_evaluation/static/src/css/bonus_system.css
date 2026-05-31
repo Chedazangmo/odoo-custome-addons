@@ -1,0 +1,1554 @@
+/* ================================================================
+   PMS Bonus System
+   ================================================================ */
+
+.pms-rating-list,
+.pms-bonus-engine-form,
+.pms-calculation-form,
+.pms-calculation-list,
+.pms-bonus-summary,
+.pms-export-section,
+.pms-my-bonus-form {
+    --pms-primary: #6366f1;
+    --pms-primary-dark: #4f46e5;
+    --pms-primary-light: #eef2ff;
+    --pms-primary-bg: #f5f3ff;
+    --pms-success: #10b981;
+    --pms-success-dark: #059669;
+    --pms-success-light: #d1fae5;
+    --pms-warning: #f59e0b;
+    --pms-warning-light: #fef3c7;
+    --pms-danger: #ef4444;
+    --pms-danger-light: #fee2e2;
+    --pms-info: #3b82f6;
+    --pms-info-light: #dbeafe;
+    --pms-border: #e2e8f0;
+    --pms-border-dark: #cbd5e1;
+    --pms-bg: #f8fafc;
+    --pms-bg-card: #ffffff;
+    --pms-text: #475569;
+    --pms-text-light: #94a3b8;
+    --pms-text-dark: #1e293b;
+    --pms-radius: 16px;
+    --pms-radius-sm: 12px;
+    --pms-radius-xs: 8px;
+    --pms-shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --pms-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
+    --pms-shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+    --pms-shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+    --pms-transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ================================================================
+   FULL WIDTH 
+   ================================================================ */
+
+.o_form_view.pms-my-bonus-form .o_form_sheet_bg {
+    max-width: 100% !important;
+    width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    background: var(--pms-bg) !important;
+}
+
+.o_form_view.pms-my-bonus-form .o_form_sheet {
+    max-width: 100% !important;
+    width: 100% !important;
+    padding: 0 !important;
+    margin: 0 auto !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+}
+
+/* ================================================================
+   RATING TIERS
+   ================================================================ */
+
+.pms-rating-list {
+    border-radius: var(--pms-radius);
+    overflow: hidden;
+    background: var(--pms-bg-card);
+    box-shadow: var(--pms-shadow);
+    margin-bottom: 20px;
+}
+
+.pms-rating-list .o_list_table {
+    margin: 0;
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.pms-rating-list .o_list_table thead th {
+    background: linear-gradient(135deg, var(--pms-primary-bg), var(--pms-bg-card));
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--pms-text-dark);
+    padding: 16px 20px;
+    border-bottom: 2px solid var(--pms-primary-light);
+    white-space: nowrap;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.pms-rating-list .o_list_table thead th:first-child {
+    border-top-left-radius: var(--pms-radius);
+}
+
+.pms-rating-list .o_list_table thead th:last-child {
+    border-top-right-radius: var(--pms-radius);
+}
+
+.pms-rating-list .o_list_table tbody td {
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--pms-border);
+    font-size: 13px;
+    transition: var(--pms-transition);
+    vertical-align: middle;
+}
+
+.pms-rating-list .o_list_table tbody tr {
+    transition: var(--pms-transition);
+    cursor: pointer;
+}
+
+.pms-rating-list .o_list_table tbody tr:hover {
+    background: linear-gradient(90deg, var(--pms-primary-light) 0%, transparent 100%);
+    transform: scale(1.01);
+    box-shadow: var(--pms-shadow-sm);
+}
+
+.pms-rating-list .o_list_table tbody tr:last-child td:first-child {
+    border-bottom-left-radius: var(--pms-radius);
+}
+
+.pms-rating-list .o_list_table tbody tr:last-child td:last-child {
+    border-bottom-right-radius: var(--pms-radius);
+}
+
+/* Rating Name Column */
+.pms-rating-list td[name="name"] {
+    font-weight: 700;
+    color: var(--pms-primary-dark);
+    font-size: 14px;
+}
+
+/* Score Columns */
+.pms-rating-list td[name="min_score"],
+.pms-rating-list td[name="max_score"] {
+    background: transparent !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    text-align: left !important;
+    padding: 14px 20px !important;
+}
+
+.pms-rating-list td[name="min_score"] .o_field_widget,
+.pms-rating-list td[name="max_score"] .o_field_widget {
+    background: transparent !important;
+    border: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    display: inline-block;
+}
+
+.pms-rating-list td[name="min_score"] .o_field_float,
+.pms-rating-list td[name="max_score"] .o_field_float {
+    background: transparent !important;
+    border: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    font-weight: 600;
+    color: var(--pms-text);
+    display: inline;
+}
+
+.pms-rating-list td[name="min_score"] .o_avatar,
+.pms-rating-list td[name="min_score"] img,
+.pms-rating-list td[name="max_score"] .o_avatar,
+.pms-rating-list td[name="max_score"] img {
+    display: none !important;
+}
+
+/* Description Column */
+.pms-rating-list td[name="description"] {
+    color: var(--pms-text-light);
+    max-width: 250px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Sequence/Handle Column */
+.pms-rating-list td[name="sequence"] .o_handle {
+    cursor: move;
+    color: var(--pms-text-light);
+}
+
+.pms-rating-list td[name="sequence"] .o_handle:hover {
+    color: var(--pms-primary);
+}
+
+/* Active Toggle Column */
+.pms-rating-list td[name="active"] {
+    text-align: center;
+}
+
+.pms-rating-list td[name="active"] .o_checkbox {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.pms-rating-list .o_list_table .o_field_widget.o_editable {
+    background: transparent;
+    transition: var(--pms-transition);
+}
+
+.pms-rating-list .o_list_table .o_field_widget.o_editable:hover {
+    background: var(--pms-primary-light);
+}
+
+/* ================================================================
+   BONUS ENGINE FORM
+   ================================================================ */
+
+.pms-bonus-engine-form .oe_title {
+    display: block !important;
+    visibility: visible !important;
+}
+
+.pms-bonus-engine-form .oe_title h1 {
+    font-size: 24px;
+    font-weight: 800;
+    margin-bottom: 8px;
+    color: var(--pms-primary-dark);
+}
+
+.pms-bonus-engine-form .oe_title .o_field_char,
+.pms-bonus-engine-form .oe_title .o_field_char input,
+.pms-bonus-engine-form .oe_title h1 .o_field_char,
+.pms-bonus-engine-form .oe_title h1 .o_field_char input,
+.pms-bonus-engine-form .oe_title h1 input {
+    -webkit-text-fill-color: unset !important;
+    color: var(--pms-text-dark) !important;
+    background: var(--pms-bg-card) !important;
+    background-clip: unset !important;
+    -webkit-background-clip: unset !important;
+    width: 100%;
+    padding: 8px 12px;
+    font-size: 20px;
+    font-weight: 700;
+    border: 2px solid var(--pms-border);
+    border-radius: var(--pms-radius-xs);
+}
+
+.pms-bonus-engine-form .oe_title .o_field_char:focus,
+.pms-bonus-engine-form .oe_title .o_field_char input:focus,
+.pms-bonus-engine-form .oe_title h1 input:focus {
+    outline: none;
+    border-color: var(--pms-primary);
+    box-shadow: 0 0 0 3px var(--pms-primary-light);
+}
+
+/* Engine Header */
+.pms-bonus-engine-form .pms-engine-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 32px 16px 32px;
+    background: linear-gradient(135deg, var(--pms-bg-card) 0%, var(--pms-bg) 100%);
+    border-bottom: 2px solid var(--pms-border);
+    margin-bottom: 20px;
+}
+
+.pms-bonus-engine-form .pms-engine-active {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 16px;
+    background: var(--pms-bg-card);
+    border-radius: 100px;
+    border: 1px solid var(--pms-border);
+    box-shadow: var(--pms-shadow-sm);
+}
+
+.pms-bonus-engine-form .pms-active-label {
+    font-weight: 700;
+    font-size: 11px;
+    color: var(--pms-text);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* ================================================================
+   SIDE-BY-SIDE LAYOUT
+   ================================================================ */
+
+.pms-bonus-engine-form .pms-side-by-side {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 28px;
+    padding: 0 28px;
+    margin-bottom: 24px;
+}
+
+.pms-bonus-engine-form .pms-formula-section {
+    background: var(--pms-bg-card);
+    border: 1px solid var(--pms-border);
+    border-radius: var(--pms-radius);
+    overflow: hidden;
+    box-shadow: var(--pms-shadow-sm);
+}
+
+.pms-bonus-engine-form .pms-formula-header,
+.pms-bonus-engine-form .pms-formula-header *,
+.pms-bonus-engine-form .pms-formula-header span,
+.pms-bonus-engine-form .pms-formula-header i,
+.pms-bonus-engine-form .pms-formula-header .fa,
+.pms-bonus-engine-form .pms-formula-header [class*="icon"],
+.pms-bonus-engine-form .pms-formula-header div,
+.pms-bonus-engine-form .pms-formula-header .o_field_char {
+    color: #000000 !important;
+    background-color: #f0f0f0 !important;
+}
+
+.pms-bonus-engine-form .pms-formula-header {
+    background: #e2e8f0 !important;
+    padding: 14px 24px !important;
+    border-bottom: 2px solid #cbd5e1 !important;
+}
+
+.pms-bonus-engine-form .pms-formula-header i {
+    color: #000000 !important;
+    font-size: 18px !important;
+}
+
+.pms-bonus-engine-form .pms-formula-header span {
+    color: #000000 !important;
+    font-weight: 900 !important;
+    font-size: 14px !important;
+}
+
+.pms-bonus-engine-form .pms-formula-body {
+    padding: 0;
+}
+
+.pms-bonus-engine-form .pms-formula-body .pfb-root {
+    width: 100%;
+    padding: 20px;
+}
+
+/* Rating Eligibility Section */
+.pms-bonus-engine-form .pms-eligibility-table-section {
+    background: var(--pms-bg-card);
+    border: 1px solid var(--pms-border);
+    border-radius: var(--pms-radius);
+    overflow: hidden;
+    box-shadow: var(--pms-shadow-sm);
+}
+
+.pms-bonus-engine-form .pms-eligibility-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 24px;
+    background: linear-gradient(135deg, #f0fdf4 0%, #ffffff 100%) !important;
+    border-bottom: 2px solid #bbf7d0 !important;
+}
+
+.pms-bonus-engine-form .pms-eligibility-header i {
+    font-size: 20px;
+    color: var(--pms-success-dark) !important;
+}
+
+.pms-bonus-engine-form .pms-eligibility-header span {
+    font-weight: 800;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--pms-success-dark) !important;
+}
+
+/* Eligibility Table */
+.pms-bonus-engine-form .pms-eligibility-editable-table {
+    width: 100%;
+    overflow-x: visible;
+}
+
+.pms-bonus-engine-form .pms-eligibility-editable-table .o_list_table {
+    margin: 0;
+    width: 100%;
+    table-layout: fixed;
+}
+
+.pms-bonus-engine-form .pms-eligibility-editable-table .o_list_table thead th {
+    background: linear-gradient(135deg, var(--pms-bg), var(--pms-bg-card));
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 14px 16px;
+    color: var(--pms-text-dark);
+    border-bottom: 2px solid var(--pms-border);
+    white-space: nowrap;
+}
+
+.pms-bonus-engine-form .pms-eligibility-editable-table .o_list_table thead th:first-child {
+    width: 60%;
+}
+
+.pms-bonus-engine-form .pms-eligibility-editable-table .o_list_table thead th:last-child {
+    width: 40%;
+}
+
+.pms-bonus-engine-form .pms-eligibility-editable-table .o_list_table tbody td {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--pms-border);
+    font-size: 13px;
+    vertical-align: middle;
+}
+
+.pms-bonus-engine-form .pms-eligibility-editable-table .o_list_table tbody tr:hover td {
+    background: linear-gradient(90deg, var(--pms-primary-light) 0%, transparent 100%);
+}
+
+.pms-bonus-engine-form .pms-eligibility-editable-table td[name="rating_name"] {
+    font-weight: 700;
+    color: var(--pms-primary-dark);
+    font-size: 13px;
+    word-break: break-word;
+}
+
+.pms-bonus-engine-form .pms-eligibility-editable-table td[name="eligibility_percentage"] {
+    min-width: 120px;
+    padding: 8px 16px;
+}
+
+.pms-bonus-engine-form .pms-eligibility-editable-table .o_progressbar {
+    background: var(--pms-bg);
+    border-radius: 30px;
+    height: 10px;
+    overflow: visible;
+    position: relative;
+    margin-bottom: 8px;
+}
+
+.pms-bonus-engine-form .pms-eligibility-editable-table .o_progressbar .progress {
+    background: linear-gradient(90deg, var(--pms-success), var(--pms-primary));
+    border-radius: 30px;
+    transition: width 0.5s ease;
+    height: 100%;
+}
+
+.pms-bonus-engine-form .pms-eligibility-editable-table td[name="eligibility_percentage"] .o_field_widget {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+}
+
+.pms-bonus-engine-form .pms-eligibility-editable-table td[name="eligibility_percentage"] .o_field_float {
+    font-weight: 700;
+    color: var(--pms-primary-dark);
+    font-size: 14px;
+    text-align: center;
+    background: var(--pms-primary-light);
+    padding: 4px 10px;
+    border-radius: 20px;
+    display: inline-block;
+    min-width: 60px;
+}
+
+/* ================================================================
+   BONUS ENGINE LIST VIEW
+   ================================================================ */
+
+.pms-engine-list {
+    border-radius: var(--pms-radius);
+    overflow: hidden;
+    background: var(--pms-bg-card);
+    box-shadow: var(--pms-shadow);
+}
+
+.pms-engine-list .o_list_table thead th {
+    background: linear-gradient(135deg, var(--pms-primary-bg), var(--pms-bg-card));
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--pms-text-dark);
+    padding: 14px 20px;
+    border-bottom: 2px solid var(--pms-primary-light);
+    white-space: nowrap;
+}
+
+.pms-engine-list .o_list_table tbody td {
+    padding: 12px 20px;
+    border-bottom: 1px solid var(--pms-border);
+    transition: var(--pms-transition);
+    font-size: 13px;
+}
+
+.pms-engine-list .o_list_table tbody tr:hover td {
+    background: linear-gradient(90deg, var(--pms-primary-light) 0%, transparent 100%);
+}
+
+.pms-engine-list td[name="name"] {
+    font-weight: 700;
+    color: var(--pms-primary-dark);
+}
+
+.pms-engine-list td[name="formula"] {
+    font-family: monospace;
+    font-size: 11px;
+    color: var(--pms-text);
+}
+
+/* ================================================================
+   ADVANCED OPTIONS
+   ================================================================ */
+
+.pms-bonus-engine-form .pms-advanced-section {
+    background: var(--pms-bg-card);
+    border: 1px solid var(--pms-border);
+    border-radius: var(--pms-radius);
+    overflow: hidden;
+    margin: 0 28px 24px 28px;
+    box-shadow: var(--pms-shadow-sm);
+}
+
+.pms-bonus-engine-form .pms-advanced-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 28px;
+    background: linear-gradient(135deg, var(--pms-bg) 0%, var(--pms-bg-card) 100%);
+    border-bottom: 2px solid var(--pms-border);
+}
+
+.pms-bonus-engine-form .pms-advanced-header i {
+    font-size: 20px;
+    color: var(--pms-primary);
+}
+
+.pms-bonus-engine-form .pms-advanced-header span {
+    font-weight: 800;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--pms-text-dark);
+}
+
+.pms-bonus-engine-form .pms-advanced-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+    padding: 20px;
+}
+
+.pms-bonus-engine-form .pms-adv-card {
+    background: var(--pms-bg-card);
+    border: 1px solid var(--pms-border);
+    border-radius: var(--pms-radius-sm);
+    overflow: hidden;
+    transition: var(--pms-transition);
+}
+
+.pms-bonus-engine-form .pms-adv-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--pms-shadow-lg);
+}
+
+.pms-bonus-engine-form .pms-adv-card-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 20px;
+    font-weight: 700;
+    font-size: 13px;
+    border-bottom: 3px solid;
+}
+
+.pms-bonus-engine-form .pms-adv-card-header i {
+    font-size: 18px;
+}
+
+.pms-bonus-engine-form .pms-adv-card-body {
+    padding: 18px;
+}
+
+.pms-bonus-engine-form .pms-adv-purple {
+    background: linear-gradient(135deg, var(--pms-primary-bg), var(--pms-bg-card));
+    border-bottom-color: var(--pms-primary);
+    color: var(--pms-primary-dark);
+}
+
+.pms-bonus-engine-form .pms-adv-purple i {
+    color: var(--pms-primary);
+}
+
+.pms-bonus-engine-form .pms-adv-teal {
+    background: linear-gradient(135deg, var(--pms-success-light), var(--pms-bg-card));
+    border-bottom-color: var(--pms-success);
+    color: var(--pms-success-dark);
+}
+
+.pms-bonus-engine-form .pms-adv-teal i {
+    color: var(--pms-success);
+}
+
+.pms-bonus-engine-form .pms-adv-field {
+    margin-bottom: 16px;
+}
+
+.pms-bonus-engine-form .pms-adv-field:last-child {
+    margin-bottom: 0;
+}
+
+.pms-bonus-engine-form .pms-adv-field > .o_checkbox {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 0;
+}
+
+.pms-bonus-engine-form .pms-check-label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 13px;
+    color: var(--pms-text-dark);
+}
+
+.pms-bonus-engine-form .pms-adv-field .o_form_label {
+    display: block;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--pms-text-light);
+    margin-bottom: 8px;
+}
+
+.pms-bonus-engine-form .pms-adv-input {
+    width: 100%;
+    padding: 8px 12px;
+    border: 2px solid var(--pms-border);
+    border-radius: var(--pms-radius-xs);
+    font-size: 13px;
+    transition: var(--pms-transition);
+    background: var(--pms-bg-card);
+}
+
+.pms-bonus-engine-form .pms-adv-input:focus {
+    outline: none;
+    border-color: var(--pms-primary);
+    box-shadow: 0 0 0 3px var(--pms-primary-light);
+}
+
+.pms-bonus-engine-form .pms-adv-divider {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--pms-border), transparent);
+    margin: 16px 0;
+}
+
+/* ================================================================
+   BONUS CALCULATION LIST VIEW
+   ================================================================ */
+
+.pms-calculation-list {
+    border-radius: var(--pms-radius);
+    overflow: hidden;
+    background: var(--pms-bg-card);
+    box-shadow: var(--pms-shadow);
+}
+
+.pms-calculation-list .o_list_table {
+    margin: 0;
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.pms-calculation-list .o_list_table thead th {
+    background: linear-gradient(135deg, var(--pms-primary-bg), var(--pms-bg-card));
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--pms-text-dark);
+    padding: 14px 20px;
+    border-bottom: 2px solid var(--pms-primary-light);
+    white-space: nowrap;
+}
+
+.pms-calculation-list .o_list_table tbody td {
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--pms-border);
+    font-size: 13px;
+    transition: var(--pms-transition);
+    vertical-align: middle;
+}
+
+.pms-calculation-list .o_list_table tbody tr:hover {
+    background: linear-gradient(90deg, var(--pms-primary-light) 0%, transparent 100%);
+}
+
+.pms-calculation-list td[name="name"] {
+    font-weight: 700;
+    color: var(--pms-primary-dark);
+}
+
+.pms-calculation-list td[name="total_bonus_amount"] .o_monetary {
+    font-weight: 800;
+    color: var(--pms-success);
+    font-size: 14px;
+}
+
+.pms-calculation-list td[name="eligible_employee_count"] {
+    text-align: center;
+    font-weight: 600;
+    background: transparent !important;
+    padding: 4px 0;
+    display: inline-block;
+    min-width: auto;
+    border-radius: 0 !important;
+}
+
+.pms-calculation-list .o_list_footer {
+    background: linear-gradient(135deg, var(--pms-bg), var(--pms-bg-card));
+    border-top: 2px solid var(--pms-border);
+}
+
+.pms-calculation-list .o_list_footer td:first-child:before {
+    content: "Total Bonus: ";
+    font-weight: 700;
+    color: var(--pms-text-dark);
+    margin-right: 8px;
+}
+
+/* ================================================================
+   BONUS CALCULATION FORM - Horizontal Setup
+   ================================================================ */
+
+.pms-calculation-form .pms-calculation-setup {
+    background: linear-gradient(135deg, var(--pms-bg-card), var(--pms-bg));
+    border-radius: var(--pms-radius);
+    margin: 20px 28px;
+    padding: 20px 28px;
+    border: 1px solid var(--pms-border);
+    box-shadow: var(--pms-shadow-sm);
+}
+
+.pms-calculation-form .pms-setup-row {
+    display: flex;
+    gap: 30px;
+    flex-wrap: wrap;
+}
+
+.pms-calculation-form .pms-setup-item {
+    flex: 1;
+    min-width: 200px;
+}
+
+.pms-calculation-form .pms-setup-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--pms-text-light);
+    margin-bottom: 8px;
+}
+
+.pms-calculation-form .pms-setup-label i {
+    font-size: 13px;
+    color: var(--pms-primary);
+}
+
+.pms-calculation-form .pms-setup-field {
+    width: 100%;
+    border: 1px solid var(--pms-border);
+    border-radius: var(--pms-radius-xs);
+    padding: 8px 12px;
+    background: var(--pms-bg-card);
+    font-size: 13px;
+}
+
+.pms-calculation-form .pms-setup-field:focus {
+    outline: none;
+    border-color: var(--pms-primary);
+    box-shadow: 0 0 0 3px var(--pms-primary-light);
+}
+
+/* Results Section */
+.pms-calculation-form .pms-results-section {
+    background: var(--pms-bg-card);
+    border: 1px solid var(--pms-border);
+    border-radius: var(--pms-radius);
+    overflow: hidden;
+    margin: 0 28px 28px 28px;
+    box-shadow: var(--pms-shadow);
+}
+
+.pms-calculation-form .pms-results-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 28px;
+    background: linear-gradient(135deg, var(--pms-success-light), var(--pms-bg-card));
+    border-bottom: 3px solid var(--pms-success-light);
+}
+
+.pms-calculation-form .pms-results-header i {
+    font-size: 20px;
+    color: var(--pms-success);
+}
+
+.pms-calculation-form .pms-results-header span {
+    font-weight: 800;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--pms-success-dark);
+}
+
+/* Results Table */
+.pms-calculation-form .pms-bonus-results-table .o_list_table {
+    margin: 0;
+    width: 100%;
+}
+
+.pms-calculation-form .pms-bonus-results-table .o_list_table thead th {
+    background: linear-gradient(135deg, var(--pms-bg), var(--pms-bg-card));
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    padding: 14px 20px;
+    white-space: nowrap;
+}
+
+.pms-calculation-form .pms-bonus-results-table .o_list_table tbody td {
+    padding: 12px 20px;
+    font-size: 13px;
+}
+
+.pms-calculation-form .pms-bonus-results-table .o_list_table tbody tr:hover td {
+    background: linear-gradient(90deg, var(--pms-success-light) 0%, transparent 100%);
+}
+
+.pms-calculation-form .pms-bonus-results-table td[name="score"] {
+    font-weight: 800;
+    text-align: center;
+}
+
+.pms-calculation-form .pms-bonus-results-table td[name="bonus_amount"] .o_monetary {
+    font-weight: 800;
+    color: var(--pms-success);
+}
+
+/* Remove circular shape from employees field in bonus calculation results table */
+.pms-calculation-form .pms-bonus-results-table td[name="employee_id"] {
+    background: transparent !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    padding: 12px 20px !important;
+}
+
+.pms-calculation-form .pms-bonus-results-table td[name="employee_id"] .o_field_widget {
+    background: transparent !important;
+    border: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+}
+
+.pms-calculation-form .pms-bonus-results-table td[name="employee_id"] .o_field_many2one {
+    background: transparent !important;
+    border: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border-radius: 0 !important;
+}
+
+.pms-calculation-form .pms-bonus-results-table td[name="employee_id"] .o_external_button {
+    display: none !important;
+}
+
+.pms-calculation-form .pms-bonus-results-table td[name="employee_id"] .o_avatar,
+.pms-calculation-form .pms-bonus-results-table td[name="employee_id"] .o_avatar img,
+.pms-calculation-form .pms-bonus-results-table td[name="employee_id"] .o_image,
+.pms-calculation-form .pms-bonus-results-table td[name="employee_id"] img,
+.pms-calculation-form .pms-bonus-results-table td[name="employee_id"] .o_image_64,
+.pms-calculation-form .pms-bonus-results-table td[name="employee_id"] .o_image_128,
+.pms-calculation-form .pms-bonus-results-table td[name="employee_id"] .o_image_avatar,
+.pms-calculation-form .pms-bonus-results-table td[name="employee_id"] .o_employee_avatar,
+.pms-calculation-form .pms-bonus-results-table td[name="employee_id"] .o_avatar_image,
+.pms-calculation-form .pms-bonus-results-table td[name="employee_id"] [class*="avatar"] {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+}
+
+.pms-calculation-form .pms-bonus-results-table td[name="employee_id"] .o_field_many2one .o_name {
+    background: transparent !important;
+    border: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    font-weight: 500;
+    color: var(--pms-text-dark);
+}
+
+.pms-calculation-form .pms-bonus-results-table td[name="employee_id"] > div,
+.pms-calculation-form .pms-bonus-results-table td[name="employee_id"] > span {
+    background: transparent !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+}
+
+/* Remove container divs with avatar classes */
+.pms-calculation-form .pms-bonus-results-table .o_avatar,
+.pms-calculation-form .pms-bonus-results-table .o_employee_avatar,
+.pms-calculation-form .pms-bonus-results-table .o_avatar_img,
+.pms-calculation-form .pms-bonus-results-table img[class*="avatar"] {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+    min-width: 0 !important;
+    max-width: 0 !important;
+    border-radius: 0 !important;
+}
+
+.pms-calculation-form .pms-bonus-results-table td[name="rating_id"] .o_avatar,
+.pms-calculation-form .pms-bonus-results-table td[name="rating_id"] img {
+    display: none !important;
+}
+
+/* ================================================================
+   MY BONUS - Employee View
+   ================================================================ */
+
+.pms-my-bonus-form {
+    background: var(--pms-bg);
+}
+
+.pms-my-bonus-form .oe_title {
+    background: linear-gradient(135deg, var(--pms-primary-bg), var(--pms-bg-card));
+    padding: 24px 28px;
+    margin-bottom: 24px;
+    border-bottom: 1px solid var(--pms-border);
+}
+
+.pms-my-bonus-form .oe_title h1 {
+    font-size: 28px;
+    font-weight: 800;
+    margin-bottom: 8px;
+    color: var(--pms-primary-dark);
+}
+
+.pms-my-bonus-form .oe_subtitle_fs {
+    font-size: 14px;
+    color: var(--pms-text-light);
+    font-weight: 500;
+}
+
+/* My Bonus List View */
+.pms-my-bonus-list {
+    border-radius: var(--pms-radius);
+    overflow: hidden;
+    background: var(--pms-bg-card);
+    box-shadow: var(--pms-shadow);
+}
+
+.pms-my-bonus-list .o_list_table thead th {
+    background: linear-gradient(135deg, var(--pms-primary-bg), var(--pms-bg-card));
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 14px 20px;
+    white-space: nowrap;
+}
+
+.pms-my-bonus-list .o_list_table tbody tr:hover td {
+    background: linear-gradient(90deg, var(--pms-primary-light) 0%, transparent 100%);
+}
+
+/* Remove round shape from employees field in My Bonus list view */
+.pms-my-bonus-list td[name="employee_id"] .o_avatar,
+.pms-my-bonus-list td[name="employee_id"] .o_avatar img,
+.pms-my-bonus-list td[name="employee_id"] .o_image,
+.pms-my-bonus-list td[name="employee_id"] img,
+.pms-my-bonus-list td[name="employee_id"] .o_employee_avatar,
+.pms-my-bonus-list td[name="employee_id"] .o_avatar_image,
+.pms-my-bonus-list td[name="employee_id"] [class*="avatar"] {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+}
+
+.pms-my-bonus-list td[name="employee_id"] .o_field_widget,
+.pms-my-bonus-list td[name="employee_id"] .o_field_many2one {
+    background: transparent !important;
+    border: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border-radius: 0 !important;
+}
+
+/* ================================================================
+   Eligibility % in My Bonus list — progressbar widget
+   ================================================================ */
+
+.pms-my-bonus-list td[name="eligibility_percentage"] {
+    min-width: 130px;
+    padding: 8px 16px;
+    vertical-align: middle;
+}
+
+.pms-my-bonus-list td[name="eligibility_percentage"] .o_field_widget {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    width: 100%;
+}
+
+.pms-my-bonus-list td[name="eligibility_percentage"] .o_progressbar {
+    width: 100%;
+    background: var(--pms-bg);
+    border-radius: 30px;
+    height: 10px;
+    overflow: hidden;
+    position: relative;
+}
+
+.pms-my-bonus-list td[name="eligibility_percentage"] .o_progressbar_value,
+.pms-my-bonus-list td[name="eligibility_percentage"] .o_progressbar .progress,
+.pms-my-bonus-list td[name="eligibility_percentage"] .o_progressbar > div {
+    background: linear-gradient(90deg, var(--pms-success), var(--pms-primary)) !important;
+    border-radius: 30px;
+    height: 100%;
+    transition: width 0.5s ease;
+}
+
+.pms-my-bonus-list td[name="eligibility_percentage"] .o_progressbar_complete,
+.pms-my-bonus-list td[name="eligibility_percentage"] .o_progressbar span,
+.pms-my-bonus-list td[name="eligibility_percentage"] .o_field_progressbar span,
+.pms-my-bonus-list td[name="eligibility_percentage"] span.o_progressbar_value {
+    display: inline-block !important;
+    visibility: visible !important;
+    font-weight: 700 !important;
+    color: var(--pms-primary-dark) !important;
+    font-size: 12px !important;
+    background: var(--pms-primary-light) !important;
+    padding: 2px 8px !important;
+    border-radius: 20px !important;
+    margin-top: 4px !important;
+    min-width: 50px !important;
+    text-align: center !important;
+}
+
+.pms-my-bonus-list td[name="eligibility_percentage"] .o_field_float,
+.pms-my-bonus-list td[name="eligibility_percentage"] .o_field_progressbar .o_progress_text {
+    display: inline-block !important;
+    visibility: visible !important;
+    font-weight: 700 !important;
+    color: var(--pms-primary-dark) !important;
+    font-size: 12px !important;
+    background: var(--pms-primary-light) !important;
+    padding: 2px 8px !important;
+    border-radius: 20px !important;
+    min-width: 50px !important;
+    text-align: center !important;
+}
+
+/* ================================================================
+   Rating summary card — eligibility % shown below rating name
+   ================================================================ */
+
+/* Always show <small> tags inside summary cards */
+.pms-my-bonus-form .pms-summary-card small {
+    display: block !important;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    color: var(--pms-text-light) !important;
+    margin-top: 8px !important;
+}
+
+/* Make the field value inside <small> visible */
+.pms-my-bonus-form .pms-summary-primary small,
+.pms-my-bonus-form .pms-summary-primary small .o_field_float,
+.pms-my-bonus-form .pms-summary-primary small .o_field_widget,
+.pms-my-bonus-form .pms-summary-primary small .o_field_widget span {
+    display: inline !important;
+    visibility: visible !important;
+    color: var(--pms-text) !important;
+    font-weight: 700 !important;
+    font-size: 13px !important;
+}
+
+/* ================================================================
+   Bonus Summary Cards
+   ================================================================ */
+
+.pms-bonus-summary {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+    margin-bottom: 32px;
+    padding: 0 28px;
+}
+
+.pms-summary-card {
+    background: var(--pms-bg-card);
+    border: 1px solid var(--pms-border);
+    border-radius: var(--pms-radius);
+    padding: 28px 24px;
+    text-align: center;
+    transition: var(--pms-transition);
+    box-shadow: var(--pms-shadow-sm);
+    position: relative;
+    overflow: hidden;
+}
+
+.pms-summary-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--pms-primary), var(--pms-success));
+    transform: scaleX(0);
+    transition: transform 0.3s ease;
+}
+
+.pms-summary-card:hover::before {
+    transform: scaleX(1);
+}
+
+.pms-summary-card:hover {
+    transform: translateY(-8px);
+    box-shadow: var(--pms-shadow-lg);
+}
+
+.pms-summary-card h4 {
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--pms-text-light);
+    margin-bottom: 16px;
+}
+
+.pms-summary-card .amount,
+.pms-summary-card .score {
+    font-size: 36px;
+    font-weight: 800;
+    line-height: 1.2;
+    margin-bottom: 0;
+}
+
+.pms-summary-success {
+    border-top: 4px solid var(--pms-success);
+    background: linear-gradient(135deg, var(--pms-bg-card), var(--pms-success-light));
+}
+
+.pms-summary-success .amount {
+    color: var(--pms-success);
+}
+
+.pms-summary-info {
+    border-top: 4px solid var(--pms-primary);
+    background: linear-gradient(135deg, var(--pms-bg-card), var(--pms-primary-light));
+}
+
+.pms-summary-info .score {
+    color: var(--pms-primary);
+}
+
+.pms-summary-primary {
+    border-top: 4px solid var(--pms-warning);
+    background: linear-gradient(135deg, var(--pms-bg-card), var(--pms-warning-light));
+}
+
+/* ================================================================
+   Details Grid Layout
+   ================================================================ */
+
+.pms-details-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 28px;
+    padding: 0 28px;
+    margin-bottom: 28px;
+}
+
+.pms-details-card {
+    background: var(--pms-bg-card);
+    border: 1px solid var(--pms-border);
+    border-radius: var(--pms-radius);
+    overflow: hidden;
+    transition: var(--pms-transition);
+    box-shadow: var(--pms-shadow-sm);
+}
+
+.pms-details-card:hover {
+    box-shadow: var(--pms-shadow-md);
+    transform: translateY(-2px);
+}
+
+.pms-details-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 24px;
+    background: linear-gradient(135deg, var(--pms-bg), var(--pms-bg-card));
+    border-bottom: 2px solid var(--pms-border);
+}
+
+.pms-details-header i {
+    font-size: 20px;
+    color: var(--pms-primary);
+}
+
+.pms-details-header span {
+    font-weight: 800;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--pms-text-dark);
+}
+
+.pms-details-body {
+    padding: 20px 24px;
+}
+
+.pms-details-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.pms-details-table tr {
+    border-bottom: 1px solid var(--pms-border);
+}
+
+.pms-details-table tr:last-child {
+    border-bottom: none;
+}
+
+.pms-details-table td {
+    padding: 12px 8px;
+    font-size: 13px;
+}
+
+.pms-details-table td:first-child {
+    font-weight: 700;
+    color: var(--pms-text-dark);
+    width: 40%;
+}
+
+.pms-details-table td:last-child {
+    color: var(--pms-text);
+    font-weight: 500;
+}
+
+/* Financial Details List */
+.pms-financial-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.pms-financial-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--pms-border);
+}
+
+.pms-financial-item:last-child {
+    border-bottom: none;
+}
+
+.pms-financial-label {
+    font-weight: 700;
+    color: var(--pms-text-dark);
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.pms-financial-label i {
+    font-size: 14px;
+    color: var(--pms-primary);
+    width: 18px;
+}
+
+.pms-financial-value {
+    font-weight: 600;
+    color: var(--pms-text);
+    font-size: 14px;
+}
+
+.pms-financial-value .o_monetary {
+    font-weight: 700;
+    color: var(--pms-success);
+}
+
+/* ================================================================
+   EXPORT WIZARD
+   ================================================================ */
+
+.pms-export-section {
+    background: var(--pms-bg-card);
+    border: 1px solid var(--pms-border);
+    border-radius: var(--pms-radius);
+    overflow: hidden;
+}
+
+.pms-export-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 28px;
+    background: linear-gradient(135deg, var(--pms-info-light), var(--pms-bg-card));
+    border-bottom: 3px solid var(--pms-info-light);
+}
+
+.pms-export-header i {
+    font-size: 20px;
+    color: var(--pms-info);
+}
+
+.pms-export-header span {
+    font-weight: 800;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--pms-info);
+}
+
+.pms-export-section group {
+    padding: 20px;
+}
+
+/* ================================================================
+   BUTTON STYLES
+   ================================================================ */
+
+.pms-bonus-engine-form .btn-primary,
+.pms-calculation-form .btn-primary,
+.pms-calculation-list .btn-primary,
+.pms-my-bonus-list .btn-primary {
+    background: linear-gradient(135deg, var(--pms-primary), var(--pms-primary-dark));
+    border: none;
+    border-radius: var(--pms-radius-xs);
+    padding: 10px 24px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-size: 12px;
+    transition: var(--pms-transition);
+}
+
+.pms-bonus-engine-form .btn-primary:hover,
+.pms-calculation-form .btn-primary:hover,
+.pms-calculation-list .btn-primary:hover,
+.pms-my-bonus-list .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--pms-shadow-lg);
+}
+
+.pms-bonus-engine-form .btn-secondary,
+.pms-calculation-form .btn-secondary,
+.pms-calculation-list .btn-secondary,
+.pms-my-bonus-list .btn-secondary {
+    border: 2px solid var(--pms-border);
+    background: var(--pms-bg-card);
+    border-radius: var(--pms-radius-xs);
+    padding: 10px 24px;
+    font-weight: 600;
+    font-size: 12px;
+    transition: var(--pms-transition);
+}
+
+.pms-bonus-engine-form .btn-secondary:hover,
+.pms-calculation-form .btn-secondary:hover,
+.pms-calculation-list .btn-secondary:hover,
+.pms-my-bonus-list .btn-secondary:hover {
+    background: var(--pms-bg);
+    border-color: var(--pms-primary);
+    transform: translateY(-2px);
+}
+
+/* ================================================================
+   RESPONSIVE DESIGN
+   ================================================================ */
+
+@media (max-width: 1024px) {
+    .pms-bonus-engine-form .pms-side-by-side {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+
+    .pms-bonus-engine-form .pms-advanced-grid {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+
+    .pms-details-grid {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+
+    .pms-bonus-summary {
+        gap: 20px;
+        padding: 0 20px;
+    }
+}
+
+@media (max-width: 768px) {
+    .pms-bonus-engine-form .pms-engine-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 16px;
+        padding: 16px;
+    }
+
+    .pms-bonus-engine-form .pms-side-by-side,
+    .pms-bonus-engine-form .pms-advanced-grid {
+        padding: 0 16px;
+    }
+
+    .pms-bonus-engine-form .pms-advanced-section {
+        margin-left: 16px;
+        margin-right: 16px;
+    }
+
+    .pms-bonus-summary {
+        grid-template-columns: 1fr;
+        padding: 0 16px;
+    }
+
+    .pms-details-grid {
+        padding: 0 16px;
+    }
+
+    .pms-my-bonus-form .oe_title {
+        padding: 16px 20px;
+    }
+
+    .pms-my-bonus-form .oe_title h1 {
+        font-size: 22px;
+    }
+
+    .pms-calculation-form .pms-setup-row {
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    .pms-calculation-form .pms-calculation-setup {
+        margin: 16px 20px;
+        padding: 16px;
+    }
+
+    .pms-calculation-list,
+    .pms-rating-list,
+    .pms-bonus-engine-form .pms-eligibility-editable-table,
+    .pms-calculation-form .pms-bonus-results-table,
+    .pms-my-bonus-list {
+        overflow-x: auto;
+    }
+
+    .pms-calculation-list .o_list_table,
+    .pms-rating-list .o_list_table,
+    .pms-bonus-engine-form .pms-eligibility-editable-table .o_list_table,
+    .pms-calculation-form .pms-bonus-results-table .o_list_table,
+    .pms-my-bonus-list .o_list_table {
+        min-width: 800px;
+    }
+}
+
+/* ================================================================
+   ANIMATIONS
+   ================================================================ */
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.pms-bonus-engine-form .pms-formula-section,
+.pms-bonus-engine-form .pms-eligibility-table-section,
+.pms-calculation-form .pms-calculation-setup,
+.pms-calculation-form .pms-results-section,
+.pms-calculation-list,
+.pms-bonus-summary .pms-summary-card,
+.pms-details-card,
+.pms-rating-list {
+    animation: fadeInUp 0.4s ease-out;
+}
+
+.pms-calculation-list .o_list_table tbody tr {
+    animation: slideIn 0.3s ease-out;
+    animation-fill-mode: backwards;
+}
+
+.pms-calculation-list .o_list_table tbody tr:nth-child(1) { animation-delay: 0.05s; }
+.pms-calculation-list .o_list_table tbody tr:nth-child(2) { animation-delay: 0.1s; }
+.pms-calculation-list .o_list_table tbody tr:nth-child(3) { animation-delay: 0.15s; }
+.pms-calculation-list .o_list_table tbody tr:nth-child(4) { animation-delay: 0.2s; }
+.pms-calculation-list .o_list_table tbody tr:nth-child(5) { animation-delay: 0.25s; }
+
+.pms-bonus-summary .pms-summary-card:nth-child(1) { animation-delay: 0.05s; }
+.pms-bonus-summary .pms-summary-card:nth-child(2) { animation-delay: 0.1s; }
+.pms-bonus-summary .pms-summary-card:nth-child(3) { animation-delay: 0.15s; }
+.pms-details-card:nth-child(1) { animation-delay: 0.2s; }
+.pms-details-card:nth-child(2) { animation-delay: 0.25s; }
+
+.pms-rating-list .o_list_table tbody tr {
+    animation: slideIn 0.3s ease-out;
+    animation-fill-mode: backwards;
+}
+
+.pms-rating-list .o_list_table tbody tr:nth-child(1) { animation-delay: 0.05s; }
+.pms-rating-list .o_list_table tbody tr:nth-child(2) { animation-delay: 0.1s; }
+.pms-rating-list .o_list_table tbody tr:nth-child(3) { animation-delay: 0.15s; }
+.pms-rating-list .o_list_table tbody tr:nth-child(4) { animation-delay: 0.2s; }
+.pms-rating-list .o_list_table tbody tr:nth-child(5) { animation-delay: 0.25s; }

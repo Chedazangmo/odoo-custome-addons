@@ -1,0 +1,878 @@
+
+.pms_plan_header {
+    width: 100%;
+}
+
+
+.pms_plan_profile_row {
+    display: flex;
+    align-items: flex-start;
+    gap: 20px;
+    width: 100%;
+}
+
+// Avatar styling
+.pms_plan_avatar_field {
+    flex-shrink: 0 !important;
+    min-width: 100px !important;
+    max-width: 100px !important;
+    height: 100px !important;
+    border: 2px solid #e9ecef !important;
+    border-radius: 50% !important;
+    overflow: hidden !important;
+    display: block !important;
+    position: relative !important;
+
+    img, .o_m2o_avatar {
+        width: 100% !important;
+        height: 100% !important;
+        object-fit: cover !important;
+        margin: 0 !important;
+        border-radius: 50% !important;
+        position: absolute !important;
+        top: 0 !important;
+        left: 0 !important;
+    }
+
+    span, a {
+        display: none !important;
+    }
+}
+
+// Profile info container
+.pms_plan_profile_info {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-width: 0;
+    gap: 8px;
+    flex: 1;
+}
+
+// Employee name
+.pms_plan_emp_name {
+    .o_field_widget,
+    a,
+    span {
+        font-size: 1.5rem !important;
+        font-weight: 600 !important;
+        color: #1a1a2e !important;
+        text-decoration: none !important;
+        pointer-events: none;
+        line-height: 1.2;
+    }
+}
+
+// Meta info row 
+.pms_plan_meta_row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 8px;
+    font-size: 0.85rem;
+    color: #6c757d;
+
+    .o_field_widget, span, a {
+        color: #6c757d !important;
+        text-decoration: none !important;
+        font-size: 0.85rem;
+        pointer-events: none;
+    }
+}
+
+.pms_plan_meta_sep { 
+    color: #dee2e6; 
+}
+
+.pms_plan_meta_item { 
+    display: inline-flex; 
+    align-items: center; 
+    gap: 5px; 
+    white-space: nowrap;
+    
+    i {
+        font-size: 0.8rem;
+    }
+}
+
+// Statusbar row
+.pms_plan_status_row {
+    width: 100%;
+}
+
+// Inline statusbar styling 
+.pms_inline_statusbar {
+    display: inline-flex !important;
+    flex-wrap: wrap !important;
+    align-items: stretch !important;
+    border-radius: 8px !important;
+    overflow: hidden !important;
+    background: #f8f9fa !important;
+    
+    .o_statusbar_status {
+        display: flex !important;
+        flex-wrap: wrap !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+    
+    button, .o_arrow_button {
+        position: relative;
+        display: inline-flex !important;
+        align-items: center !important;
+        padding: 8px 18px 8px 28px !important;
+        font-size: 0.7rem !important;
+        font-weight: 600 !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.5px !important;
+        background: #f8f9fa !important;
+        color: #6c757d !important;
+        border: none !important;
+        margin-left: -1px !important;
+        
+        &:first-child {
+            margin-left: 0 !important;
+            padding-left: 18px !important;
+        }
+        
+        // Arrow effect between buttons
+        &::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 0;
+        }
+    }
+    
+    // Current/active state
+    .o_arrow_button_current {
+        background: #7367f0 !important;
+        color: #fff !important;
+        z-index: 1;
+        box-shadow: none !important;
+    }
+    
+    .btn-primary, .o_arrow_button_current {
+        background: #7367f0 !important;
+        color: #fff !important;
+    }
+    
+    // Hide dropdown toggles
+    .dropdown-toggle {
+        display: none !important;
+    }
+    
+    .dropdown-menu {
+        position: static !important;
+        display: inline-flex !important;
+        background: transparent !important;
+        border: none !important;
+        padding: 0 !important;
+        box-shadow: none !important;
+    }
+    
+    // Completed states (previous steps)
+    button:not(.o_arrow_button_current):not(.dropdown-toggle) {
+        background: #e9ecef !important;
+        color: #495057 !important;
+    }
+}
+
+// ── Stats Row ─────────────────────────────────────────────────────────────────
+
+.pms_plan_stats_row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-top: 24px;
+}
+
+.pms_plan_stat_card {
+    flex: 1;
+    min-width: 130px;
+    background: #f8f9fa;
+    border-radius: 12px;
+    padding: 14px 18px;
+    border: 1px solid #e9ecef;
+    transition: all 0.2s ease;
+    
+    &:hover {
+        border-color: #dee2e6;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    }
+    
+    .pms_stat_label {
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        font-weight: 600;
+        color: #6c757d;
+        letter-spacing: 0.8px;
+        margin-bottom: 6px;
+    }
+    
+    .pms_stat_value {
+        font-size: 1.4rem;
+        font-weight: 700;
+        color: #1a1a2e;
+        
+        .o_field_widget, .o_field_float, .o_field_date, span {
+            font-size: inherit !important;
+            font-weight: inherit !important;
+            color: inherit !important;
+        }
+    }
+}
+
+// Score matching styling
+.pms_stat_score_current .pms_stat_value {
+    .text-success, &.text-success { 
+        color: #28a745 !important; 
+    }
+    .text-danger, &.text-danger { 
+        color: #dc3545 !important; 
+    }
+}
+
+// ── Two Column Layout ────────────────────────────────────────────────────────
+
+.pms_plan_two_col_wrapper {
+    display: flex;
+    gap: 40px;
+    margin-top: 8px;
+}
+
+.pms_plan_left_col {
+    flex: 2;
+    min-width: 0;
+}
+
+.pms_plan_right_col {
+    flex: 1;
+    min-width: 280px;
+    max-width: 340px;
+}
+
+// ── Details Card ─────────────────────────────────────────────────────────────
+
+.pms_details_card {
+    background: #f8f9fa;
+    border-radius: 12px;
+    padding: 18px 20px;
+    border: 1px solid #e9ecef;
+}
+
+.pms_details_section_title {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: #6c757d;
+    margin-bottom: 14px;
+    letter-spacing: 1px;
+}
+
+.pms_detail_row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid #e9ecef;
+    
+    &:last-child {
+        border-bottom: none;
+        padding-bottom: 0;
+    }
+    
+    &:first-child {
+        padding-top: 0;
+    }
+}
+
+.pms_detail_label {
+    font-size: 0.8rem;
+    color: #6c757d;
+    font-weight: 500;
+}
+
+.pms_detail_value {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #1a1a2e;
+    text-align: right;
+    
+    .o_field_widget, .o_field_many2one, span, a {
+        font-size: inherit !important;
+        font-weight: inherit !important;
+        color: inherit !important;
+        text-decoration: none !important;
+        pointer-events: none;
+    }
+}
+
+// ── Alert Warning ────────────────────────────────────────────────────────────
+
+.alert-warning {
+    background-color: #fff3cd;
+    border-color: #ffeeba;
+    color: #856404;
+    border-radius: 10px;
+    padding: 12px 16px;
+    font-size: 0.85rem;
+    
+    i {
+        margin-right: 8px;
+    }
+}
+
+// ── Responsive Design ────────────────────────────────────────────────────────
+
+@media (max-width: 992px) {
+    .pms_plan_two_col_wrapper {
+        flex-direction: column;
+        gap: 24px;
+    }
+    
+    .pms_plan_right_col {
+        max-width: 100%;
+    }
+}
+
+@media (max-width: 768px) {
+    .pms_plan_profile_row {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+    
+    .pms_plan_profile_info {
+        align-items: center;
+    }
+    
+    .pms_plan_meta_row {
+        justify-content: center;
+    }
+    
+    .pms_plan_stats_row {
+        flex-direction: column;
+        gap: 12px;
+    }
+    
+    .pms_plan_stat_card {
+        min-width: auto;
+    }
+    
+    .pms_details_card {
+        padding: 14px 16px;
+    }
+}
+
+@media (max-width: 480px) {
+    .pms_plan_avatar_field {
+        min-width: 80px !important;
+        max-width: 80px !important;
+        height: 80px !important;
+    }
+    
+    .pms_plan_emp_name .o_field_widget,
+    .pms_plan_emp_name a,
+    .pms_plan_emp_name span {
+        font-size: 1.25rem !important;
+    }
+    
+    .pms_inline_statusbar button, 
+    .pms_inline_statusbar .o_arrow_button {
+        padding: 6px 12px 6px 20px !important;
+        font-size: 0.6rem !important;
+    }
+}
+
+// ── Appraisal Layout Support────────────────────
+
+.pms_appraisal_layout {
+    display: flex !important;
+    gap: 40px !important;
+    margin-top: 8px !important;
+    
+    > div:first-child {
+        flex: 2 !important;
+        min-width: 0 !important;
+    }
+    
+    > div:last-child {
+        flex: 1 !important;
+        min-width: 280px !important;
+        max-width: 340px !important;
+    }
+    
+    @media (max-width: 992px) {
+        flex-direction: column !important;
+        
+        > div:last-child {
+            max-width: 100% !important;
+        }
+    }
+}
+
+.appraisal-cards-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.appraisal-card-compact {
+    background: #ffffff;
+    border-radius: 8px;
+    border: 1px solid #e9ecef;
+    transition: all 0.2s ease;
+    overflow: hidden;
+}
+
+.appraisal-card-compact:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    border-color: #dee2e6;
+}
+
+.appraisal-card-content {
+    padding: 12px 16px;
+}
+
+.compact-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.compact-header i {
+    font-size: 14px;
+}
+
+.compact-header strong {
+    font-size: 13px;
+    font-weight: 600;
+    color: #2c3e50;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.card-icon-blue {
+    color: #4a90e2;
+}
+
+.card-icon-purple {
+    color: #9b59b6;
+}
+
+.card-icon-green {
+    color: #27ae60;
+}
+
+.compact-group {
+    margin-bottom: 10px;
+}
+
+.compact-group:last-child {
+    margin-bottom: 0;
+}
+
+.compact-label {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: #6c757d;
+    margin-bottom: 4px;
+    display: block;
+    letter-spacing: 0.3px;
+}
+
+.compact-input {
+    font-size: 13px !important;
+    padding: 6px 8px !important;
+    height: auto !important;
+    min-height: 32px !important;
+}
+
+.compact-input:focus {
+    border-color: #7367f0 !important;
+    box-shadow: 0 0 0 2px rgba(115, 103, 240, 0.1) !important;
+}
+
+.compact-field-box {
+    margin-bottom: 0;
+}
+
+.compact-points {
+    text-align: center;
+    margin: 8px 0;
+}
+
+.compact-points .points-value {
+    font-size: 20px;
+    font-weight: 700;
+    color: #2c3e50;
+}
+
+.compact-points-field {
+    font-size: 20px !important;
+    font-weight: 700 !important;
+    text-align: center !important;
+    width: auto !important;
+    display: inline-block !important;
+    background: transparent !important;
+    border: none !important;
+    padding: 0 !important;
+}
+
+.compact-points-label {
+    font-size: 9px;
+    text-transform: uppercase;
+    color: #6c757d;
+    letter-spacing: 0.5px;
+    margin-top: 2px;
+}
+
+.compact-points .kpi {
+    color: #4a90e2;
+}
+
+.compact-points .competency {
+    color: #27ae60;
+}
+
+.compact-points .total {
+    color: #6c757d;
+    font-size: 16px;
+}
+
+.compact-progress {
+    height: 4px !important;
+    background: #f0f0f0;
+    border-radius: 2px;
+    overflow: hidden;
+    margin-top: 8px;
+}
+
+.compact-progress .progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #7367f0, #9b8bf4);
+    border-radius: 2px;
+    transition: width 0.3s ease;
+}
+
+.appraisal-card-compact:nth-child(3) .compact-progress .progress-bar-fill {
+    background: linear-gradient(90deg, #4a90e2, #6ba3f5);
+}
+
+.appraisal-card-compact:nth-child(4) .compact-progress .progress-bar-fill {
+    background: linear-gradient(90deg, #27ae60, #2ecc71);
+}
+
+.compact-btn-group {
+    margin-top: 6px;
+    display: flex;
+    gap: 6px;
+}
+
+.btn-compact {
+    padding: 4px 10px !important;
+    font-size: 11px !important;
+    height: auto !important;
+    line-height: 1.4 !important;
+    border-radius: 4px !important;
+}
+
+.btn-compact i {
+    font-size: 11px !important;
+    margin-right: 4px !important;
+}
+
+.btn-compact.btn-primary {
+    background-color: #7367f0 !important;
+    border-color: #7367f0 !important;
+}
+
+.btn-compact.btn-primary:hover {
+    background-color: #5f52e0 !important;
+    border-color: #5f52e0 !important;
+}
+
+.btn-compact.btn-default {
+    background-color: #f8f9fa !important;
+    border-color: #dee2e6 !important;
+    color: #495057 !important;
+}
+
+.btn-compact.btn-default:hover {
+    background-color: #e9ecef !important;
+    border-color: #ced4da !important;
+}
+
+.compact-alert {
+    padding: 6px 8px !important;
+    margin-top: 8px !important;
+    font-size: 11px !important;
+    border-radius: 4px !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+}
+
+.compact-alert i {
+    font-size: 11px;
+}
+
+.compact-alert span {
+    font-size: 11px;
+}
+
+.alert-warning-card {
+    background-color: #fff3cd;
+    border: 1px solid #ffeeba;
+    color: #856404;
+}
+
+.compact-alert-wide {
+    margin: 0 0 16px 0 !important;
+    padding: 10px 12px !important;
+    font-size: 12px !important;
+    border-radius: 6px !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+}
+
+.compact-alert-wide i {
+    font-size: 14px;
+}
+
+.compact-alert-wide strong {
+    font-weight: 600;
+    margin-right: 4px;
+}
+
+.alert-danger-card {
+    background-color: #f8d7da;
+    border: 1px solid #f5c6cb;
+    color: #721c24;
+}
+
+.kra-tabs-section {
+    margin-top: 20px;
+    border-top: 1px solid #e9ecef;
+    padding-top: 20px;
+}
+
+@media (max-width: 992px) and (min-width: 769px) {
+    .appraisal-cards-container {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 14px;
+    }
+}
+
+@media (max-width: 768px) {
+    .appraisal-cards-container {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+        margin-bottom: 16px;
+    }
+    
+    .appraisal-card-content {
+        padding: 10px 14px;
+    }
+    
+    .compact-header {
+        margin-bottom: 10px;
+        padding-bottom: 6px;
+    }
+    
+    .compact-header strong {
+        font-size: 12px;
+    }
+    
+    .compact-label {
+        font-size: 10px;
+    }
+    
+    .compact-points .points-value {
+        font-size: 18px;
+    }
+    
+    .compact-points-field {
+        font-size: 18px !important;
+    }
+    
+    .kra-tabs-section {
+        margin-top: 16px;
+        padding-top: 16px;
+    }
+}
+
+@media (max-width: 576px) {
+    .appraisal-cards-container {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+    
+    .appraisal-card-content {
+        padding: 10px 12px;
+    }
+    
+    .compact-header {
+        margin-bottom: 8px;
+    }
+    
+    .compact-header strong {
+        font-size: 12px;
+    }
+    
+    .compact-header i {
+        font-size: 12px;
+    }
+    
+    .compact-group {
+        margin-bottom: 8px;
+    }
+    
+    .compact-label {
+        font-size: 10px;
+        margin-bottom: 3px;
+    }
+    
+    .compact-input {
+        font-size: 12px !important;
+        padding: 5px 7px !important;
+        min-height: 30px !important;
+    }
+    
+    .compact-points {
+        margin: 6px 0;
+    }
+    
+    .compact-points .points-value {
+        font-size: 16px;
+    }
+    
+    .compact-points-field {
+        font-size: 16px !important;
+    }
+    
+    .compact-points-label {
+        font-size: 8px;
+    }
+    
+    .btn-compact {
+        padding: 3px 8px !important;
+        font-size: 10px !important;
+    }
+    
+    .compact-alert {
+        padding: 5px 7px !important;
+        font-size: 10px !important;
+    }
+    
+    .compact-alert-wide {
+        padding: 8px 10px !important;
+        font-size: 11px !important;
+    }
+}
+
+@media (max-width: 400px) {
+    .appraisal-card-content {
+        padding: 8px 10px;
+    }
+    
+    .compact-header {
+        gap: 6px;
+        margin-bottom: 8px;
+    }
+    
+    .compact-header strong {
+        font-size: 11px;
+    }
+    
+    .compact-label {
+        font-size: 9px;
+    }
+    
+    .compact-input {
+        font-size: 11px !important;
+        padding: 4px 6px !important;
+        min-height: 28px !important;
+    }
+}
+
+@media print {
+    .appraisal-card-compact {
+        break-inside: avoid;
+        box-shadow: none;
+        border: 1px solid #ddd;
+    }
+    
+    .appraisal-card-compact:hover {
+        box-shadow: none;
+    }
+    
+    .compact-progress .progress-bar-fill {
+        background: #7367f0;
+    }
+    
+    .btn-compact {
+        display: none !important;
+    }
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.appraisal-card-compact {
+    animation: fadeInUp 0.3s ease-out;
+}
+
+.appraisal-card-compact:nth-child(1) { animation-delay: 0s; }
+.appraisal-card-compact:nth-child(2) { animation-delay: 0.05s; }
+.appraisal-card-compact:nth-child(3) { animation-delay: 0.1s; }
+.appraisal-card-compact:nth-child(4) { animation-delay: 0.15s; }
+
+.field-group .o_field_widget {
+    width: 100%;
+}
+
+.o_form_sheet .oe_button_box {
+    margin-bottom: 10px;
+}
+
+.compact-field-box .o_field_many2one {
+    width: 100%;
+}
+
+.compact-input[readonly] {
+    background-color: #f8f9fa;
+    cursor: default;
+}
+
+.compact-points:hover .points-value {
+    transform: scale(1.02);
+    transition: transform 0.2s ease;
+}
+
+.compact-input:focus-visible {
+    outline: 2px solid #7367f0;
+    outline-offset: 1px;
+}
+
+.btn-compact:focus-visible {
+    outline: 2px solid #7367f0;
+    outline-offset: 2px;
+}

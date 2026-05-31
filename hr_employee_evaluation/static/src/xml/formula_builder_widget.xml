@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="utf-8"?>
+<templates xml:space="preserve">
+
+    <!-- Formula Builder Widget Template -->
+    <t t-name="pms.FormulaBuilderWidget">
+        <div class="pfb-root">
+
+            <!-- Variables Section -->
+            <div class="pfb-section">
+                <div class="pfb-section-hd">
+                    <i class="fa fa-cubes" aria-hidden="true"/>
+                    <span>INSERT VARIABLES</span>
+                </div>
+                <div class="pfb-section-bd">
+                    <div class="pfb-var-grid">
+                        <t t-foreach="vars" t-as="v" t-key="v.name">
+                            <button class="pfb-var-chip" t-on-click="() => onVarClick(v)" t-att-title="v.desc">
+                                <i t-attf-class="fa #{v.icon} pfb-chip-icon" aria-hidden="true"/>
+                                <span class="pfb-chip-name" t-esc="v.name"/>
+                            </button>
+                        </t>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Operators & Functions Section -->
+            <div class="pfb-section">
+                <div class="pfb-section-hd">
+                    <i class="fa fa-calculator" aria-hidden="true"/>
+                    <span>OPERATORS &amp; FUNCTIONS</span>
+                </div>
+                <div class="pfb-section-bd">
+                    <div class="pfb-ops-group">
+                        <span class="pfb-ops-label">Basic</span>
+                        <div class="pfb-ops-row">
+                            <t t-foreach="basicOps" t-as="op" t-key="op.label">
+                                <button class="pfb-op-btn" t-on-click="() => onOpClick(op)" t-esc="op.label"/>
+                            </t>
+                        </div>
+                    </div>
+                    <div class="pfb-ops-group">
+                        <span class="pfb-ops-label">Parentheses</span>
+                        <div class="pfb-ops-row">
+                            <t t-foreach="parenthesisOps" t-as="op" t-key="op.label">
+                                <button class="pfb-op-btn" t-on-click="() => onOpClick(op)" t-esc="op.label"/>
+                            </t>
+                        </div>
+                    </div>
+                    <div class="pfb-ops-group">
+                        <span class="pfb-ops-label">Math Functions</span>
+                        <div class="pfb-ops-row">
+                            <t t-foreach="mathOps" t-as="op" t-key="op.label">
+                                <button class="pfb-op-btn pfb-op-fn" t-on-click="() => onOpClick(op)" t-esc="op.label"/>
+                            </t>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Expression Builder Area -->
+            <div class="pfb-expr-wrap">
+                <div class="pfb-expr-hd">
+                    <i class="fa fa-code" aria-hidden="true"/>
+                    <span>YOUR FORMULA</span>
+                </div>
+                <div class="pfb-expr-tokens">
+                    <t t-if="state.tokens.length === 0">
+                        <span class="pfb-expr-placeholder">
+                            Click variables and operators above to build your formula...
+                        </span>
+                    </t>
+                    <t t-else="">
+                        <t t-foreach="state.tokens" t-as="tok" t-key="tok.id">
+                            <span t-attf-class="pfb-tok pfb-tok-#{tok.kind}">
+                                <span class="pfb-tok-label" t-esc="tok.label"/>
+                                <button class="pfb-tok-del-btn" t-on-click.stop="() => onRemoveToken(tok.id)" title="Remove">
+                                    <i class="fa fa-times" aria-hidden="true"/>
+                                </button>
+                            </span>
+                        </t>
+                        <span class="pfb-cursor" aria-hidden="true"/>
+                    </t>
+                </div>
+                <div class="pfb-expr-preview">
+                    <span class="pfb-preview-label">Preview:</span>
+                    <span class="pfb-preview-value" t-esc="_getExprString() || '…'"/>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="pfb-action-row">
+                <button class="pfb-btn-validate" t-on-click="onValidate">
+                    <i class="fa fa-check-circle" aria-hidden="true"/>
+                    Validate
+                </button>
+                <button class="pfb-btn-secondary" t-on-click="onClear">
+                    <i class="fa fa-eraser" aria-hidden="true"/>
+                    Clear All
+                </button>
+                <button class="pfb-btn-secondary" t-on-click="onCopy">
+                    <i class="fa fa-copy" aria-hidden="true"/>
+                    Copy Formula
+                </button>
+            </div>
+
+            <!-- Validation Status Message-->
+            <t t-if="state.validationStatus === 'ok'">
+                <div class="pfb-status pfb-status-ok">
+                    <i class="fa fa-check-circle" aria-hidden="true"/>
+                    <div>
+                        <strong>✓ Formula is valid</strong>
+                        <div class="pfb-status-desc" t-esc="state.validationMsg"/>
+                    </div>
+                </div>
+            </t>
+            <t t-if="state.validationStatus === 'error'">
+                <div class="pfb-status pfb-status-err">
+                    <i class="fa fa-exclamation-circle" aria-hidden="true"/>
+                    <div>
+                        <strong>✗ Validation Error</strong>
+                        <div class="pfb-status-desc" t-esc="state.validationMsg"/>
+                    </div>
+                </div>
+            </t>
+
+        </div>
+    </t>
+
+</templates>

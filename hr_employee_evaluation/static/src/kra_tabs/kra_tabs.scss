@@ -1,0 +1,547 @@
+.pms_rounded_kanban {
+    .o_kanban_record {
+        border-radius: .75rem !important; 
+        overflow: hidden; 
+    }
+}
+
+.o_kra_tabs_container {
+    font-family: inherit;
+    background: #fff;
+    border-radius: 4px;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    min-width: 0;
+
+    .o_kra_tabs_header {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        min-width: 0;
+        position: relative;
+
+        // fades to indicate that the tabs exceeds
+        &::before,
+        &::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            bottom: 1px; 
+            width: 80px;
+            pointer-events: none;
+            transition: opacity 0.25s ease;
+            z-index: 1;
+        }
+
+        // Left fade 
+        &::before {
+            left: 0;
+            background: linear-gradient(to left, transparent, rgba(255, 255, 255, 0.95) 70%);
+            opacity: 0;
+        }
+
+        // Right fade 
+        &::after {
+            right: 0;
+            background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.95) 70%);
+            opacity: 0; // JS toggles 
+        }
+
+        &.can-scroll-left::before  { opacity: 1; }
+        &.can-scroll-right::after  { opacity: 1; }
+    }
+
+    .o_kra_tabs_nav {
+        display: flex;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        overflow-y: hidden;
+        -webkit-overflow-scrolling: touch;
+        border-bottom: 1px solid #e0e0e0;
+        margin-bottom: 1.5rem;
+        gap: 2rem;
+        padding: 0 1rem;
+        scrollbar-width: none;
+
+        &::-webkit-scrollbar { display: none; }
+
+        .o_kra_tab {
+            padding: 1rem 0.5rem;
+            cursor: pointer;
+            color: #6c757d;
+            font-weight: 500;
+            border-bottom: 3px solid transparent;
+            transition: all 0.2s ease-in-out;
+            background: transparent !important;
+            flex-shrink: 0;
+            white-space: nowrap;
+
+            &.o_drag_over {
+                border-left: 3px solid #714B67; 
+                padding-left: calc(1rem - 3px); 
+                background-color: #f8f9fa;
+            }
+
+            .cursor-grab {
+                cursor: grab;
+                opacity: 0.5;
+                transition: opacity 0.2s;
+                
+                &:hover { opacity: 1; }
+                &:active { cursor: grabbing; opacity: 1; }
+            }
+
+            .cursor-pointer { cursor: pointer; }
+            
+            .hover-primary {
+                opacity: 0.5;
+                transition: all 0.2s;
+                &:hover { 
+                    opacity: 1;
+                    color: #714B67 !important; /* Change this hex to match your primary theme color */
+                }
+            }
+
+            &:hover        { color: #9989C9; }
+            &.o_active_tab { color: #9989C9; font-weight: 700; border-bottom-color: #9989C9; }
+        }
+    }
+
+    .o_kra_no_content {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 4rem 2rem;
+        background-color: #f8f9fa;
+        border: 2px dashed #dee2e6;
+        border-radius: 8px;
+        color: #adb5bd;
+        text-align: center;
+
+        i { font-size: 2rem; margin-bottom: 1rem; opacity: 0.5; }
+        p { font-size: 1.1rem; margin: 0; }
+    }
+
+    .o_kra_kpi_section {
+        padding: 0 1rem 1rem;
+
+        h5 {
+            color: #212529;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+        }
+
+        .table-responsive {
+            min-width: 0;
+            width: 100%;
+        }
+
+        
+
+        .table {
+            table-layout: fixed;
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            border: 1.9px solid #313131;
+            border-radius: 16px;
+            overflow: hidden;
+
+            thead th {
+                background-color: #f8f9fa !important; // Deep Slate Blue (very professional)
+                color: #495057 !important;
+                text-transform: uppercase;
+                font-size: 0.825rem !important; // Smaller headers = cleaner look
+                font-weight: 600 !important;
+                padding: 16px 12px !important;
+                border: none !important;
+                vertical-align: middle;
+            }
+
+            thead th:first-child { border-radius: 8px 0 0 0; }
+            thead th:last-child  { border-radius: 0 8px 0 0; }
+
+            tbody td {
+                vertical-align: top;
+                padding: 8px;
+                border-color: #e9ecef;
+            }
+
+            tbody tr:last-child td { border-bottom: none; }
+            tbody tr:last-child td:first-child { border-radius: 0 0 0 8px; }
+            tbody tr:last-child td:last-child  { border-radius: 0 0 8px 0; }
+
+            input.form-control,
+            textarea.form-control {
+                border: none;
+                border-radius: 0;
+                background: transparent;
+                box-shadow: none;
+                padding: 6px 8px;
+                font-size: 0.85rem;
+                color: #212529;
+                resize: none;
+                overflow: hidden;
+                min-height: 36px;
+                line-height: 1.4;
+
+                &::placeholder { color: #adb5bd; font-style: italic; }
+                &:focus { background: #f8f9fa; outline: none; border-bottom: 1px solid #004D8B; }
+            }
+        }
+    }
+}
+
+/* --- Modern Corporate Table Theme --- */
+
+.o_kra_kpi_section .table, 
+.appraisal-flex-table, 
+.appraisal-expand-table {
+    border: none !important; // Remove the heavy black border
+    border-collapse: separate !important;
+    border-spacing: 0;
+    // Adds a soft "lift" from the page
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03); 
+    border-radius: 10px;
+    overflow: hidden;
+    margin-top: 10px;
+
+
+    tbody tr {
+        background-color: #ffffff !important; // Start with White
+        transition: background 0.2s ease-in-out;
+
+        // Subtle Zebra Striping
+        &:nth-child(even) {
+            background-color: #f8fafc !important; // Very pale slate/blue
+        }
+
+        // Row Highlight on Hover
+        &:hover {
+            background-color: #f1f5f9 !important;
+        }
+
+        td {
+            border-top: 1px solid #f1f5f9 !important; // Light gray line instead of black
+            border-bottom: none !important;
+            padding: 12px 12px !important;
+            color: #334155;
+            font-size: 0.85rem;
+            vertical-align: middle;
+        }
+    }
+}
+
+
+/* --- Status Badge Styling --- */
+.badge {
+    padding: 6px 10px;
+    font-weight: 600;
+    border-radius: 6px;
+    text-transform: capitalize;
+}
+
+
+// for appraisal, scrolling for the scores and the remarks field
+
+.appraisal-wrapper {
+    width: 100%;
+    background-color: #fff;
+    padding-bottom: 12px;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.appraisal-flex-table {
+    width: 100%;
+    table-layout: fixed; 
+    border-collapse: collapse;
+    background-color: #fff;
+}
+
+.appraisal-flex-table th, 
+.appraisal-flex-table td {
+    padding: 8px;
+    vertical-align: top;
+    word-wrap: break-word;
+}
+
+.appraisal-flex-table tbody tr:hover td { background-color: #EEF4FA; }
+.appraisal-flex-table tbody tr:last-child td { border-bottom: none; }
+
+.appraisal-flex-table thead th {
+    background-color: #1A6FAD !important;
+    color: #EEF4FA !important;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 12px;
+    border-bottom: none !important;
+    padding: 16px 8px !important;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.col-kpi { width: 16%; } 
+.col-sco { width: 6%; } 
+.col-cri { width: 24%; } 
+.col-tar { width: 24%; } 
+.col-ssc, .col-msc { width: 8%; } 
+.col-srm, .col-mrm { width: 13%; } 
+
+.s-1, .s-2, .s-3, .s-4 { 
+    position: static !important; 
+    background-color: transparent !important; 
+}
+
+.appraisal-flex-table input.form-control,
+.appraisal-flex-table textarea.form-control {
+    border: none;
+    background: transparent;
+    padding: 4px 6px;
+    box-shadow: none;
+    resize: none;
+    font-size: 0.85rem;
+    min-height: 32px;
+    width: 100%;
+}
+.appraisal-flex-table textarea.form-control:focus,
+.appraisal-flex-table input.form-control:focus {
+    background: #f8f9fa;
+    border-bottom: 1px solid #9989C9;
+    outline: none;
+}
+
+.o_field_kra_tabs_widget {
+    width: 100% !important;
+    display: block !important;
+}
+
+/* --- Alternating COLUMN colors (Zebra Columns) --- */
+.o_kra_kpi_section .table, 
+.appraisal-flex-table, 
+.appraisal-expand-table {
+    
+    tbody tr {
+        // Reset row backgrounds to ensure they don't override columns
+        background-color: transparent !important;
+
+        // ODD Columns (1st, 3rd, 5th...) -> White
+        td:nth-child(odd) {
+            background-color: #ffffff !important;
+        }
+
+        // EVEN Columns (2nd, 4th, 6th...) -> Soft Blue Shade
+        td:nth-child(even) {
+            background-color: #fcfdff !important; 
+        }
+    }
+}
+
+/* Ensure headers stay the solid brand blue you already have */
+.appraisal-flex-table thead th, 
+.o_kra_kpi_section .table thead th {
+    background-color: #9989C9 !important;
+    color: #EEF4FA !important;
+}
+
+
+
+@media (max-width: 1199px) {
+    
+    .appraisal-wrapper {
+        overflow-x: auto;
+        position: relative;
+        container-type: inline-size;
+        scroll-snap-type: x mandatory; 
+    }
+
+    .appraisal-flex-table {
+        display: flex;
+        flex-direction: column;
+        width: max-content;
+        min-width: 100%;
+        border: none !important;
+        padding-right: 1px;  
+    }
+
+    .appraisal-flex-table thead, 
+    .appraisal-flex-table tbody {
+        display: flex;
+        flex-direction: column;
+        width: max-content;
+        min-width: 100%;
+    }
+
+    .appraisal-flex-table tr {
+        display: flex;
+        flex-wrap: nowrap;
+        width: max-content; 
+        min-width: 100%;
+        border: none !important;
+    }
+
+    .appraisal-flex-table th, 
+    .appraisal-flex-table td {
+        flex-shrink: 0; 
+        border: none !important;
+        box-sizing: border-box;
+    }
+
+    .col-kpi { flex: 0 0 16cqw; width: 16cqw; } 
+    .col-sco { flex: 0 0 10cqw; width: 10cqw; } 
+    .col-cri { flex: 0 0 23cqw; width: 23cqw; } 
+    .col-tar { flex: 0 0 23cqw; width: 23cqw; } 
+    .col-ssc { flex: 0 0 13cqw; width: 13cqw; } 
+    .col-srm { flex: 0 0 15cqw; width: 15cqw; } 
+    .col-msc { flex: 0 0 13cqw; width: 13cqw; } 
+    .col-mrm { flex: 0 0 15cqw; width: 15cqw; } 
+
+    .s-1 { position: sticky !important; left: 0;      z-index: 14 !important; background-color: #fff !important; }
+    .s-2 { position: sticky !important; left: 16cqw;  z-index: 13 !important; background-color: #fff !important; }
+    .s-3 { position: sticky !important; left: 26cqw;  z-index: 12 !important; background-color: #fff !important; } 
+    .s-4 { position: sticky !important; left: 49cqw;  z-index: 11 !important; background-color: #fff !important; } 
+
+    .appraisal-flex-table thead th {
+        z-index: 20 !important;
+    }
+
+    .appraisal-flex-table thead th.s-1 { z-index: 24 !important; background-color: #1A6FAD !important; }
+    .appraisal-flex-table thead th.s-2 { z-index: 23 !important; background-color: #1A6FAD !important; }
+    .appraisal-flex-table thead th.s-3 { z-index: 22 !important; background-color: #1A6FAD !important; }
+    .appraisal-flex-table thead th.s-4 { z-index: 21 !important; background-color: #1A6FAD !important; }
+
+    .appraisal-wrapper::-webkit-scrollbar { height: 10px; }
+    .appraisal-wrapper::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 4px; }
+    .appraisal-wrapper::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 4px; }
+    .appraisal-wrapper::-webkit-scrollbar-thumb:hover { background: #a8a8a8; }
+
+    .appraisal-flex-table thead th.col-ssc, 
+    .appraisal-flex-table thead th.col-msc {
+        scroll-snap-align: start;
+        scroll-margin-left: 72cqw; 
+    }
+}
+
+
+.modal-dialog:has(.appraisal-expand-wrapper) {
+    max-width: 80vw !important;
+}
+
+.appraisal-expand-wrapper {
+    width: 100%;
+    height: auto;
+    max-height: 60vh; 
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+.appraisal-expand-table {
+    width: 100%;
+    table-layout: fixed;
+    border-collapse: separate;
+    border-spacing: 0;
+    word-wrap: break-word;
+    border: 1.5px solid #B8D0E8;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.appraisal-expand-table tbody tr:hover td { background-color: #EEF4FA; }
+.appraisal-expand-table tbody tr:last-child td { border-bottom: none; }
+
+.pop-col-name { width: 13%; }
+.pop-col-base-score { width: 6%; }
+.pop-col-text { width: 17%; } 
+.pop-col-user-score { width: 8%; } 
+.pop-col-user-remark { width: 15%; } 
+
+.appraisal-expand-table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background-color: #9989C9;
+    padding: 16px 8px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: #EEF4FA;
+    border-bottom: none;
+    vertical-align: middle;
+}
+
+.appraisal-expand-table thead th:first-child { border-radius: 8px 0 0 0; }
+.appraisal-expand-table thead th:last-child  { border-radius: 0 8px 0 0; }
+
+.appraisal-expand-table tbody tr { border-bottom: 1px solid #f1f3f5; }
+.appraisal-expand-table tbody td { padding: 8px; vertical-align: top; }
+
+.appraisal-readonly-text {
+    white-space: pre-wrap;
+    word-break: break-word;
+    font-size: 0.85rem;
+    color: #212529;
+}
+
+.appraisal-expand-table input.form-control,
+.appraisal-expand-table textarea.form-control {
+    border: none !important;
+    background: transparent;
+    box-shadow: none !important;
+    resize: none;
+    font-size: 0.85rem;
+    width: 100%;
+    overflow: hidden !important; 
+}
+
+.appraisal-expand-table input.form-control:focus,
+.appraisal-expand-table textarea.form-control:focus {
+    background-color: #f8f9fa;
+    outline: none;
+}
+
+
+.o_kra_tabs_container .o_kra_tabs_header .o_kra_tabs_nav .o_kra_tab.o_active_tab {
+    background-color: #75a7ca !important;
+    border-radius: 6px 6px 0 0;
+    margin-bottom: -1px;
+    border-bottom: 2px solid #9989C9 !important;
+}
+
+.o_kra_tabs_container .o_kra_tabs_header .o_kra_tabs_nav .o_kra_tab.o_active_tab {
+    background: linear-gradient(to bottom, #f8f5ff, #f0f0ff) !important;
+}
+
+.o_kra_tabs_container .o_kra_tabs_header .o_kra_tabs_nav .o_kra_tab.o_active_tab span {
+    color: #4a2c6d !important;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.o_kra_tabs_container .o_kra_tabs_header .o_kra_tabs_nav .o_kra_tab.o_active_tab:hover {
+    background: linear-gradient(to bottom, #f5f0ff, #e8e6ff) !important;
+}
+
+.o_kra_tabs_container .o_kra_tabs_header .o_kra_tabs_nav .o_kra_tab.o_competency_tab.o_active_tab {
+    background-color: #f0f4ff !important;
+    background: linear-gradient(to bottom, #f8f5ff, #f0f0ff) !important;
+}
+
+.o_kra_tabs_container .o_kra_tabs_header .o_kra_tabs_nav .o_kra_tab {
+    padding: 0.6rem 0.4rem !important;
+    font-size: 0.85rem;
+}
+
+.o_kra_tabs_container .o_kra_tabs_header .o_kra_tabs_nav {
+    gap: 1.5rem !important;
+}
+
+.o_kra_tabs_container .o_kra_tabs_header .o_kra_tabs_nav .o_kra_tab .cursor-grab {
+    font-size: 0.75rem;
+}
+
+.o_kra_tabs_container .o_kra_tabs_header .o_kra_tabs_nav .o_kra_tab .fa-pencil {
+    font-size: 0.7rem;
+}

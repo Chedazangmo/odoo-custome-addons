@@ -1,0 +1,271 @@
+/* Card Styles */
+.appraisal-cards-container {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.appraisal-card {
+    flex: 1;
+    min-width: 200px;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+    padding: 14px;
+    transition: all 0.2s ease;
+    border: 1px solid #e8eef2;
+}
+
+.appraisal-card:hover {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.12);
+}
+
+.card-header {
+    margin-bottom: 14px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid #f0f0f0;
+    font-size: 14px;
+    color: #2c3e50;
+}
+
+.card-header i {
+    margin-right: 8px;
+}
+
+.card-icon-blue {
+    color: #3498db;
+}
+
+.card-icon-purple {
+    color: #9b59b6;
+}
+
+.card-icon-green {
+    color: #27ae60;
+}
+
+.field-group {
+    margin-bottom: 10px;
+}
+
+.field-group label {
+    display: block;
+    font-size: 11px;
+    font-weight: 500;
+    margin-bottom: 4px;
+    color: #7f8c8d;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.field-box input, 
+.field-box select {
+    width: 100%;
+    padding: 6px 8px;
+    border: 1px solid #dcdfe6;
+    border-radius: 4px;
+    font-size: 13px;
+}
+
+/* Points Display */
+.points-display {
+    text-align: center;
+    margin: 8px 0;
+}
+
+.points-value {
+    font-size: 20px;
+    font-weight: bold;
+    color: #2c3e50;
+}
+
+.points-value .kpi,
+.points-value .competency {
+    color: #3498db;
+}
+
+.points-allocated {
+    font-size: 10px;
+    color: #95a5a6;
+    margin-top: 2px;
+}
+
+/* Progress Bar */
+.progress-bar-container {
+    margin-top: 8px;
+    background-color: #ecf0f1;
+    border-radius: 4px;
+    height: 4px;
+    overflow: hidden;
+}
+
+.progress-bar-fill {
+    height: 100%;
+    background-color: #3498db;
+    border-radius: 4px;
+    transition: width 0.3s ease;
+}
+
+/* Alert Styles */
+.alert-warning-card {
+    background-color: #fff3cd;
+    border-left: 3px solid #ffc107;
+    padding: 6px 10px;
+    margin-top: 8px;
+    font-size: 11px;
+    border-radius: 4px;
+    color: #856404;
+}
+
+.alert-danger-card {
+    background-color: #f8d7da;
+    border-left: 3px solid #dc3545;
+    padding: 10px 15px;
+    margin: 15px 0;
+    border-radius: 6px;
+    color: #721c24;
+    font-size: 13px;
+}
+
+/* Button Styles */
+.btn-compact {
+    padding: 4px 8px;
+    font-size: 11px;
+    margin-top: 5px;
+}
+
+.btn-group {
+    margin-top: 8px;
+    display: flex;
+    gap: 5px;
+}
+
+/* KPI Table Styles */
+.kpi-table-container {
+    margin-top: 20px;
+    border: 1px solid #e8eef2;
+    border-radius: 8px;
+    overflow: hidden;
+    background: white;
+}
+
+.kpi-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: inherit;
+}
+
+.kpi-table thead tr {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.kpi-table th {
+    padding: 14px 10px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 12px;
+    color: white;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.kpi-table th:first-child {
+    border-radius: 8px 0 0 0;
+}
+
+.kpi-table th:last-child {
+    border-radius: 0 8px 0 0;
+}
+
+.kpi-table td {
+    padding: 12px 10px;
+    border-bottom: 1px solid #ecf0f1;
+    vertical-align: middle;
+    background-color: white;
+}
+
+.kpi-table tbody tr:hover td {
+    background-color: #f8f9fa;
+}
+
+/* Column Widths */
+.col-kpi-name { width: 28%; }
+.col-description { width: 35%; }
+.col-score { width: 12%; }
+.col-criteria { width: 20%; }
+.col-actions { width: 5%; }
+
+/* Score Column Center Alignment */
+.kpi-table th:nth-child(3),
+.kpi-table td:nth-child(3) {
+    text-align: center;
+}
+
+/* Actions Column Center Alignment */
+.kpi-table th:nth-child(5),
+.kpi-table td:nth-child(5) {
+    text-align: center;
+}
+
+/* Delete Button */
+.delete-kpi-btn {
+    background: none;
+    border: none;
+    color: #dc3545;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+    padding: 4px 8px;
+    transition: all 0.2s ease;
+    border-radius: 4px;
+    display: inline-block;
+    width: 30px;
+}
+
+.delete-kpi-btn:hover {
+    color: #c82333;
+    background-color: #fee;
+    transform: scale(1.1);
+}
+
+/* Odoo Overrides */
+.o_field_x2many_list_row_add td {
+    padding: 8px 10px !important;
+}
+
+.o_list_view th,
+.o_list_view td {
+    vertical-align: middle !important;
+}
+
+.o_list_view th:last-child,
+.o_list_view td:last-child {
+    text-align: center !important;
+    width: 50px !important;
+}
+
+.o_unlink {
+    background: transparent !important;
+    color: #dc3545 !important;
+    font-size: 18px !important;
+    font-weight: bold !important;
+    padding: 0 !important;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .appraisal-cards-container {
+        flex-direction: column;
+    }
+    
+    .kpi-table {
+        font-size: 12px;
+    }
+    
+    .kpi-table th,
+    .kpi-table td {
+        padding: 8px 6px;
+    }
+}
