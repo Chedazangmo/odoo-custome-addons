@@ -7,93 +7,51 @@
         <field name="arch" type="xml">
             <form string="Competency Group" auto_save="1" class="o_competency_group_form">
                 <sheet>
-
-                    <group>
+                    <group class="o_competency_header_fields">
                         <field name="name" string="Competency Group" />
                         <field name="description" string="Define Competency Targets" />
-                        <field name="points" string="Total Points" />
+                        <field name="points" string="Total Points" readonly="1" />
+                        <field name="template_ceiling" invisible="1" />
+                        <field name="template_remaining" invisible="1" />
+                        <field name="template_total_points" invisible="1" />
                     </group>
 
                     <div class="o_grp_lines_section">
-                        <div class="o_grp_lines_heading">
-                            <i class="fa fa-list-ul me-2" /> Competency Lines <div
-                                style="margin-left: auto;">
-                                <button type="button"
-                                    class="btn btn-sm btn-default cf-export-pdf-btn"
-                                    id="cf-export-pdf"
-                                    style="margin-right: 5px; padding: 2px 8px; font-size: 11px;">
-                                    <i class="fa fa-file-pdf-o" /> PDF </button>
-                                <button type="button"
-                                    class="btn btn-sm btn-default cf-export-excel-btn"
-                                    id="cf-export-excel" style="padding: 2px 8px; font-size: 11px;">
-                                    <i class="fa fa-file-excel-o" /> Excel </button>
-                            </div>
-                        </div>
-
                         <field name="line_ids" nolabel="1">
-                            <list class="o_competency_lines_table" editable="bottom"
-                                decoration-danger="group_points_status == 'over'"
-                                decoration-warning="group_points_status == 'under'">
+                            <list class="o_competency_lines_table" editable="bottom">
                                 <field name="sequence" widget="handle" />
-                                <field name="name"
-                                    string="Competency"
+                                <field name="full_code" string="Sl. No" readonly="1"
+                                    class="o_line_col_code" />
+                                <field name="name" string="Competencies Lines"
                                     class="o_line_col_name" />
-                                <field name="description"
-                                    string="Competency Targets"
+                                <field name="description" string="Competency Targets"
                                     class="o_line_col_targets" />
-                                <field name="points"
-                                    string="Points"
-                                    widget="float"
+                                <field name="points" string="Points" widget="float"
                                     class="o_line_col_pts" />
-                                <!-- Internal — row decoration only -->
+                                <field name="template_ceiling" column_invisible="1" />
+                                <field name="template_remaining" column_invisible="1" />
                                 <field name="group_points_status" column_invisible="1" />
                             </list>
                         </field>
-
-                        <!-- Remaining points hint -->
-                        <p class="text-muted mt-1 mb-0"
-                            invisible="points_status == 'exact'"
-                            style="font-size:0.82em;padding:6px 8px;">
-                            <i class="fa fa-info-circle me-1" />
-                            <span invisible="points_status != 'under'"> Remaining: <field
-                                    name="remaining_points" readonly="1" /> pt(s). Assign all <field
-                                    name="points" readonly="1" /> pts before saving. </span>
-                            <span invisible="points_status != 'over'"
-                                style="color:#b91c1c;">
-                                <i class="fa fa-exclamation-triangle me-1" /> Line total exceeds
-                                group points. Reduce before saving. </span>
-                        </p>
-
                     </div>
-
                 </sheet>
             </form>
         </field>
     </record>
 
-
-    <!-- ============================================================
-         2. GROUPED TABULAR VIEW on competency.framework.line
-         ============================================================ -->
-
     <record id="view_competency_line_grouped_list" model="ir.ui.view">
         <field name="name">competency.framework.line.grouped.list</field>
         <field name="model">competency.framework.line</field>
         <field name="arch" type="xml">
-            <list string="Competency Framework"
-                default_group_by="group_id"
-                class="o_competency_tabular"
-                decoration-warning="group_points_status == 'under'"
-                decoration-danger="group_points_status == 'over'">
-
+            <list string="Competency Framework" default_group_by="group_id"
+                class="o_competency_tabular">
                 <field name="group_id" column_invisible="1" />
                 <field name="group_points_status" column_invisible="1" />
-
+                <field name="full_code" string="Sl. No" />
                 <field name="name" string="Competency" />
                 <field name="description" string="Targets" class="o_col_targets" optional="show" />
                 <field name="points" string="Points" sum="Total Points" />
                 <field name="group_points" string="Group Points" readonly="1" />
-
             </list>
         </field>
     </record>
@@ -106,57 +64,26 @@
                 <field name="name" string="Competency" />
                 <field name="group_id" string="Group" />
                 <separator />
-                <filter name="filter_under" string="Incomplete Groups"
-                    domain="[('group_points_status', '=', 'under')]" />
-                <filter name="filter_over" string="Over Limit"
-                    domain="[('group_points_status', '=', 'over')]" />
-                <filter name="filter_exact" string="Fully Assigned"
-                    domain="[('group_points_status', '=', 'exact')]" />
-                <separator />
                 <filter name="groupby_group" string="Group By: Competency Group"
                     context="{'group_by': 'group_id'}" />
             </search>
         </field>
     </record>
 
-
-    <!-- ============================================================
-         3. TEMPLATE LIST VIEW
-         points_status drives row colour only — no visible column.
-         total_hr_points is the correct field name (was incorrectly
-         referenced as total_group_points in some versions).
-         ============================================================ -->
-
     <record id="view_competency_template_list" model="ir.ui.view">
         <field name="name">competency.framework.template.list</field>
         <field name="model">competency.framework.template</field>
         <field name="arch" type="xml">
-            <list string="Competency Templates"
-                class="o_competency_template_list"
-                decoration-warning="points_status == 'under'"
-                decoration-danger="points_status == 'over'"
-                decoration-success="points_status == 'exact'">
-
-                <field name="points_status" column_invisible="1" />
-
-                <field name="name"
-                    string="Template Name"
-                    class="o_tmpl_col_name" />
-                <field name="total_hr_points"
-                    string="Total Points"
-                    class="o_tmpl_col_pts"
+            <list string="Competency Templates" class="o_competency_template_list">
+                <field name="name" string="Template Name" class="o_tmpl_col_name" />
+                <field name="points_progress" string="Points"
+                    class="o_tmpl_col_pts" readonly="1" />
+                <field name="group_count" string="No. of Groups" class="o_tmpl_col_count"
                     readonly="1" />
-                <field name="group_count"
-                    string="No. of Groups"
-                    class="o_tmpl_col_count"
-                    readonly="1" />
-
             </list>
         </field>
     </record>
 
-
-    <!-- Action: grouped tabular view filtered to one template -->
     <record id="action_competency_lines_by_template" model="ir.actions.act_window">
         <field name="name">Competency Lines</field>
         <field name="res_model">competency.framework.line</field>
@@ -168,17 +95,9 @@
                         'view_id': ref('view_competency_line_grouped_list')}),
             ]" />
         <field name="search_view_id" ref="view_competency_line_grouped_search" />
-        <field name="context">{
-            'group_by': 'group_id',
-            'search_default_groupby_group': 1
-            }</field>
+        <field name="context">{'group_by': 'group_id', 'search_default_groupby_group': 1}</field>
         <field name="domain">[('template_id', '=', active_id)]</field>
     </record>
-
-
-    <!-- ============================================================
-         4. TEMPLATE FORM VIEW (with export buttons added)
-         ============================================================ -->
 
     <record id="view_competency_template_form" model="ir.ui.view">
         <field name="name">competency.framework.template.form</field>
@@ -186,55 +105,23 @@
         <field name="arch" type="xml">
             <form string="Competency Template" auto_save="1" class="o_competency_template_form">
                 <sheet>
-
                     <group>
                         <group string="Template Details">
-                            <field name="name"
-                                placeholder="e.g. Annual Competency Framework 2025" />
-                            <field name="description"
-                                placeholder="Optional description" />
+                            <field name="name" placeholder="e.g. Annual Competency Framework 2026" />
+                            <field name="description" placeholder="Optional description" />
                         </group>
                         <group string="Points Summary">
-                            <field name="total_hr_points"
-                                string="Total Assigned"
-                                readonly="1"
-                                help="Sum of all group points. Must equal exactly 16 to save." />
-                            <field name="remaining_hr_points"
-                                string="Remaining"
-                                readonly="1"
-                                help="Points left before reaching the 16-pt ceiling." />
-                            <field name="group_count"
-                                string="No. of Groups"
-                                readonly="1" />
+                            <field name="points_progress" string="Total Assigned" readonly="1" />
+                            <field name="group_count" string="No. of Groups" readonly="1" />
+                            <field name="competency_ceiling" invisible="1" />
+                            <field name="total_hr_points" invisible="1" />
+                            <field name="points_status" invisible="1" />
+                            <field name="is_skeleton" invisible="1" />
                         </group>
                     </group>
 
-                    <!-- Incomplete banner -->
-                    <div class="alert alert-info o_hr_points_bar mb-0" role="alert"
-                        invisible="points_status != 'under' or not group_ids">
-                        <i class="fa fa-info-circle me-2" />
-                        <strong>Incomplete.</strong>
-                        <field
-                            name="total_hr_points" readonly="1" /> / 16 pts assigned — add <field
-                            name="remaining_hr_points" readonly="1" /> more pt(s) to enable saving. </div>
-
-                    <!-- Over limit banner -->
-                    <div class="alert alert-danger o_hr_points_bar mb-0" role="alert"
-                        invisible="points_status != 'over'">
-                        <i class="fa fa-times-circle me-2" />
-                        <strong>Over Limit!</strong>
-                        <field
-                            name="total_hr_points" readonly="1" /> / 16 pts assigned — reduce group
-                        points to exactly 16 before saving. </div>
-
-                    <!-- Internal field needed for banner visibility expressions -->
-                    <field name="points_status" invisible="1" />
-
                     <notebook>
-
-                        <!-- TAB 1: COMPETENCY GROUPS -->
                         <page string="Competency Groups" name="groups_page">
-
                             <field name="group_ids"
                                 context="{'default_template_id': id}"
                                 mode="list"
@@ -244,69 +131,37 @@
                                     decoration-danger="points_status == 'over'"
                                     decoration-success="points_status == 'exact'">
                                     <field name="sequence" widget="handle" />
-                                    <field name="name"
-                                        string="Competency Group"
+                                    <field name="hr_code" string="Sl. No" readonly="1"
+                                        class="o_grp_col_code" />
+                                    <field name="name" string="Competency Group"
                                         class="o_grp_col_name" />
-                                    <field name="points"
-                                        string="Group Points"
+                                    <field name="points" string="Group Points" readonly="1"
                                         class="o_grp_col_pts" />
-                                    <field name="line_count"
-                                        string="No. of Lines"
-                                        readonly="1"
+                                    <field name="line_count" string="No. of Lines" readonly="1"
                                         class="o_grp_col_count" />
                                     <field name="points_status" column_invisible="1" />
                                 </list>
                             </field>
-
-                            <p class="text-muted mt-2"
-                                invisible="points_status == 'over'"
-                                style="font-size:0.85em;">
-                                <i class="fa fa-info-circle me-1" /> Click any group row to open it
-                                and add competency lines. All 16 pts must be distributed before the
-                                template can be saved. </p>
-
-                            <p class="text-muted mt-1 mb-0"
-                                invisible="points_status != 'over'"
-                                style="font-size:0.82em;padding:4px 8px;color:#b91c1c;">
-                                <i class="fa fa-exclamation-triangle me-1" /> Total exceeds 16 pts —
-                                reduce group points before saving. </p>
-
                         </page>
 
-                        <!-- TAB 2: COMPETENCY TABLE with Export Buttons -->
                         <page string="Competency Table" name="table_page">
-                            <div
-                                style="display: flex; justify-content: flex-end; margin-bottom: 12px; gap: 8px;">
-                                <button type="button"
-                                    class="btn btn-sm btn-default cf-export-pdf-btn"
-                                    id="cf-template-export-pdf">
-                                    <i class="fa fa-file-pdf-o" /> Export PDF </button>
-                                <button type="button"
-                                    class="btn btn-sm btn-default cf-export-excel-btn"
-                                    id="cf-template-export-excel">
-                                    <i class="fa fa-file-excel-o" /> Export Excel </button>
-                                <button type="button" class="btn btn-sm btn-default cf-print-btn"
-                                    id="cf-template-print">
-                                    <i class="fa fa-print" /> Print </button>
+                            <div class="cf-export-bar">
+                                <button type="button" id="cf-template-export-pdf"
+                                    class="cf-export-btn cf-export-btn-pdf btn btn-sm">
+                                    <i class="fa fa-file-pdf-o me-1" /> Export PDF </button>
+                                <button type="button" id="cf-template-export-excel"
+                                    class="cf-export-btn cf-export-btn-excel btn btn-sm">
+                                    <i class="fa fa-file-excel-o me-1" /> Export Excel</button>
                             </div>
-                            <field name="competency_table_html"
-                                widget="html"
-                                readonly="1"
+                            <field name="competency_table_html" widget="html" readonly="1"
                                 nolabel="1" />
                         </page>
-
                     </notebook>
-
                 </sheet>
                 <chatter />
             </form>
         </field>
     </record>
-
-
-    <!-- ============================================================
-         5. SEARCH VIEW (template)
-         ============================================================ -->
 
     <record id="view_competency_template_search" model="ir.ui.view">
         <field name="name">competency.framework.template.search</field>
@@ -314,24 +169,11 @@
         <field name="arch" type="xml">
             <search string="Search Competency Templates">
                 <field name="name" string="Template" />
-                <separator />
-                <filter name="filter_exact" string="Complete (16 pts)"
-                    domain="[('points_status', '=', 'exact')]" />
-                <filter name="filter_under" string="Incomplete"
-                    domain="[('points_status', '=', 'under')]" />
-                <filter name="filter_over" string="Over Limit"
-                    domain="[('points_status', '=', 'over')]" />
             </search>
         </field>
     </record>
 
-
-    <!-- ============================================================
-         6. ACTION (template)
-         ============================================================ -->
-
-    <record id="action_competency_template" model="ir.actions.act_window"
-        forcecreate="True">
+    <record id="action_competency_template" model="ir.actions.act_window" forcecreate="True">
         <field name="name">Competency Template</field>
         <field name="res_model">competency.framework.template</field>
         <field name="view_mode">list,form</field>
@@ -347,7 +189,8 @@
         <field name="search_view_id" ref="view_competency_template_search" />
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">No competency templates found.</p>
-            <p>Create a template, add groups, and distribute exactly points across them.</p>
+            <p>Create a template, add groups, and add competency lines to each group.</p>
         </field>
     </record>
+
 </odoo>

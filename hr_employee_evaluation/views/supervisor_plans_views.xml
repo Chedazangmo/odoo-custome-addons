@@ -16,7 +16,7 @@
                 <field name="secondary_supervisor_id" string="Secondary Manager" />
                 <field name="reviewer_id" string="Reviewer" />
                 <field name="planning_start_date" string="Planning Start" />
-                <field name="planning_end_date" string="Planning Deadline" />
+                <field name="self_planning_deadline" string="Planning Deadline" />
                 <field name="state"
                     widget="badge"
                     decoration-muted="state == 'draft'"
@@ -37,7 +37,7 @@
                         plan yet. </div>
 
                     <!--
-                        Approve visible only to the assigned supervisor 
+                        Approve visible only to the assigned supervisor
                     -->
                     <button name="action_supervisor_approve"
                         string="Approve Plan"
@@ -75,8 +75,7 @@
                 </header>
 
                 <sheet style="max-width: 100% !important; width: 100% !important;">
-                    <div class="oe_button_box" name="button_box">      <!-- button to view plan summary,
-                        visible to supervisors and reviewers -->
+                    <div class="oe_button_box" name="button_box">
                         <button class="oe_stat_button"
                             type="object"
                             name="action_view_plan_summary"
@@ -97,7 +96,6 @@
                         </button>
                     </div>
 
-
                     <!-- Hidden fields needed for logic only -->
                     <field name="employee_id" readonly="1" options="{'no_open': True}" invisible="1" />
                     <field name="employee_job_id" string="Job Position" readonly="1"
@@ -107,7 +105,8 @@
                     <field name="employee_evaluation_group_id" string="Evaluation Group"
                         readonly="1" options="{'no_open': True}" invisible="1" />
                     <field name="planning_start_date" string="Start Date" readonly="1" invisible="1" />
-                    <field name="planning_end_date" string="Deadline" readonly="1" invisible="1" />
+                    <field name="self_planning_deadline" string="Deadline" readonly="1"
+                        invisible="1" />
                     <field name="template_total_score" string="Template Total" readonly="1"
                         widget="float" invisible="1" />
                     <field name="planning_total_score" string="Employee's Total" readonly="1"
@@ -193,7 +192,8 @@
                                     <div class="pms_plan_stat_card pms_stat_date_end">
                                         <div class="pms_stat_label">Deadline</div>
                                         <div class="pms_stat_value">
-                                            <field name="planning_end_date" nolabel="1" readonly="1" />
+                                            <field name="self_planning_deadline" nolabel="1"
+                                                readonly="1" />
                                         </div>
                                     </div>
                                 </div>
@@ -258,44 +258,72 @@
 
                     </div>
 
-                    <!-- Access control flags -->
-                    <field name="is_supervisor_of_appraisal" invisible="1" />
-                    <field name="is_secondary_supervisor_of_appraisal" invisible="1" />
-                    <field name="is_reviewer_of_appraisal" invisible="1" />
-                    <field name="can_supervisor_edit_target" invisible="1" />
-                    <field name="can_secondary_supervisor_edit_target" invisible="1" />
-                    <field name="cycle_id" invisible="1" />
+                    <!-- Notebook / Tabs section -->
+                    <notebook class="mt-4">
 
+                        <!-- TAB 1: KRA Planning -->
+                        <page string="Key Result Areas" name="kra_planning_page">
+                            <!-- Access control flags -->
+                            <field name="is_supervisor_of_appraisal" invisible="1" />
+                            <field name="is_secondary_supervisor_of_appraisal" invisible="1" />
+                            <field name="is_reviewer_of_appraisal" invisible="1" />
+                            <field name="can_supervisor_edit_target" invisible="1" />
+                            <field name="can_secondary_supervisor_edit_target" invisible="1" />
+                            <field name="cycle_id" invisible="1" />
+                            <field name="cycle_state" invisible="1" />
 
-                    <field name="kra_ids"
-                        widget="kra_tabs_widget"
-                        options="{'mode': 'supervisor'}"
-                        readonly="not (can_supervisor_edit_target or can_secondary_supervisor_edit_target)"
-                        nolabel="1">
-                        <list>
-                            <field name="name" />
-                            <field name="kpi_ids">
+                            <!--
+                                Supervisor / secondary supervisor can edit target, criteria,
+                                and planning_remarks when it is their review turn.
+                                SUPERVISOR_KPI_FIELDS and SECONDARY_SUPERVISOR_KPI_FIELDS on
+                                the Python side now include 'planning_remarks'.
+                            -->
+                            <field name="kra_ids"
+                                widget="kra_tabs_widget"
+                                options="{'mode': 'supervisor'}"
+                                readonly="not (can_supervisor_edit_target or can_secondary_supervisor_edit_target)"
+                                nolabel="1">
                                 <list>
                                     <field name="name" />
-                                    <field name="description" />
-                                    <field name="criteria" />
-                                    <field name="weightage" />
-                                    <field name="is_selected" />
-                                    <field name="target" />
-                                    <field name="planning_remarks" />
+                                    <field name="kpi_ids">
+                                        <list>
+                                            <field name="name" />
+                                            <field name="description" />
+                                            <field name="criteria" />
+                                            <field name="weightage" />
+                                            <field name="is_selected" />
+                                            <!-- target and planning_remarks editable for supervisor
+                                                 when can_supervisor_edit_target / can_secondary_supervisor_edit_target is True -->
+                                            <field name="target" />
+                                            <field name="planning_remarks" />
 
-                                    <field name="snapshot_employee_target" invisible="1" />
-                                    <field name="snapshot_employee_criteria" invisible="1" />
+                                            <field name="snapshot_employee_target" invisible="1" />
+                                            <field name="snapshot_employee_criteria" invisible="1" />
 
-                                    <field name="snapshot_supervisor_target" invisible="1" />
-                                    <field name="snapshot_supervisor_criteria" invisible="1" />
+                                            <field name="snapshot_supervisor_target" invisible="1" />
+                                            <field name="snapshot_supervisor_criteria" invisible="1" />
 
-                                    <field name="snapshot_secondary_target" invisible="1" />
-                                    <field name="snapshot_secondary_criteria" invisible="1" />
+                                            <field name="snapshot_secondary_target" invisible="1" />
+                                            <field name="snapshot_secondary_criteria" invisible="1" />
+                                        </list>
+                                    </field>
                                 </list>
                             </field>
-                        </list>
-                    </field>
+                        </page>
+
+                        <!-- TAB 2: Competency Framework -->
+                        <page string="Competency Framework" name="competency_planning_page"
+                            invisible="not template_id.competency_template_id">
+
+                            <field name="competency_framework_html"
+                                widget="html"
+                                readonly="1"
+                                nolabel="1"
+                                class="competency-framework-table" />
+                        </page>
+
+                    </notebook>
+
                 </sheet>
 
                 <chatter />

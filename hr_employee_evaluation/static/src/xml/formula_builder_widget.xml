@@ -57,40 +57,6 @@
                 </div>
             </div>
 
-            <!-- Constants Section -->
-            <div class="pfb-section">
-                <div class="pfb-section-hd">
-                    <i class="fa fa-hashtag" aria-hidden="true"/>
-                    <span>INSERT CONSTANTS</span>
-                </div>
-                <div class="pfb-section-bd">
-                    <div class="pfb-num-row">
-                        <input class="pfb-num-input" type="number" placeholder="Custom number" step="0.01" t-model="state.customNum" t-on-keydown="onNumKeydown"/>
-                        <button class="pfb-add-btn" t-on-click="onAddNum">
-                            Add →
-                        </button>
-                    </div>
-                    
-                    <div class="pfb-preset-group">
-                        <span class="pfb-preset-label">Percentages:</span>
-                        <div class="pfb-presets">
-                            <t t-foreach="ratePresets" t-as="p" t-key="p.label">
-                                <button class="pfb-preset" t-on-click="() => onPresetClick(p)" t-esc="p.label"/>
-                            </t>
-                        </div>
-                    </div>
-                    
-                    <div class="pfb-preset-group">
-                        <span class="pfb-preset-label">Constants:</span>
-                        <div class="pfb-presets">
-                            <t t-foreach="constantPresets" t-as="c" t-key="c.label">
-                                <button class="pfb-preset" t-on-click="() => onConstantClick(c)" t-esc="c.label"/>
-                            </t>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
             <!-- Expression Builder Area -->
             <div class="pfb-expr-wrap">
                 <div class="pfb-expr-hd">
@@ -137,7 +103,7 @@
                 </button>
             </div>
 
-            <!-- Validation Status Message - Simplified -->
+            <!-- Validation Status Message-->
             <t t-if="state.validationStatus === 'ok'">
                 <div class="pfb-status pfb-status-ok">
                     <i class="fa fa-check-circle" aria-hidden="true"/>

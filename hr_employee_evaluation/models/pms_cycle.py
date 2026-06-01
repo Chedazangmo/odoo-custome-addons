@@ -300,17 +300,131 @@ class PMSCycle(models.Model):
                 
         return super().create(vals_list)
     
+    # def write(self, vals):
+    #     if not self.env.context.get('skip_cycle_edit_check'):
+    #         protected_fields = [
+    #             'cycle_type', 'start_date', 'apply_to', 
+    #             'employee_ids', 'final_score_selection' 
+    #         ]
+    #         if any(field in vals for field in protected_fields):
+    #             for record in self:
+    #                 if record.state != 'draft':
+    #                     raise UserError('Cannot modify cycle configuration after activation.')
+    #     return super().write(vals)
+
     def write(self, vals):
-        # Prevent editing fields when not in draft
-        protected_fields = [
-            'cycle_type', 'start_date', 'apply_to', 
-            'employee_ids', 'final_score_selection' 
-        ]
-        if any(field in vals for field in protected_fields):
-            for record in self:
-                if record.state != 'draft':
-                    raise UserError('Cannot modify cycle configuration after activation.')
-        return super().write(vals)
+        if not self.env.context.get('skip_cycle_edit_check'):
+            protected_fields = [
+                'cycle_type', 'start_date', 'apply_to',
+                'employee_ids', 'final_score_selection'
+            ]
+            if any(f in vals for f in protected_fields):
+                for record in self:
+                    if record.state != 'draft':
+                        raise UserError(
+                            'Cannot modify cycle configuration after activation.'
+                        )
+
+        duration_snapshots = {}
+        if 'planning_duration' in vals:
+            new_duration = vals['planning_duration']
+            for cycle in self:
+                if cycle.state not in ('draft', 'planning', 'monitoring'):
+                    raise UserError(
+                        'Planning duration can only be changed while the cycle '
+                        'is in Draft, Planning, or Monitoring state.'
+                    )
+                if cycle.state != 'draft' and new_duration < cycle.planning_duration:
+                    raise UserError(
+                        f'Cannot reduce the planning duration after a cycle has '
+                        f'been activated.\n\n'
+                        f'Current duration: {cycle.planning_duration} days\n'
+                        f'Requested duration: {new_duration} days\n\n'
+                        f'You may only extend it.'
+                    )
+                duration_snapshots[cycle.id] = {
+                    'old_duration': cycle.planning_duration,
+                    'old_state':    cycle.state,
+                }
+
+        res = super().write(vals)
+
+        if duration_snapshots:
+            today = fields.Date.today()
+            for cycle in self:
+                snap         = duration_snapshots.get(cycle.id)
+                if not snap:
+                    continue
+                old_duration = snap['old_duration']
+                old_state    = snap['old_state']
+                new_duration = cycle.planning_duration       
+                delta        = new_duration - old_duration   
+
+                if delta == 0:
+                    continue
+
+                pending = cycle.appraisal_ids.filtered(
+                    lambda a: a.state != 'approved'
+                )
+
+                for appraisal in pending:
+                    update_vals = {}
+
+                    # Slide the main deadline forward by the exact delta
+                    if appraisal.planning_end_date:
+                        update_vals['planning_end_date'] = (
+                            appraisal.planning_end_date + relativedelta(days=delta)
+                        )
+
+                    if update_vals:
+                        appraisal.with_context(
+                            skip_edit_check=True
+                        ).write(update_vals)
+                    # Note: self_planning_deadline is a computed field, so it will 
+                    # automatically update itself based on the new planning_end_date!
+
+                moved_back = False
+                if (
+                    old_state == 'monitoring'
+                    and cycle.planning_deadline
+                    and cycle.planning_deadline > today
+                ):
+                    cycle.write({'state': 'planning'})
+                    moved_back = True
+
+                deadline_str = str(cycle.planning_deadline) if cycle.planning_deadline else '—'
+                if moved_back:
+                    body = (
+                        f'Planning duration extended from '
+                        f'{old_duration} to {new_duration} days '
+                        f'(new deadline: {deadline_str}).'
+                        f'Cycle automatically moved back to '
+                        f'Planning phase so employees can submit or '
+                        f'revise their plans.'
+                        f'{len(pending)} pending appraisal deadline(s) updated.'
+                    )
+                else:
+                    body = (
+                        f'Planning duration extended from '
+                        f'{old_duration} to {new_duration} days '
+                        f'(new deadline: {deadline_str}). '
+                        f'{len(pending)} pending appraisal deadline(s) updated.'
+                    )
+                cycle.message_post(body=body, message_type='notification')
+
+        return res
+    
+    # def write(self, vals):
+    #     # Prevent editing fields when not in draft
+    #     protected_fields = [
+    #         'cycle_type', 'start_date', 'apply_to', 
+    #         'employee_ids', 'final_score_selection' 
+    #     ]
+    #     if any(field in vals for field in protected_fields):
+    #         for record in self:
+    #             if record.state != 'draft':
+    #                 raise UserError('Cannot modify cycle configuration after activation.')
+    #     return super().write(vals)
     
     def unlink(self):
         # Prevent deletion of non-draft cycles
@@ -320,29 +434,140 @@ class PMSCycle(models.Model):
         return super().unlink()
     
     def action_activate_cycle(self):
-        # Activate the cycle 
         self.ensure_one()
         
         if self.state != 'draft':
             raise UserError('Only draft cycles can be activated.')
+            
+        active_states = ['planning', 'monitoring', 'appraisal']
+        if self.cycle_type in ['annual', 'semi_annual']:
+            # Check for active Regular cycles
+            if self.search_count([
+                ('state', 'in', active_states), 
+                ('cycle_type', 'in', ['annual', 'semi_annual']), 
+                ('id', '!=', self.id)
+            ]):
+                raise UserError('Cannot activate: A Regular cycle (Annual or Semi-Annual) is already active. Please complete or cancel it first.')
+                
+        elif self.cycle_type == 'probation':
+            # Check for active Probation cycles
+            if self.search_count([
+                ('state', 'in', active_states), 
+                ('cycle_type', '=', 'probation'), 
+                ('id', '!=', self.id)
+            ]):
+                raise UserError('Cannot activate: A Probation cycle is already active. Please complete or cancel it first.')
         
-        # Validate dates
         if not self.start_date or not self.end_date:
             raise UserError('Start date and end date must be set.')
         
-        # Get employees to create appraisals for
         if self.apply_to == 'all':
-            employees = self.env['hr.employee'].search([
+            # Base domain for all cycles
+            domain = [
                 ('active', '=', True),
                 ('evaluation_group_id', '!=', False)
-            ])
+            ]
+            
+            # Filter by Employee Tags based on Cycle Type
+            if self.cycle_type in ['annual', 'semi_annual']:
+                domain.append(('category_ids.name', 'ilike', 'Regular'))
+            elif self.cycle_type == 'probation':
+                domain.append(('category_ids.name', 'ilike', 'Probation'))
+
+            employees = self.env['hr.employee'].search(domain)
+            
+            if not employees:
+                raise UserError(
+                    f"No employees found with an Evaluation Group and the required tag for this cycle type. "
+                    f"Please ensure your employees have the correct tags ('Regular' or 'Probation')."
+                )
+                
+            # Force the employee_ids list to populate so we can view them in the UI!
+            self.write({'employee_ids': [(6, 0, employees.ids)]})
         else:
             employees = self.employee_ids
+            if not employees:
+                raise UserError('No employees selected to create appraisals.')
         
-        if not employees:
-            raise UserError('No employees found to create appraisals.')
+        self._validate_employees(employees)
+        self._create_employee_appraisals(employees, is_late=False)
         
+        self.write({'state': 'planning'})
+        
+        self.message_post(
+            body=f"Cycle activated. {len(employees)} employee appraisals created.",
+            message_type='notification'
+        )
+        return True
+    
+    # def action_activate_cycle(self):
+    #     self.ensure_one()
+        
+    #     if self.state != 'draft':
+    #         raise UserError('Only draft cycles can be activated.')
+        
+    #     if not self.start_date or not self.end_date:
+    #         raise UserError('Start date and end date must be set.')
+        
+    #     if self.apply_to == 'all':
+    #         employees = self.env['hr.employee'].search([
+    #             ('active', '=', True),
+    #             ('evaluation_group_id', '!=', False)
+    #         ])
+    #         # Force the employee_ids list to populate so we can view them in the UI!
+    #         self.write({'employee_ids': [(6, 0, employees.ids)]})
+    #     else:
+    #         employees = self.employee_ids
+        
+    #     if not employees:
+    #         raise UserError('No employees found to create appraisals.')
+        
+    #     self._validate_employees(employees)
+    #     self._create_employee_appraisals(employees, is_late=False)
+        
+    #     self.write({'state': 'planning'})
+        
+    #     self.message_post(
+    #         body=f"Cycle activated. {len(employees)} employee appraisals created.",
+    #         message_type='notification'
+    #     )
+    #     return True
+
+    def _validate_employees(self, employees):
+        """Reusable validation for activating cycles and adding late employees"""
         error_messages = []
+
+        # ─── Tag Validation for Manual Selection ───
+        invalid_for_regular = self.env['hr.employee']
+        invalid_for_probation = self.env['hr.employee']
+        
+        for e in employees:
+            # Extract all tags for the employee and convert to lowercase for safe checking
+            tags = [tag.lower() for tag in e.category_ids.mapped('name') if tag]
+            has_probation = any('probation' in t for t in tags)
+            
+            if self.cycle_type in ['annual', 'semi_annual']:
+                # Regular cycles can have any tag EXCEPT Probation
+                if has_probation:
+                    invalid_for_regular |= e
+            elif self.cycle_type == 'probation':
+                # Probation cycles MUST have the Probation tag
+                if not has_probation:
+                    invalid_for_probation |= e
+
+        if invalid_for_regular:
+            names = "\n".join([f"- {e.name}" for e in invalid_for_regular])
+            error_messages.append(
+                f"Regular cycles CANNOT include employees on Probation. "
+                f"Please remove these employees or update their tags:\n{names}\n"
+            )
+
+        if invalid_for_probation:
+            names = "\n".join([f"- {e.name}" for e in invalid_for_probation])
+            error_messages.append(
+                f"Probation cycles can ONLY include employees with the 'Probation' tag. "
+                f"Please remove these employees or update their tags:\n{names}\n"
+            )
 
         active_appraisals = self.env['pms.appraisal'].search([
             ('employee_id', 'in', employees.ids),
@@ -351,152 +576,107 @@ class PMSCycle(models.Model):
         ])
 
         if active_appraisals:
-            # Get unique names of employees involved in active cycles
             busy_employee_names = list(set(active_appraisals.mapped('employee_id.name')))
             names = "\n".join([f"- {name}" for name in busy_employee_names])
-            error_messages.append(
-                f"The following employees are already have an active cycle:\n{names}\n"
-            )
+            error_messages.append(f"The following employees already have an active cycle:\n{names}\n")
 
-        # Check Missing Supervisors and Rreviewers
         employees_missing_supervisor = employees.filtered(lambda e: not e.parent_id)
         employees_missing_reviewer = employees.filtered(lambda e: not e.reviewer_id)
         
         if employees_missing_supervisor:
             names = "\n".join([f"- {e.name}" for e in employees_missing_supervisor])
-            error_messages.append(
-                f"The following employees do not have a Supervisor assigned:\n{names}"
-            )
+            error_messages.append(f"The following employees do not have a Supervisor assigned:\n{names}\n")
         
         if employees_missing_reviewer:
             names = "\n".join([f"- {e.name}" for e in employees_missing_reviewer])
-            error_messages.append(
-                f"The following employees do not have a Reviewer assigned:\n{names}"
-            )
+            error_messages.append(f"The following employees do not have a Reviewer assigned:\n{names}\n")
 
-        # Check Missing Templates for Evaluation Groups        
         employees_missing_group = employees.filtered(lambda e: not e.evaluation_group_id)
-        
         employees_with_group = employees - employees_missing_group
 
         if employees_with_group:
-            # Get all unique groups from these employees
             unique_groups = employees_with_group.mapped('evaluation_group_id')
-            
-            # Find which of these groups actually have an active template
             valid_templates = self.env['appraisal.template'].search([
                 ('evaluation_group_id', 'in', unique_groups.ids),
                 ('active', '=', True)
             ])
             valid_group_ids = valid_templates.mapped('evaluation_group_id.id')
-            
-            # Identify employees whose group is NOT in the valid list
             employees_missing_template = employees_with_group.filtered(
                 lambda e: e.evaluation_group_id.id not in valid_group_ids
             )
         else:
             employees_missing_template = self.env['hr.employee']
 
-        # Combine both template errors
         total_template_errors = employees_missing_group | employees_missing_template
 
         if total_template_errors:
             names = "\n".join([f"- {e.name} (Group: {e.evaluation_group_id.name or 'None'})" for e in total_template_errors])
             error_messages.append(
                 f"The following employees do not have a valid Appraisal Template assigned:\n{names}\n"
-                "Please ensure they have an Evaluation Group assigned and a valid Template."
+                "Please ensure they have an Evaluation Group assigned and a valid Template.\n"
             )
 
         if error_messages:
             full_error = "\n\n".join(error_messages)
-            raise UserError(f"Cannot activate cycle due to configuration errors:\n\n{full_error}")
+            raise UserError(f"Cannot proceed due to configuration errors:\n\n{full_error}")
 
-
-        # Create appraisals for each employee (Validation Passed)
-        self._create_employee_appraisals(employees)
-        
-        # Change state to planning
-        self.write({'state': 'planning'})
-        
-        # Log activity
-        self.message_post(
-            body=f"Cycle activated. {len(employees)} employee appraisals created.",
-            message_type='notification'
-        )
-        
-        return True
-
-    # create a copy of the tenplates for each employee based on their evaluation group 
-    def _create_employee_appraisals(self, employees):
+    def _create_employee_appraisals(self, employees, is_late=False):
         AppraisalObj = self.env['pms.appraisal']
-        
         created_count = 0
-        skipped_count = 0
         created_appraisals = self.env['pms.appraisal']
         
         for employee in employees:
-            # Check if employee has evaluation group
-            if not employee.evaluation_group_id:
-                skipped_count += 1
-                continue
-            
-            # Find template for this evaluation group
             template = self.env['appraisal.template'].search([
                 ('evaluation_group_id', '=', employee.evaluation_group_id.id),
                 ('active', '=', True)
             ], limit=1)
             
             if not template:
-                skipped_count += 1
                 continue
             
-            # Check if appraisal already exists for this employee in this cycle
-            existing = AppraisalObj.search([
-                ('cycle_id', '=', self.id),
-                ('employee_id', '=', employee.id)
-            ], limit=1)
-            
+            existing = AppraisalObj.search([('cycle_id', '=', self.id), ('employee_id', '=', employee.id)], limit=1)
             if existing:
                 continue
             
-            # Get supervisor (parent_id from hr.employee)
+            # Calculate custom dates if employee is added late
+            start_date = fields.Date.today() if is_late else self.start_date
+            end_date = start_date + relativedelta(days=self.planning_duration) if is_late else self.planning_deadline
+            
             supervisor = employee.parent_id
             sec_supervisor = employee.secondary_manager_id
             reviewer = employee.reviewer_id
             
-            # Create appraisal with deep copy of template
-            appraisal_vals = {
+            appraisal = AppraisalObj.create({
                 'cycle_id': self.id,
                 'employee_id': employee.id,
                 'template_id': template.id,
                 'supervisor_id': supervisor.id if supervisor else False,
-                'secondary_supervisor_id': (                                     
-                    sec_supervisor.id
-                    if sec_supervisor else False
-                ),
+                'secondary_supervisor_id': sec_supervisor.id if sec_supervisor else False,
                 'reviewer_id': reviewer.id if reviewer else False,
-            }
+                'planning_start_date': start_date,
+                'planning_end_date': end_date,
+            })
             
-            appraisal = AppraisalObj.create(appraisal_vals)
-            
-            # Clone template KRAs and KPIs
             appraisal._clone_template_structure()
-            
             created_appraisals |= appraisal
             created_count += 1
         
-        # Send notifications to employees
         if created_appraisals:
             self._notify_employees(created_appraisals)
         
-        if skipped_count > 0:
-            self.message_post(
-                body=f"Note: {skipped_count} employees skipped (no evaluation group or template).",
-                message_type='comment'
-            )
-        
         return created_count
-    
+
+    def action_open_add_employee_wizard(self):
+        self.ensure_one()
+        return {
+            'name': 'Add Employees to Cycle',
+            'type': 'ir.actions.act_window',
+            'res_model': 'pms.add.employee.wizard',
+            'view_mode': 'form',
+            'target': 'new',
+            'context': {'default_cycle_id': self.id}
+        }
+
     def _notify_employees(self, appraisals):
         # Notify employees that their performance plan is ready
         ActivityType = self.env['mail.activity.type']
@@ -602,13 +782,11 @@ class PMSCycle(models.Model):
             cycle.action_move_to_monitoring()
 
 
-
-    
     appraisal_start_date = fields.Date(
         string='Appraisal Start Date',
-        readonly=True,
+        required=True,
         tracking=True,
-        help='Date when HR manually moved the cycle to the Appraisal phase.'
+        help='Date when the cycle automatically moves to the Appraisal phase.'
     )
 
     def action_move_to_appraisal(self):
@@ -627,7 +805,7 @@ class PMSCycle(models.Model):
 
         self.write({
             'state': 'appraisal',
-            'appraisal_start_date': fields.Date.today()
+            # Removed the automatic 'today()' override here so your planned date stays
         })
         
         self.message_post(
@@ -635,3 +813,32 @@ class PMSCycle(models.Model):
             message_type='notification'
         )
         return True
+
+    @api.model
+    def _cron_auto_move_to_appraisal(self):
+        today = fields.Date.today()
+        # Move state to appraisal automatically after appraisal_start_date reaches
+        ready_appraisal_cycles = self.search([
+            ('state', '=', 'monitoring'),
+            ('appraisal_start_date', '<=', today)
+        ])
+        
+        for cycle in ready_appraisal_cycles:
+            cycle.action_move_to_appraisal()
+    
+    @api.constrains('state', 'cycle_type')
+    def _check_concurrent_active_cycles(self):
+        active_states = ['planning', 'monitoring', 'appraisal']
+        for cycle in self:
+            if cycle.state in active_states:
+                domain = [('state', 'in', active_states), ('id', '!=', cycle.id)]
+                
+                if cycle.cycle_type in ['annual', 'semi_annual']:
+                    domain.append(('cycle_type', 'in', ['annual', 'semi_annual']))
+                    if self.search_count(domain):
+                        raise ValidationError('Only one Regular cycle (Annual or Semi-Annual) can be active at a time.')
+                        
+                elif cycle.cycle_type == 'probation':
+                    domain.append(('cycle_type', '=', 'probation'))
+                    if self.search_count(domain):
+                        raise ValidationError('Only one Probation cycle can be active at a time.')

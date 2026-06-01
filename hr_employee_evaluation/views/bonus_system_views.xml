@@ -1,10 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
 
-    <!-- ================================================================
-     1.  Rating Tiers
-     ================================================================ -->
-
     <record id="view_pms_rating_definition_list" model="ir.ui.view">
         <field name="name">pms.rating.definition.list</field>
         <field name="model">pms.rating.definition</field>
@@ -34,7 +30,6 @@
                             <field name="name" placeholder="Rating name…" />
                         </h1>
                     </div>
-
                     <group>
                         <group>
                             <field name="min_score"
@@ -47,7 +42,6 @@
                             <field name="color" widget="color_picker" />
                         </group>
                     </group>
-
                     <div class="pms-description-card">
                         <div class="pms-description-header">
                             <i class="fa fa-file-text-o" aria-hidden="true" />
@@ -66,11 +60,6 @@
         <field name="res_model">pms.rating.definition</field>
         <field name="view_mode">list,form</field>
     </record>
-
-
-    <!-- ================================================================
-     2.  Bonus Engine — Formula Builder with Inherited Rating Eligibility Table
-     ================================================================ -->
 
     <record id="view_pms_bonus_engine_list" model="ir.ui.view">
         <field name="name">pms.bonus.engine.list</field>
@@ -102,10 +91,7 @@
                             <field name="active" widget="boolean_toggle" nolabel="1" />
                         </div>
                     </div>
-
-                    <!-- Side-by-side layout: Formula Builder + Rating Eligibility -->
                     <div class="pms-side-by-side">
-                        <!-- Formula Builder Section -->
                         <div class="pms-formula-section">
                             <div class="pms-formula-header">
                                 <i class="fa fa-code" aria-hidden="true" />
@@ -120,8 +106,6 @@
                                 />
                             </div>
                         </div>
-
-                        <!-- Rating Eligibility Table Section - Inherited from Rating Tiers -->
                         <div class="pms-eligibility-table-section">
                             <div class="pms-eligibility-header">
                                 <i class="fa fa-trophy" aria-hidden="true" />
@@ -130,7 +114,8 @@
                             <div class="pms-eligibility-body">
                                 <field name="rating_eligibility_ids" nolabel="1"
                                     class="pms-eligibility-editable-table">
-                                    <list editable="bottom" default_order="rating_sequence">
+                                    <list editable="bottom" default_order="rating_sequence"
+                                        create="false" delete="false" edit="1">
                                         <field name="rating_name" string="Rating Tier" readonly="1" />
                                         <field name="eligibility_percentage"
                                             string="Eligibility %"
@@ -141,15 +126,12 @@
                             </div>
                         </div>
                     </div>
-
-                    <!-- Advanced Options -->
                     <div class="pms-advanced-section">
                         <div class="pms-advanced-header">
                             <i class="fa fa-sliders" aria-hidden="true" />
                             <span>Advanced Configuration</span>
                         </div>
                         <div class="pms-advanced-grid">
-                            <!-- Tenure Weighting Card -->
                             <div class="pms-adv-card">
                                 <div class="pms-adv-card-header pms-adv-purple">
                                     <i class="fa fa-line-chart" aria-hidden="true" />
@@ -173,8 +155,6 @@
                                     </div>
                                 </div>
                             </div>
-
-                            <!-- Cap & Floor Card -->
                             <div class="pms-adv-card">
                                 <div class="pms-adv-card-header pms-adv-teal">
                                     <i class="fa fa-adjust" aria-hidden="true" />
@@ -210,11 +190,6 @@
         <field name="res_model">pms.bonus.engine</field>
         <field name="view_mode">list,form</field>
     </record>
-
-
-    <!-- ================================================================
-     3.  Bonus Calculation
-     ================================================================ -->
 
     <record id="view_pms_bonus_calculation_list" model="ir.ui.view">
         <field name="name">pms.bonus.calculation.list</field>
@@ -253,8 +228,6 @@
                             <field name="name" placeholder="Calculation name…" />
                         </h1>
                     </div>
-
-                    <!-- Setup Section - Horizontal Layout -->
                     <div class="pms-calculation-setup">
                         <div class="pms-setup-row">
                             <div class="pms-setup-item">
@@ -282,8 +255,6 @@
                             </div>
                         </div>
                     </div>
-
-                    <!-- Bonus Results Table -->
                     <div class="pms-results-section" invisible="state == 'draft'">
                         <div class="pms-results-header">
                             <i class="fa fa-table" aria-hidden="true" />
@@ -317,162 +288,6 @@
         <field name="view_mode">list,form</field>
     </record>
 
-
-    <!-- ================================================================
-     4.  My Bonus - Employee view
-     ================================================================ -->
-
-    <record id="view_employee_my_bonus_list" model="ir.ui.view">
-        <field name="name">employee.my.bonus.list</field>
-        <field name="model">pms.bonus.calculation.line</field>
-        <field name="arch" type="xml">
-            <list string="My Bonus History" create="false" delete="false" multi_edit="0"
-                class="pms-my-bonus-list">
-                <field name="calculation_name" string="Calculation" optional="hide" />
-                <field name="calculation_date" string="Date" width="100" />
-                <field name="cycle_id" string="Cycle" optional="show" />
-                <field name="score" string="Score" width="80"
-                    decoration-success="score >= 80"
-                    decoration-warning="score >= 60 and score &lt; 80"
-                    decoration-danger="score &lt; 60" />
-                <field name="rating_id" string="Rating" width="120" />
-                <field name="eligibility_percentage" string="Eligibility %" width="100"
-                    widget="progressbar" options="{'max_value': 100}" />
-                <field name="base_salary" widget="monetary" string="Base Salary" width="120" />
-                <field name="bonus_amount" widget="monetary" string="Bonus Amount"
-                    sum="Total" width="120" class="text-success fw-bold" />
-                <field name="calculation_state" string="Status" width="100" widget="badge"
-                    decoration-success="calculation_state == 'calculated'"
-                    decoration-info="calculation_state == 'draft'" />
-            </list>
-        </field>
-    </record>
-
-    <record id="view_employee_my_bonus_form" model="ir.ui.view">
-        <field name="name">employee.my.bonus.form</field>
-        <field name="model">pms.bonus.calculation.line</field>
-        <field name="arch" type="xml">
-            <form string="My Bonus Details" create="false" delete="false" class="pms-my-bonus-form">
-                <sheet>
-                    <div class="oe_title">
-                        <h1>
-                            <field name="employee_id" readonly="1" />
-                        </h1>
-                        <div class="oe_subtitle_fs">
-                            <field name="calculation_date" readonly="1" />
-                        </div>
-                    </div>
-
-                    <!-- Summary Cards -->
-                    <div class="pms-bonus-summary">
-                        <div class="pms-summary-card pms-summary-success">
-                            <h4>Bonus Amount</h4>
-                            <div class="amount">
-                                <field name="bonus_amount" widget="monetary" readonly="1"
-                                    nolabel="1" />
-                            </div>
-                        </div>
-                        <div class="pms-summary-card pms-summary-info">
-                            <h4>Appraisal Score</h4>
-                            <div class="score">
-                                <field name="score" readonly="1" nolabel="1" />
-                            </div>
-                            <small>Out of 100 points</small>
-                        </div>
-                        <div class="pms-summary-card pms-summary-primary">
-                            <h4>Rating</h4>
-                            <div>
-                                <field name="rating_id" readonly="1" nolabel="1" />
-                            </div>
-                            <small><field name="eligibility_percentage" readonly="1" nolabel="1" />%
-                                eligibility</small>
-                        </div>
-                    </div>
-
-                    <!-- Details Grid -->
-                    <div class="pms-details-grid">
-                        <!-- Calculation Details Card -->
-                        <div class="pms-details-card">
-                            <div class="pms-details-header">
-                                <i class="fa fa-calculator" aria-hidden="true" />
-                                <span>Calculation Details</span>
-                            </div>
-                            <div class="pms-details-body">
-                                <table class="pms-details-table">
-                                    <tr>
-                                        <td>Formula Used</td>
-                                        <td>
-                                            <field name="bonus_engine_name" readonly="1" />
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>Performance Cycle</td>
-                                        <td>
-                                            <field name="cycle_id" readonly="1" />
-                                        </td>
-                                    </tr>
-                                </table>
-                            </div>
-                        </div>
-
-                        <!-- Financial Details Card — Eligibility % removed -->
-                        <div class="pms-details-card">
-                            <div class="pms-details-header">
-                                <i class="fa fa-money" aria-hidden="true" />
-                                <span>Financial Details</span>
-                            </div>
-                            <div class="pms-details-body">
-                                <div class="pms-financial-list">
-                                    <div class="pms-financial-item">
-                                        <span class="pms-financial-label">
-                                            <i class="fa fa-wallet" aria-hidden="true" /> Base
-                                            Salary (NU) </span>
-                                        <span class="pms-financial-value">
-                                            <field name="base_salary" widget="monetary" readonly="1"
-                                                nolabel="1" />
-                                        </span>
-                                    </div>
-                                    <div class="pms-financial-item">
-                                        <span class="pms-financial-label">
-                                            <i class="fa fa-calendar" aria-hidden="true" /> Months
-                                            Served </span>
-                                        <span class="pms-financial-value">
-                                            <field name="months_served" readonly="1" /> months </span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </sheet>
-            </form>
-        </field>
-    </record>
-
-    <!-- My Bonus Action -->
-    <record id="action_my_bonus" model="ir.actions.act_window">
-        <field name="name">My Bonus</field>
-        <field name="res_model">pms.bonus.calculation.line</field>
-        <field name="view_mode">list,form</field>
-        <field name="view_ids"
-            eval="[(5, 0, 0),
-            (0, 0, {'view_mode': 'list', 'view_id': ref('view_employee_my_bonus_list')}),
-            (0, 0, {'view_mode': 'form', 'view_id': ref('view_employee_my_bonus_form')})]" />
-        <field name="domain">[('employee_id.user_id', '=', uid)]</field>
-        <field name="context">{'create': False, 'delete': False, 'edit': False}</field>
-        <field name="help" type="html">
-            <p class="o_view_nocontent_smiling_face">
-                No bonuses found.
-            </p>
-            <p>
-                Bonuses will appear here once HR processes bonus calculations.
-            </p>
-        </field>
-    </record>
-
-    <!-- ================================================================
-     5.  Scheduled action
-     ================================================================ -->
-
     <record id="ir_cron_pms_auto_bonus" model="ir.cron">
         <field name="name">PMS: Auto-calculate pending bonus calculations</field>
         <field name="model_id" ref="model_pms_bonus_calculation" />
@@ -482,11 +297,6 @@
         <field name="interval_type">days</field>
         <field name="active">True</field>
     </record>
-
-
-    <!-- ================================================================
-     6.  Payroll Export Wizard
-     ================================================================ -->
 
     <record id="view_pms_bonus_payroll_export_wizard_form" model="ir.ui.view">
         <field name="name">pms.bonus.payroll.export.wizard.form</field>

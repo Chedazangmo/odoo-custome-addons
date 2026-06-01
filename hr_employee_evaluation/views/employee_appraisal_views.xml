@@ -56,9 +56,6 @@
                             </div>
                         </button>
 
-                        <!-- HR sync button: refreshes competency score rows
-                             if the linked competency template was updated
-                             after this appraisal was created. -->
                         <button name="action_sync_competency_scores"
                             string="Sync Competency"
                             type="object"
@@ -230,12 +227,7 @@
                     <field name="can_reviewer_rate" invisible="1" />
                     <field name="cycle_id" invisible="1" />
 
-                    <!-- ── Competency score rows (invisible data carrier) ─
-                         Loads appraisal.competency.score rows into
-                         record.data so the KraTabs OWL widget can read
-                         and edit them. Every sub-field listed here is
-                         accessed by the JS widget — do not remove any.
-                    ──────────────────────────────────────────────────── -->
+                    <!-- Competency score rows -->
                     <field name="competency_score_ids" invisible="1">
                         <list>
                             <field name="competency_line_id" />

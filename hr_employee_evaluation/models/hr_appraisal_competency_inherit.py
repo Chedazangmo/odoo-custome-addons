@@ -1,18 +1,4 @@
-# ============================================================
 # models/pms_appraisal_competency_inherit.py
-#
-# Extends pms.appraisal to:
-#   1. Add competency_score_ids (One2many → appraisal.competency.score)
-#   2. Add computed totals per rater
-#   3. Auto-sync score rows from linked competency template on create
-#      and when template_id changes
-#
-# NOTE: This mixin does NOT re-define write(). The parent pms.appraisal
-# write() already handles competency_score_ids filtering via
-# _filter_competency_score_commands(). Re-defining write() here would
-# cause double execution. Template-change sync is handled via
-# _post_write_sync() called from a chained super().write().
-# ============================================================
 
 from odoo import models, fields, api, _
 from odoo.exceptions import UserError
@@ -21,7 +7,7 @@ from odoo.exceptions import UserError
 class PmsAppraisalCompetencyInherit(models.Model):
     _inherit = 'pms.appraisal'
 
-    # ── One2many to score rows ────────────────────────────────
+    # One2many to score rows 
 
     competency_score_ids = fields.One2many(
         'appraisal.competency.score',
@@ -29,7 +15,7 @@ class PmsAppraisalCompetencyInherit(models.Model):
         string='Competency Scores',
     )
 
-    # ── Convenience computed totals ───────────────────────────
+    # Convenience computed totals 
 
     competency_self_total = fields.Float(
         string='Competency Employee Total',
@@ -73,13 +59,9 @@ class PmsAppraisalCompetencyInherit(models.Model):
             appraisal.competency_reviewer_total   = sum(scores.mapped('reviewer_score'))
             appraisal.competency_max_total        = sum(scores.mapped('line_points'))
 
-    # ── Sync helpers ──────────────────────────────────────────
+
 
     def _get_competency_template(self):
-        """
-        Returns the competency.framework.template linked to this appraisal via:
-            pms.appraisal.template_id → appraisal.template.competency_template_id
-        """
         self.ensure_one()
         appraisal_tmpl = self.template_id
         if not appraisal_tmpl:
@@ -88,14 +70,6 @@ class PmsAppraisalCompetencyInherit(models.Model):
         return comp_tmpl or self.env['competency.framework.template']
 
     def _sync_competency_scores(self):
-        """
-        Idempotent: creates one appraisal.competency.score row per
-        competency.framework.line in the linked template.
-        Existing rows (with scores already entered) are left untouched.
-
-        Uses sudo() so this works regardless of the calling user's access rights,
-        since score rows are system-managed, not user-created.
-        """
         Score = self.env['appraisal.competency.score'].sudo()
 
         for appraisal in self:
@@ -103,9 +77,6 @@ class PmsAppraisalCompetencyInherit(models.Model):
             if not comp_tmpl:
                 continue
 
-            # Collect all lines from all groups in the template,
-            # ordered by (group.sequence, group.id, line.sequence, line.id)
-            # so the display order matches the competency table exactly.
             all_lines = self.env['competency.framework.line'].search([
                 ('group_id.template_id', '=', comp_tmpl.id),
             ], order='group_id, sequence, id')
@@ -129,19 +100,13 @@ class PmsAppraisalCompetencyInherit(models.Model):
             if new_vals:
                 Score.create(new_vals)
 
-    # ── Trigger sync on create ────────────────────────────────
+    # Trigger sync on create 
 
     @api.model_create_multi
     def create(self, vals_list):
         records = super().create(vals_list)
-        # Sync after create so the appraisal ID exists in DB
         records._sync_competency_scores()
         return records
-
-    # ── Trigger sync when template changes ───────────────────
-    # We override write() ONLY to detect template_id changes.
-    # We always call super() first so the parent write() (with its
-    # role-based field filtering) runs before we do any post-processing.
 
     def write(self, vals):
         template_changed = 'template_id' in vals
@@ -150,10 +115,9 @@ class PmsAppraisalCompetencyInherit(models.Model):
             self._sync_competency_scores()
         return result
 
-    # ── Public action (HR manual re-sync button) ──────────────
+    # Actions Button
 
     def action_sync_competency_scores(self):
-        """Re-populate competency score rows from the linked template."""
         self.ensure_one()
         self._sync_competency_scores()
         return {
@@ -167,13 +131,9 @@ class PmsAppraisalCompetencyInherit(models.Model):
             },
         }
 
-    # ── HR reset: also clear competency scores ────────────────
+    # HR reset - Clear Competency scores
 
     def action_hr_reset_appraisal_to_draft(self):
-        """
-        Overrides the base reset to also clear competency scores.
-        The base method handles KPI scores and state change.
-        """
         self.ensure_one()
         if not self.env.user.has_group('hr_employee_evaluation.group_pms_hr_manager'):
             raise UserError(_('Only HR/Admin can reset an appraisal.'))
@@ -211,7 +171,6 @@ class PmsAppraisalCompetencyInherit(models.Model):
                 'reviewer_remarks':              False,
             })
 
-        # FIX: was fields.Datetime.now.strftime(...)
         self.with_context(skip_edit_check=True).write({
             'state':                'appraisal_draft',
             'appraisal_reset_date': fields.Datetime.now(),

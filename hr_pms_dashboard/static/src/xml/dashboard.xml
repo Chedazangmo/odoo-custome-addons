@@ -1,0 +1,3008 @@
+<?xml version="1.0" encoding="utf-8"?>
+<templates>
+
+    <t t-name="hr_pms_dashboard.Dashboard">
+        <div class="pms_dashboard o_action">
+            <div class="pms_dashboard_inner">
+
+                <!-- Loading -->
+                <t t-if="state.loading">
+                    <div class="pms_loading">
+                        <div class="spinner-border text-primary" role="status"/>
+                        <p>Loading Dashboard...</p>
+                    </div>
+                </t>
+
+                <!-- Error -->
+                <t t-elif="state.error">
+                    <div class="alert alert-danger m-4">
+                        <strong>Error:</strong> <t t-esc="state.error"/>
+                    </div>
+                </t>
+
+                <!-- ============================================================ -->
+                <!-- HR MANAGER DASHBOARD                                        -->
+                <!-- ============================================================ -->
+              <t t-elif="state.role === 'hr_manager'">
+
+<!-- Welcome card and Stat Cards in same row — hide when viewing cycle detail -->
+<t t-if="!state.show_cycle_detail and !state.is_monitoring_cycle">
+<div class="pms_dashboard_header_row">
+    <!-- Welcome card - now same size as stat cards -->
+    <div class="pms_welcome_card card shadow-sm pms_card">
+        <div class="pms_card_top_row">
+            <div class="pms_card_icon"><i class="fa fa-tachometer"/></div>
+            <div class="pms_card_value">HR</div>
+        </div>
+        <div class="pms_card_label">Dashboard</div>
+    </div>
+
+    <!-- Stat Cards -->
+    <div class="pms_stat_cards">
+        <!-- Total Cycles -->
+        <div class="pms_card orange pms_card_clickable" t-on-click="onClickTotalCycles">
+            <div class="pms_card_top_row">
+                <div class="pms_card_icon"><i class="fa fa-calendar"/></div>
+                <div class="pms_card_value"><t t-esc="state.stats.total_cycles_count or 0"/></div>
+            </div>
+            <div class="pms_card_label">Total Cycles</div>
+        </div>
+
+        <!-- Probation Active Cycles -->
+        <div class="pms_card yellow pms_card_clickable" t-on-click="onClickProbationActiveCycles">
+            <div class="pms_card_top_row">
+                <div class="pms_card_icon"><i class="fa fa-clock-o"/></div>
+                <div class="pms_card_value"><t t-esc="state.stats.probation_active_cycles_count or 0"/></div>
+            </div>
+            <div class="pms_card_label">Probation Active Cycles</div>
+        </div>
+
+        <!-- Total Active Employees -->
+        <div class="pms_card green pms_card_clickable" t-on-click="onClickTotalActiveEmployees">
+            <div class="pms_card_top_row">
+                <div class="pms_card_icon"><i class="fa fa-user-check"/></div>
+                <div class="pms_card_value"><t t-esc="state.stats.total_active_employees or 0"/></div>
+            </div>
+            <div class="pms_card_label">Total Active Employees</div>
+        </div>
+
+        <!-- Total Employees -->
+        <div class="pms_card blue pms_card_clickable" t-on-click="onClickTotalEmployees">
+            <div class="pms_card_top_row">
+                <div class="pms_card_icon"><i class="fa fa-users"/></div>
+                <div class="pms_card_value"><t t-esc="state.stats.total_employees"/></div>
+            </div>
+            <div class="pms_card_label">Total Employees</div>
+        </div>
+
+        <!-- Active Cycles -->
+        <div class="pms_card purple pms_card_clickable" t-on-click="onClickActiveCycles">
+            <div class="pms_card_top_row">
+                <div class="pms_card_icon"><i class="fa fa-refresh"/></div>
+                <div class="pms_card_value"><t t-esc="state.stats.active_cycles_count"/></div>
+            </div>
+            <div class="pms_card_label">Active Cycles</div>
+        </div>
+
+        <!-- Employees in Active Cycles -->
+        <div class="pms_card teal pms_card_clickable" t-on-click="onClickEmployeesInActiveCycles">
+            <div class="pms_card_top_row">
+                <div class="pms_card_icon"><i class="fa fa-users"/></div>
+                <div class="pms_card_value"><t t-esc="state.stats.employees_in_active_cycles or 0"/></div>
+            </div>
+            <div class="pms_card_label">Employees in Active Cycles</div>
+        </div>
+    </div>
+</div>
+</t>
+
+                  <!-- MONITORING CYCLE VIEW - Very Simple (MUST come first) -->
+<t t-if="state.is_monitoring_cycle and state.selected_cycle">
+    <div class="mb-3">
+        <button class="btn btn-sm btn-outline-secondary" t-on-click="closeCycleDetail">
+            <i class="fa fa-arrow-left me-1"></i>Back to All Cycles
+        </button>
+    </div>
+    <div class="pms_cycle_detail_header_compact mb-3">
+        <div class="d-flex align-items-center gap-2">
+            <span class="pms_cycle_detail_icon"><i class="fa fa-bar-chart text-primary"/></span>
+            <h3 class="mb-0"><t t-esc="state.selected_cycle.name"/></h3>
+            <span class="badge bg-info">Monitoring Active</span>
+        </div>
+    </div>
+    <div class="alert alert-info text-center" style="border-radius: 12px;">
+        <i class="fa fa-chart-line fa-3x mb-3 d-block"></i>
+        <h4>Monitoring Phase</h4>
+        <p>This cycle is currently in the <strong>Monitoring phase</strong>.</p>
+        <p>No active planning or appraisal actions are required at this time.</p>
+    </div>
+</t>
+
+    <!-- Show Cycle Detail if selected -->
+    <t t-if="state.show_cycle_detail and state.selected_cycle">
+
+        <!-- Back Button -->
+        <div class="mb-3">
+            <button class="btn btn-sm btn-outline-secondary" t-on-click="closeCycleDetail">
+                <i class="fa fa-arrow-left me-1"></i>Back to All Cycles
+            </button>
+        </div>
+
+        <!-- Cycle Header -->
+        <div class="pms_cycle_detail_header_compact mb-3">
+            <div class="d-flex align-items-center gap-2">
+                <span class="pms_cycle_detail_icon">
+                    <t t-if="state.selected_cycle.state === 'planning'"></t>
+                    <t t-elif="state.selected_cycle.state === 'appraisal'"></t>
+                    <t t-else=""></t>
+                </span>
+                <h3 class="mb-0"><t t-esc="state.selected_cycle.name"/></h3>
+                <span class="badge" t-attf-class="badge #{state.selected_cycle.state === 'planning' ? 'bg-warning text-dark' : state.selected_cycle.state === 'appraisal' ? 'bg-primary' : 'bg-secondary'}">
+                   <t t-if="state.selected_cycle.state === 'planning'">Planning Active</t>
+                    <t t-elif="state.selected_cycle.state === 'monitoring'">Monitoring Active</t>
+                    <t t-elif="state.selected_cycle.state === 'appraisal'">Appraisal Active</t>
+                    <t t-else="">Completed</t>
+                </span>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- STAT CARDS — always visible, outside tabs                    -->
+        <!-- Planning cards always shown.                                  -->
+        <!-- Appraisal cards shown ONLY when state === 'appraisal'.       -->
+        <!-- Date card content switches based on active state.            -->
+        <!-- ============================================================ -->
+     <div class="pms_stat_cards mb-3">
+
+    <!-- Always: Total Employees -->
+    <div class="pms_card" style="border-left: 4px solid #378ADD; border-top: none;">
+        <div class="pms_card_top_row" style="justify-content:space-between; align-items:center; gap:16px;">
+            <div class="pms_card_icon" style="background:#E6F1FB; color:#185FA5; border-radius:8px; width:32px; height:32px; display:flex; align-items:center; justify-content:center;">
+                <i class="fa fa-users" style="font-size:14px;"/>
+            </div>
+            <div class="pms_card_value"><t t-esc="state.selected_cycle.total_employees or 0"/></div>
+        </div>
+        <div class="pms_card_label">Employees</div>
+    </div>
+
+    <!-- Always: Plans Submitted -->
+    <div class="pms_card" style="border-left: 4px solid #1D9E75; border-top: none;">
+        <div class="pms_card_top_row" style="justify-content:space-between; align-items:center; gap:16px;">
+            <div class="pms_card_icon" style="background:#E1F5EE; color:#0F6E56; border-radius:8px; width:32px; height:32px; display:flex; align-items:center; justify-content:center;">
+                <i class="fa fa-paper-plane" style="font-size:14px;"/>
+            </div>
+            <div class="pms_card_value"><t t-esc="state.selected_cycle.plans_submitted or 0"/></div>
+        </div>
+        <div class="pms_card_label">Plans Submitted</div>
+    </div>
+
+    <!-- Always: Plans Approved -->
+    <div class="pms_card" style="border-left: 4px solid #639922; border-top: none;">
+        <div class="pms_card_top_row" style="justify-content:space-between; align-items:center; gap:16px;">
+            <div class="pms_card_icon" style="background:#EAF3DE; color:#3B6D11; border-radius:8px; width:32px; height:32px; display:flex; align-items:center; justify-content:center;">
+                <i class="fa fa-check-circle" style="font-size:14px;"/>
+            </div>
+            <div class="pms_card_value"><t t-esc="state.selected_cycle.plans_approved or 0"/></div>
+        </div>
+        <div class="pms_card_label">Plans Approved</div>
+    </div>
+
+    <!-- NEW: Cycle Info Card (shows cycle start and end dates) -->
+    <div class="pms_card" style="border-left: 4px solid #6c757d; border-top: none;">
+        <div class="pms_card_top_row" style="justify-content:space-between; align-items:center; gap:16px; margin-bottom:12px;">
+            <div class="pms_card_icon" style="background:#e9ecef; color:#495057; border-radius:8px; width:32px; height:32px; display:flex; align-items:center; justify-content:center;">
+                <i class="fa fa-calendar" style="font-size:14px;"/>
+            </div>
+            <div class="pms_card_label" style="font-size:11px; font-weight:500; color:#495057;">Cycle Period</div>
+        </div>
+        <div class="pms_date_line" style="margin-bottom:6px;">
+            <span class="pms_date_label" style="font-size:10px;">Start:</span>
+            <span class="pms_date_value" style="font-size:11px;"><t t-esc="state.selected_cycle.start_date or '-'"/></span>
+        </div>
+        <div class="pms_date_line">
+            <span class="pms_date_label" style="font-size:10px;">End:</span>
+            <span class="pms_date_value" style="font-size:11px;"><t t-esc="state.selected_cycle.end_date or '-'"/></span>
+        </div>
+    </div>
+
+    <!-- Appraisal only: Appraisal Started + Approved -->
+    <t t-if="state.selected_cycle.state === 'appraisal'">
+        <div class="pms_card" style="border-left: 4px solid #BA7517; border-top: none;">
+            <div class="pms_card_top_row" style="justify-content:space-between; align-items:center; gap:16px;">
+                <div class="pms_card_icon" style="background:#FAEEDA; color:#854F0B; border-radius:8px; width:32px; height:32px; display:flex; align-items:center; justify-content:center;">
+                    <i class="fa fa-play-circle" style="font-size:14px;"/>
+                </div>
+                <div class="pms_card_value"><t t-esc="state.selected_cycle.appraisal_started or 0"/></div>
+            </div>
+            <div class="pms_card_label">Appraisal Started</div>
+        </div>
+
+        <div class="pms_card" style="border-left: 4px solid #7F77DD; border-top: none;">
+            <div class="pms_card_top_row" style="justify-content:space-between; align-items:center; gap:16px;">
+                <div class="pms_card_icon" style="background:#EEEDFE; color:#534AB7; border-radius:8px; width:32px; height:32px; display:flex; align-items:center; justify-content:center;">
+                    <i class="fa fa-star" style="font-size:14px;"/>
+                </div>
+                <div class="pms_card_value"><t t-esc="state.selected_cycle.appraisal_approved or 0"/></div>
+            </div>
+            <div class="pms_card_label">Appraisal Approved</div>
+        </div>
+    </t>
+
+    <!-- Date Details Card (shows phase-specific dates) -->
+<!-- Date Details Card -->
+<div class="pms_card date-card">
+
+    <!-- Phase Title on the RIGHT side -->
+    <div class="pms_card_top_row date-card-header">
+        <div class="pms_card_icon date-card-icon">
+            <i class="fa fa-calendar-check-o"/>
+        </div>
+        <div class="pms_card_phase_badge">
+            <t t-if="state.selected_cycle.state === 'planning'">
+                <span class="phase-badge planning">PLANNING</span>
+            </t>
+            <t t-elif="state.selected_cycle.state === 'monitoring'">
+                <span class="phase-badge monitoring">MONITORING</span>
+            </t>
+            <t t-else="">
+                <span class="phase-badge appraisal">APPRAISAL</span>
+            </t>
+        </div>
+    </div>
+
+    <!-- PLANNING phase -->
+    <t t-if="state.selected_cycle.state === 'planning'">
+        <div class="pms_date_line">
+            <span class="pms_date_label">Start:</span>
+            <span class="pms_date_value"><t t-esc="state.selected_cycle.planning_start_date or '-'"/></span>
+        </div>
+        <div class="pms_date_line">
+            <span class="pms_date_label">Deadline:</span>
+            <span class="pms_date_value"><t t-esc="state.selected_cycle.planning_end_date or '-'"/></span>
+        </div>
+        <t t-if="state.selected_cycle.days_left !== null">
+            <div class="pms_date_line">
+                <span class="pms_date_label">Days Left:</span>
+                <span t-attf-class="pms_date_value #{state.selected_cycle.days_left &lt; 7 ? 'text-danger fw-bold' : 'text-success'}">
+                    <t t-esc="state.selected_cycle.days_left"/> days
+                </span>
+            </div>
+        </t>
+    </t>
+
+    <!-- MONITORING phase -->
+    <t t-elif="state.selected_cycle.state === 'monitoring'">
+        <div class="pms_date_line">
+            <span class="pms_date_label">Plan Start:</span>
+            <span class="pms_date_value"><t t-esc="state.selected_cycle.planning_start_date or '-'"/></span>
+        </div>
+        <div class="pms_date_line">
+            <span class="pms_date_label">Plan End:</span>
+            <span class="pms_date_value"><t t-esc="state.selected_cycle.end_date or '-'"/></span>
+        </div>
+        <t t-if="state.selected_cycle.days_left !== null">
+            <div class="pms_date_line">
+                <span class="pms_date_label">Days Left:</span>
+                <span t-attf-class="pms_date_value #{state.selected_cycle.days_left &lt; 7 ? 'text-danger fw-bold' : 'text-success'}">
+                    <t t-esc="state.selected_cycle.days_left"/> days
+                </span>
+            </div>
+        </t>
+    </t>
+
+    <!-- APPRAISAL phase -->
+    <t t-else="">
+        <div class="pms_date_line">
+            <span class="pms_date_label">Appraisal Start:</span>
+            <span class="pms_date_value"><t t-esc="state.selected_cycle.appraisal_start_date or '-'"/></span>
+        </div>
+        <div class="pms_date_line">
+            <span class="pms_date_label">Appraisal End:</span>
+            <span class="pms_date_value"><t t-esc="state.selected_cycle.appraisal_end_date or '-'"/></span>
+        </div>
+        <t t-if="state.selected_cycle.days_left !== null">
+            <div class="pms_date_line">
+                <span class="pms_date_label">Days Left:</span>
+                <span t-attf-class="pms_date_value #{state.selected_cycle.days_left &lt; 7 ? 'text-danger fw-bold' : 'text-success'}">
+                    <t t-esc="state.selected_cycle.days_left"/> days
+                </span>
+            </div>
+        </t>
+    </t>
+
+</div>
+
+</div>
+        <!-- END STAT CARDS -->
+
+        <!-- Cycle Detail Tabs -->
+        <ul class="nav nav-tabs mb-3">
+            <li class="nav-item">
+                <a class="nav-link" t-attf-class="#{state.cycle_active_tab === 'planning' ? 'active' : ''}"
+                   t-on-click="() => setCycleTab('planning')">
+                    <i class="fa fa-clipboard me-1"></i>Planning Phase
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" t-attf-class="#{state.cycle_active_tab === 'appraisal' ? 'active' : ''}"
+                   t-on-click="() => setCycleTab('appraisal')">
+                    <i class="fa fa-star me-1"></i>Appraisal Phase
+                </a>
+            </li>
+        </ul>
+
+        <!-- ============================================================ -->
+        <!-- PLANNING TAB CONTENT                                         -->
+        <!-- ============================================================ -->
+        <t t-if="state.cycle_active_tab === 'planning'">
+
+            <!-- ============================================================ -->
+            <!-- CHARTS SECTION                                               -->
+            <!-- ============================================================ -->
+            <div class="pms_charts_row_3 mb-3">
+                <!-- Chart 1: Plans by Department -->
+                <div class="pms_chart_box">
+                    <h4>Plans by Department</h4>
+                    <p class="text-muted mb-1" style="font-size:10px;">Number of plans per department</p>
+                    <div style="position:relative;width:100%;height:200px;">
+                        <canvas t-ref="cyclePlansDeptChart"/>
+                    </div>
+                </div>
+
+                <!-- Chart 2: Plans by Evaluation Group -->
+                <div class="pms_chart_box">
+                    <h4>Plans by Evaluation Group</h4>
+                    <p class="text-muted mb-1" style="font-size:10px;">Number of plans per evaluation group</p>
+                    <div style="position:relative;width:100%;height:200px;">
+                        <canvas t-ref="cyclePlansGroupChart"/>
+                    </div>
+                </div>
+
+                <!-- Chart 3: Plan Status Breakdown -->
+                <div class="pms_chart_box">
+                    <h4>Plan Status Breakdown</h4>
+                    <p class="text-muted mb-1" style="font-size:10px;">Draft → 1st → 2nd → Final → Approved</p>
+                    <t t-if="state.selected_cycle.state === 'planning' or state.selected_cycle.state === 'monitoring'">
+                        <div style="position:relative;width:100%;height:200px;">
+                            <canvas t-ref="cyclePlanStatusChart"/>
+                        </div>
+                    </t>
+                    <t t-else="">
+                        <div style="height:200px; background:#f8f9fa; border-radius:8px; display:flex; align-items:center; justify-content:center; flex-direction:column;">
+                            <i class="fa fa-chart-line" style="font-size:48px; color:#adb5bd;"></i>
+                            <p class="text-center mt-2 mb-0 px-3" style="color:#6c757d;">
+                                <strong>Planning Phase Completed</strong><br/>
+                                The cycle has moved to <strong>Appraisal Phase</strong>.<br/>
+                                <span style="font-size:11px;">Switch to "Appraisal Phase" tab to view current status.</span>
+                            </p>
+                        </div>
+                    </t>
+                </div>
+            </div>
+
+            <!-- ============================================================ -->
+            <!-- ALL EMPLOYEE PLANS TABLE                                      -->
+            <!-- ============================================================ -->
+            <div class="pms_table_box">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <h4 class="mb-0"> Employee Performance Plans</h4>
+                    <div class="input-group" style="max-width:260px;">
+                        <span class="input-group-text py-1 px-2"><i class="fa fa-search"/></span>
+                        <input type="text"
+                               class="form-control form-control-sm"
+                               placeholder="Search employee..."
+                               t-model="state.cycle_planning_search"
+                               t-on-input="filterCyclePlanningData"/>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-sm table-hover table-striped">
+                        <thead>
+                            <tr>
+                                <th>Employee</th>
+                                <th>Department</th>
+                                <th>Evaluation Group</th>
+                                <th>Status</th>
+                                <th>Pending With</th>
+                                <th>Progress</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <t t-foreach="state.filtered_cycle_planning_data" t-as="plan" t-key="plan.plan_id">
+                                <tr class="pms_row_clickable" t-on-click="() => onOpenPlanRecord(plan)">
+                                    <td>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <img t-attf-src="/web/image/hr.employee/#{plan.employee_id}/avatar_128"
+                                                 style="width:28px;height:28px;border-radius:50%;object-fit:cover;" alt=""/>
+                                            <span class="pms_emp_link"><t t-esc="plan.name"/></span>
+                                        </div>
+                                    </td>
+                                    <td><t t-esc="plan.department"/></td>
+                                    <td><t t-esc="plan.evaluation_group or '-'"/></td>
+                                    <td>
+                                        <span class="badge"
+                                              t-attf-style="#{plan.state_key === 'approved' ? 'background:#d1fae5;color:#065f46;' : plan.state_key === 'draft' ? 'background:#f3f4f6;color:#6b7280;' : 'background:#fef9c3;color:#92400e;'}">
+                                            <t t-esc="plan.state"/>
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex align-items-center justify-content-between gap-2">
+                                            <span class="flex-grow-1">
+                                                <t t-if="plan.state_key === 'draft'">
+                                                    <span class="text-muted"><i class="fa fa-user me-1"/><t t-esc="plan.name"/></span>
+                                                </t>
+                                                <t t-elif="plan.state_key === 'pending_supervisor'">
+                                                    <span class="text-primary"><i class="fa fa-user-tie me-1"/><t t-esc="plan.supervisor_name"/></span>
+                                                </t>
+                                                <t t-elif="plan.state_key === 'pending_secondary_supervisor'">
+                                                    <span class="text-warning"><i class="fa fa-users me-1"/><t t-esc="plan.secondary_name"/></span>
+                                                </t>
+                                                <t t-elif="plan.state_key === 'pending_reviewer'">
+                                                    <span class="text-info"><i class="fa fa-check-double me-1"/><t t-esc="plan.reviewer_name"/></span>
+                                                </t>
+                                                <t t-elif="plan.state_key === 'approved'">
+                                                    <span class="text-success"><i class="fa fa-check-circle me-1"/>Completed</span>
+                                                </t>
+                                                <t t-else="">
+                                                    <span>-</span>
+                                                </t>
+                                            </span>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <div class="progress" style="height: 4px; width: 80px;">
+                                                <div class="progress-bar bg-success"
+                                                     t-attf-style="width:#{Math.round(plan.progress)}%"></div>
+                                            </div>
+                                            <span><t t-esc="Math.round(plan.progress)"/>%</span>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </t>
+                            <t t-if="(!state.filtered_cycle_planning_data or state.filtered_cycle_planning_data.length === 0) and state.cycle_planning_data.length === 0">
+                                <tr><td colspan="6" class="text-center text-muted py-3">No planning data found for this cycle</td></tr>
+                            </t>
+                            <t t-elif="state.filtered_cycle_planning_data and state.filtered_cycle_planning_data.length === 0">
+                                <tr><td colspan="6" class="text-center text-muted py-3">No employees match your search</td></tr>
+                            </t>
+                        </tbody>
+                    </table>
+                    <div class="d-flex justify-content-center mt-3">
+                        <button class="btn btn-primary px-4 py-2" t-on-click="onViewAllPlans">
+                            <i class="fa fa-eye me-2"/>View All Employee Plans
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Full Plans Preview Modal -->
+            <t t-if="state.show_all_plans_preview">
+                <div style="position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:9999;display:flex;flex-direction:column;"
+                     t-on-click="onCloseAllPlans">
+                    <div style="background:#1a3557;padding:14px 24px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
+                        <div style="color:#fff;">
+                            <span style="font-size:16px;font-weight:bold;">
+                                <i class="fa fa-file-pdf-o me-2 text-danger"/>All Employee Plans
+                            </span>
+                            <span style="color:#aecde8;font-size:12px;margin-left:12px;">
+                                <t t-esc="state.selected_cycle.name"/> ·
+                                <t t-esc="(state.all_plans_data or []).length"/> employees
+                            </span>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <t t-if="state.all_plans_loading">
+                                <span style="color:#aecde8;font-size:13px;"><i class="fa fa-spinner fa-spin me-1"/>Loading plans...</span>
+                            </t>
+                            <t t-else="">
+                                <button class="btn btn-danger btn-sm" t-on-click.stop="onDownloadAllPDF">
+                                    <i class="fa fa-download me-1"/>Download PDF
+                                </button>
+                            </t>
+                            <button class="btn btn-outline-light btn-sm" t-on-click="onCloseAllPlans">
+                                <i class="fa fa-times"/>
+                            </button>
+                        </div>
+                    </div>
+                    <div t-ref="allPlansPreviewContainer"
+                         style="flex:1;overflow-y:auto;background:#e8e8e8;padding:24px;"
+                         t-on-click.stop="">
+                        <t t-if="state.all_plans_loading">
+                            <div style="text-align:center;padding:80px;color:#666;">
+                                <i class="fa fa-spinner fa-spin fa-2x mb-3"/><br/>Loading employee plans...
+                            </div>
+                        </t>
+                    </div>
+                </div>
+            </t>
+
+            <!-- Employee Plan Detail Modal -->
+            <t t-if="state.selected_plan">
+                <div class="pms_plan_modal_backdrop" t-on-click="onClosePlanModal">
+                    <div class="pms_plan_modal" t-on-click.stop="">
+                        <div class="pms_plan_modal_header">
+                            <div class="d-flex align-items-center gap-3">
+                                <img t-attf-src="/web/image/hr.employee/#{state.selected_plan.employee_id}/avatar_128"
+                                     style="width:48px;height:48px;border-radius:50%;object-fit:cover;border:2px solid #dee2e6;" alt=""/>
+                                <div>
+                                    <h5 class="mb-0"><t t-esc="state.selected_plan.name"/></h5>
+                                    <small class="text-muted">
+                                        <t t-esc="state.selected_plan.department"/> · <t t-esc="state.selected_plan.cycle"/>
+                                    </small>
+                                </div>
+                            </div>
+                            <button class="btn btn-sm btn-outline-secondary" t-on-click="onClosePlanModal">
+                                <i class="fa fa-times"/>
+                            </button>
+                        </div>
+
+                        <div class="pms_plan_modal_body">
+                            <div class="d-flex align-items-center gap-3 mb-3">
+                                <span class="badge fs-6"
+                                      t-attf-style="#{state.selected_plan.state_key === 'approved' ? 'background:#d1fae5;color:#065f46;' : state.selected_plan.state_key === 'draft' ? 'background:#f3f4f6;color:#6b7280;' : 'background:#fef9c3;color:#854d0e;'}">
+                                    <t t-esc="state.selected_plan.state"/>
+                                </span>
+                                <div class="progress flex-grow-1" style="height:8px;border-radius:4px;">
+                                    <div class="progress-bar bg-success"
+                                         t-attf-style="width:#{Math.round(state.selected_plan.progress)}%"
+                                         role="progressbar"/>
+                                </div>
+                                <span class="fw-semibold"><t t-esc="Math.round(state.selected_plan.progress)"/>%</span>
+                            </div>
+
+                            <div class="pms_pending_with_section mb-3">
+                                <div class="alert alert-info py-2 px-3 mb-0"
+                                     style="background-color: #e7f3ff; border: 1px solid #b8daff; border-radius: 8px;">
+                                    <div class="d-flex align-items-center justify-content-between">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <i class="fa fa-clock-o text-primary"></i>
+                                            <span class="fw-semibold">Pending With:</span>
+                                            <t t-if="state.selected_plan.state_key === 'draft'">
+                                                <span><t t-esc="state.selected_plan.name"/> (Employee)</span>
+                                            </t>
+                                            <t t-elif="state.selected_plan.state_key === 'pending_supervisor'">
+                                                <span><t t-esc="state.selected_plan.supervisor_name"/> (1st Approver)</span>
+                                            </t>
+                                            <t t-elif="state.selected_plan.state_key === 'pending_secondary_supervisor'">
+                                                <span><t t-esc="state.selected_plan.secondary_name"/> (2nd Approver)</span>
+                                            </t>
+                                            <t t-elif="state.selected_plan.state_key === 'pending_reviewer'">
+                                                <span><t t-esc="state.selected_plan.reviewer_name"/> (Final Approver)</span>
+                                            </t>
+                                            <t t-elif="state.selected_plan.state_key === 'approved'">
+                                                <span>✓ Approved - No pending action</span>
+                                            </t>
+                                        </div>
+                                        <t t-if="state.selected_plan.state_key !== 'approved'">
+                                        </t>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row g-2 mb-3">
+                                <div class="col-6">
+                                    <div class="pms_modal_stat_card">
+                                        <div class="pms_modal_stat_value"><t t-esc="state.selected_plan.cycle"/></div>
+                                        <div class="pms_modal_stat_label">Cycle</div>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="pms_modal_stat_card">
+                                        <div class="pms_modal_stat_value">
+                                            <t t-if="state.selected_plan.state_key === 'draft'">Not Started</t>
+                                            <t t-elif="state.selected_plan.state_key === 'pending_supervisor'">Waiting for 1st Approver</t>
+                                            <t t-elif="state.selected_plan.state_key === 'pending_secondary_supervisor'">Waiting for 2nd Approver</t>
+                                            <t t-elif="state.selected_plan.state_key === 'pending_reviewer'">Waiting for Final Approver</t>
+                                            <t t-elif="state.selected_plan.state_key === 'approved'">Completed</t>
+                                        </div>
+                                        <div class="pms_modal_stat_label">Current Stage</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="pms_modal_approver_row">
+                                <t t-if="state.selected_plan.supervisor_name">
+                                    <div class="pms_modal_approver_item">
+                                        <span class="text-muted" style="font-size:11px;">1st Approver</span>
+                                        <span class="fw-semibold" style="font-size:13px;"><t t-esc="state.selected_plan.supervisor_name"/></span>
+                                    </div>
+                                </t>
+                                <t t-if="state.selected_plan.secondary_name">
+                                    <div class="pms_modal_approver_item">
+                                        <span class="text-muted" style="font-size:11px;">2nd Approver</span>
+                                        <span class="fw-semibold" style="font-size:13px;"><t t-esc="state.selected_plan.secondary_name"/></span>
+                                    </div>
+                                </t>
+                                <t t-if="state.selected_plan.reviewer_name">
+                                    <div class="pms_modal_approver_item">
+                                        <span class="text-muted" style="font-size:11px;">Final Approver</span>
+                                        <span class="fw-semibold" style="font-size:13px;"><t t-esc="state.selected_plan.reviewer_name"/></span>
+                                    </div>
+                                </t>
+                            </div>
+
+                            <t t-if="state.selected_plan.days_stuck and state.selected_plan.days_stuck > 0 and state.selected_plan.state_key !== 'approved'">
+                                <div class="alert alert-warning py-2 px-3 mt-3 mb-0" style="font-size: 12px;">
+                                    <i class="fa fa-exclamation-triangle me-1"></i>
+                                    Pending for <strong><t t-esc="state.selected_plan.days_stuck"/> days</strong>. Send reminder to the responsible person.
+                                </div>
+                            </t>
+                        </div>
+
+                        <div class="pms_plan_modal_footer">
+                            <button class="btn btn-sm btn-outline-secondary" t-on-click="onClosePlanModal">Close</button>
+                            <button class="btn btn-sm btn-primary" t-on-click="() => onOpenPlanRecord(state.selected_plan)">
+                                <i class="fa fa-external-link me-1"></i>Open Full Plan
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </t>
+        </t>
+
+        <!-- ============================================================ -->
+        <!-- APPRAISAL TAB CONTENT                                        -->
+        <!-- ============================================================ -->
+        <t t-if="state.cycle_active_tab === 'appraisal'">
+
+            <!-- Employee Appraisal Status Table -->
+            <div class="pms_table_box mb-3">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <h4 class="mb-0"><i class="fa fa-clipboard text-warning"/> Employee Appraisal Status</h4>
+                    <div class="input-group" style="max-width:260px;">
+                        <span class="input-group-text py-1 px-2"><i class="fa fa-search"/></span>
+                        <input type="text"
+                               class="form-control form-control-sm"
+                               placeholder="Search employee..."
+                               t-model="state.cycle_appraisal_search"
+                               t-on-input="filterCycleAppraisalData"/>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-sm table-hover table-striped">
+                        <thead>
+                            <tr>
+                                <th>Employee</th>
+                                <th>Department</th>
+                                <th>Evaluation Group</th>
+                                <th>Status</th>
+                                <th>Pending With</th>
+                                <th>Progress</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <t t-foreach="state.filtered_cycle_appraisal_data" t-as="appraisal" t-key="appraisal.plan_id">
+                                <tr class="pms_row_clickable" t-on-click="() => onClickEmployeeAppraisal(appraisal)">
+                                    <td>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <img t-attf-src="/web/image/hr.employee/#{appraisal.employee_id}/avatar_128"
+                                                 style="width:28px;height:28px;border-radius:50%;object-fit:cover;" alt=""/>
+                                            <span class="pms_emp_link"><t t-esc="appraisal.name"/></span>
+                                        </div>
+                                    </td>
+                                    <td><t t-esc="appraisal.department"/></td>
+                                    <td><t t-esc="appraisal.evaluation_group or '-'"/></td>
+                                    <td>
+                                        <span class="badge"
+                                              t-attf-style="#{appraisal.state_key === 'appraisal_approved' ? 'background:#d1fae5;color:#065f46;' : appraisal.state_key === 'appraisal_draft' ? 'background:#f3f4f6;color:#6b7280;' : 'background:#fef9c3;color:#854d0e;'}">
+                                            <t t-esc="appraisal.state"/>
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex align-items-center justify-content-between gap-2">
+                                            <span class="flex-grow-1">
+                                                <t t-if="appraisal.state_key === 'appraisal_draft'">
+                                                    <span class="text-muted"><i class="fa fa-user me-1"></i><t t-esc="appraisal.name"/> (Self Rating)</span>
+                                                </t>
+                                                <t t-elif="appraisal.state_key === 'appraisal_pending_supervisor'">
+                                                    <span class="text-primary"><i class="fa fa-user-tie me-1"></i><t t-esc="appraisal.supervisor_name"/> (1st Approver)</span>
+                                                </t>
+                                                <t t-elif="appraisal.state_key === 'appraisal_pending_secondary_supervisor'">
+                                                    <span class="text-warning"><i class="fa fa-users me-1"></i><t t-esc="appraisal.secondary_name"/> (2nd Approver)</span>
+                                                </t>
+                                                <t t-elif="appraisal.state_key === 'appraisal_pending_reviewer'">
+                                                    <span class="text-info"><i class="fa fa-check-double me-1"></i><t t-esc="appraisal.reviewer_name"/> (Final Approver)</span>
+                                                </t>
+                                                <t t-elif="appraisal.state_key === 'appraisal_approved'">
+                                                    <span class="text-success"><i class="fa fa-check-circle me-1"></i>Completed</span>
+                                                </t>
+                                                <t t-else=""><span>-</span></t>
+                                            </span>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <div class="progress" style="height: 4px; width: 60px;">
+                                                <div class="progress-bar bg-success"
+                                                     t-attf-style="width:#{Math.round(appraisal.progress)}%"></div>
+                                            </div>
+                                            <span><t t-esc="Math.round(appraisal.progress)"/>%</span>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </t>
+                            <t t-if="(!state.filtered_cycle_appraisal_data or state.filtered_cycle_appraisal_data.length === 0) and state.cycle_appraisal_data.length === 0">
+                                <tr><td colspan="6" class="text-center text-muted py-3">No appraisal data found for this cycle</td></tr>
+                            </t>
+                            <t t-elif="state.filtered_cycle_appraisal_data and state.filtered_cycle_appraisal_data.length === 0">
+                                <tr><td colspan="6" class="text-center text-muted py-3">No employees match your search</td></tr>
+                            </t>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Appraisal Scores Table -->
+         <div class="pms_table_box mb-3">
+    <div class="d-flex align-items-center justify-content-between mb-2">
+        <h4 class="mb-0"><i class="fa fa-bar-chart text-primary"/> Employee Appraisals</h4>
+        <div class="d-flex gap-2">
+            <button class="btn btn-sm btn-outline-primary" t-on-click="viewAllEmployeeAppraisals">
+                <i class="fa fa-eye me-1"></i>View All Employee Appraisals
+            </button>
+        </div>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-sm table-hover table-striped">
+            <thead>
+                <tr>
+                    <th>Employee</th>
+                    <th>Department</th>
+                    <th>Weightage</th>
+                    <th>Self</th>
+                    <th>Supervisor</th>
+                    <th>Secondary</th>
+                    <th>Reviewer</th>
+                    <th>Final Score</th>
+                    <th>Rating</th>
+                </tr>
+            </thead>
+            <tbody>
+                <t t-foreach="state.cycle_appraisal_data" t-as="appraisal" t-key="appraisal.plan_id">
+                    <tr class="pms_row_clickable" t-on-click="() => onClickEmployeeAppraisal(appraisal)">
+                        <td><t t-esc="appraisal.name"/></td>
+                        <td><t t-esc="appraisal.department"/></td>
+                        <td class="text-center">
+    <span class="badge" style="background:#f0fdf4;color:#166534;">
+        <t t-esc="appraisal.total_weightage or '—'"/>
+    </span>
+</td>
+                        <td class="text-center"><span class="badge" style="background:#f3f4f6;color:#374151;"><t t-esc="appraisal.self_score or 0"/></span></td>
+                        <td class="text-center"><span class="badge" style="background:#dbeafe;color:#1e40af;"><t t-esc="appraisal.supervisor_score or 0"/></span></td>
+                        <td class="text-center">
+                            <t t-if="appraisal.secondary_score">
+                                <span class="badge" style="background:#fef9c3;color:#854d0e;"><t t-esc="appraisal.secondary_score"/></span>
+                            </t>
+                            <t t-else=""><span class="text-muted">—</span></t>
+                        </td>
+                        <td class="text-center"><span class="badge" style="background:#e0f2fe;color:#0369a1;"><t t-esc="appraisal.reviewer_score or 0"/></span></td>
+                        <td class="text-center"><strong class="text-success fs-6"><t t-esc="appraisal.final_score or 0"/></strong></td>
+                        <td>
+                            <span t-att-class="'badge ' + (appraisal.rating_class or 'bg-secondary')">
+                                <t t-esc="appraisal.rating or '-'"/>
+                            </span>
+                        </td>
+                    </tr>
+                </t>
+                <t t-if="state.cycle_appraisal_data.length === 0">
+                    <tr><td colspan="9" class="text-center text-muted py-3">No appraisal data found for this cycle</td></tr>
+                </t>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+            <!-- View All Employee Appraisals Modal -->
+            <t t-if="state.show_all_appraisals_modal and state.all_appraisals_data">
+                <div class="pms_plan_modal_backdrop" t-on-click="closeAllAppraisalsModal">
+                    <div class="pms_plan_modal" style="max-width: 95%; width: 1400px; max-height: 90vh;" t-on-click.stop="">
+                        <div class="pms_plan_modal_header"
+                             style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                            <div class="d-flex align-items-center gap-3">
+                                <i class="fa fa-users fa-2x"></i>
+                                <div>
+                                    <h4 class="mb-0">Employee Appraisal Report</h4>
+                                    <small>Cycle: <t t-esc="state.selected_cycle?.name"/> - All Employees</small>
+                                </div>
+                            </div>
+                            <button class="btn btn-sm btn-light" t-on-click="closeAllAppraisalsModal">
+                                <i class="fa fa-times"/>
+                            </button>
+                        </div>
+                        <div class="pms_plan_modal_body" style="max-height: calc(90vh - 120px); overflow-y: auto;">
+                            <div class="table-responsive">
+                                <table class="table table-sm table-bordered table-striped" style="font-size: 12px;">
+                                    <thead class="table-dark">
+                                        <tr>
+                                            <th>#</th>
+                                            <th>Emp ID</th>
+                                            <th>Employee Name</th>
+                                            <th>Designation</th>
+                                            <th>DOJ</th>
+                                            <th>Self Rating</th>
+                                            <th>1st Mgr Score</th>
+                                            <th>2nd Mgr Score</th>
+                                            <th>Reviewer Score</th>
+                                            <th>Final Score</th>
+                                            <th>Rating</th>
+                                            <th>BVVP %</th>
+                                            <th>Basic Pay</th>
+                                            <th>BVVP Payable</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <t t-foreach="state.all_appraisals_data" t-as="emp" t-key="emp.employee_id">
+                                            <tr t-att-class="{'table-success': (emp.final_score or 0) >= 85, 'table-warning': (emp.final_score or 0) &lt; 70}">
+                                                <td class="text-center"><t t-esc="emp_index + 1"/></td>
+                                                <td><t t-esc="emp.employee_id"/></td>
+                                                <td><t t-esc="emp.name"/></td>
+                                                <td><t t-esc="emp.designation or '-'"/></td>
+                                                <td><t t-esc="emp.doj or '-'"/></td>
+                                                <td class="text-center"><t t-esc="emp.self_score or 0"/></td>
+                                                <td class="text-center"><t t-esc="emp.supervisor_score or 0"/></td>
+                                                <td class="text-center"><t t-esc="emp.secondary_score or '-'"/></td>
+                                                <td class="text-center"><t t-esc="emp.reviewer_score or 0"/></td>
+                                                <td class="text-center"><strong><t t-esc="emp.final_score or 0"/></strong></td>
+                                                <td class="text-center"><t t-esc="emp.rating or '-'"/></td>
+                                                <td class="text-center"><t t-esc="emp.bvvp_percent or 0"/>%</td>
+                                                <td class="text-end"><t t-esc="emp.basic_pay or 0"/></td>
+                                                <td class="text-end"><strong><t t-esc="emp.bvvp_payable or 0"/></strong></td>
+                                            </tr>
+                                        </t>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="pms_plan_modal_footer">
+                            <button class="btn btn-sm btn-outline-secondary" t-on-click="closeAllAppraisalsModal">
+                                <i class="fa fa-times me-1"></i>Close
+                            </button>
+                            <div class="dropdown d-inline-block">
+                                <button class="btn btn-sm btn-success dropdown-toggle" data-bs-toggle="dropdown">
+                                    <i class="fa fa-download me-1"></i>Export
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end">
+                                    <li><a class="dropdown-item" href="#" t-on-click.prevent="exportAllAppraisalsToExcel"><i class="fa fa-bar-chart text-primary"/> Export to Excel (CSV)</a></li>
+                                    <li><a class="dropdown-item" href="#" t-on-click.prevent="exportAllAppraisalsToPDF"><i class="fa fa-file-text-o text-primary"/> Export to PDF</a></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </t>
+
+
+        </t>
+
+
+
+    </t>
+
+<!-- Otherwise show Overview with all cycles -->
+<t t-else="">
+
+    <!-- OVERVIEW DASHBOARD -->
+    <div class="pms_overview">
+        <div class="pms_all_cycles_section">
+    <div class="pms_section_header">
+        <h3><i class="fa fa-refresh me-2 text-primary"/>Active Cycles</h3>
+        <span class="pms_section_badge"><t t-esc="state.active_cycles_list.length"/> Active</span>
+    </div>
+
+    <div class="pms_cycle_cards_grid">
+        <t t-foreach="state.active_cycles_list" t-as="cycle" t-key="cycle.id">
+            <div t-attf-class="pms_cycle_card #{cycle.state}">
+
+                <!-- Header -->
+                <div t-attf-class="pms_cycle_card_header #{cycle.state}">
+                    <div class="pms_cycle_card_title">
+                        <strong><t t-esc="cycle.name"/></strong>
+                    </div>
+                    <div class="pms_cycle_phase_badge">
+                        <span class="badge" t-attf-style="#{cycle.state === 'planning' ? 'background:#dbeafe;color:#60a5fa;' : cycle.state === 'monitoring' ? 'background:#e0f2fe;color:#38bdf8;' : 'background:#d1fae5;color:#34d399;'}">
+                            <t t-if="cycle.state === 'planning'">Planning Active</t>
+                            <t t-elif="cycle.state === 'monitoring'">Monitoring Active</t>
+                            <t t-else="">Appraisal Active</t>
+                        </span>
+                    </div>
+                </div>
+
+                <div class="pms_cycle_card_body">
+
+
+                   <!-- Dates row -->
+<div class="pms_cycle_dates" style="margin-bottom:8px;">
+
+    <!-- Planning Phase -->
+    <t t-if="cycle.state === 'planning'">
+        <div class="pms_date_row">
+            <span class="pms_date_label">Start:</span>
+            <span class="pms_date_value"><t t-esc="cycle.start_date or '-'"/></span>
+        </div>
+        <div class="pms_date_row">
+            <span class="pms_date_label">Deadline:</span>
+            <span class="pms_date_value"><t t-esc="cycle.planning_deadline or '-'"/></span>
+        </div>
+    </t>
+
+    <!-- Monitoring Phase - Show approved plan dates (same as planning) -->
+    <t t-elif="cycle.state === 'monitoring'">
+        <div class="pms_date_row">
+            <span class="pms_date_label">Plan Start:</span>
+            <span class="pms_date_value"><t t-esc="cycle.start_date or '-'"/></span>
+        </div>
+        <div class="pms_date_row">
+            <span class="pms_date_label">Plan End:</span>
+            <span class="pms_date_value"><t t-esc="cycle.end_date or '-'"/></span>
+        </div>
+    </t>
+
+    <!-- Appraisal Phase -->
+    <t t-else="">
+        <div class="pms_date_row">
+            <span class="pms_date_label">Appraisal Start:</span>
+            <span class="pms_date_value"><t t-esc="cycle.appraisal_start_date or cycle.start_date or '-'"/></span>
+        </div>
+        <div class="pms_date_row">
+            <span class="pms_date_label">Appraisal End:</span>
+            <span class="pms_date_value"><t t-esc="cycle.appraisal_end_date or cycle.end_date or '-'"/></span>
+        </div>
+    </t>
+
+    <!-- Days Left (shown for all phases) -->
+    <t t-if="cycle.days_left !== null and cycle.days_left !== undefined">
+        <div class="pms_date_row">
+            <span class="pms_date_label">Days Left:</span>
+            <span t-attf-class="pms_date_value #{cycle.days_left &lt; 7 ? 'text-danger' : 'text-success'}">
+                <t t-esc="cycle.days_left"/> days
+            </span>
+        </div>
+    </t>
+</div>
+
+                    <!-- PLANNING: 2-column status grid -->
+                    <t t-if="cycle.state === 'planning'">
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 12px;">
+                            <div class="pms_breakdown_item">
+                                <span class="pms_breakdown_label">Draft:</span>
+                                <span class="pms_breakdown_count"><t t-esc="cycle.phase_data.draft_count or 0"/></span>
+                            </div>
+                            <div class="pms_breakdown_item">
+                                <span class="pms_breakdown_label">Supervisor:</span>
+                                <span class="pms_breakdown_count"><t t-esc="cycle.phase_data.pending_supervisor_count or 0"/></span>
+                            </div>
+                            <div class="pms_breakdown_item">
+                                <span class="pms_breakdown_label">Secondary:</span>
+                                <span class="pms_breakdown_count"><t t-esc="cycle.phase_data.pending_secondary_count or 0"/></span>
+                            </div>
+                            <div class="pms_breakdown_item">
+                                <span class="pms_breakdown_label">Reviewer:</span>
+                                <span class="pms_breakdown_count"><t t-esc="cycle.phase_data.pending_reviewer_count or 0"/></span>
+                            </div>
+                            <div class="pms_breakdown_item">
+                                <span class="pms_breakdown_label">Approved:</span>
+                                <span class="pms_breakdown_count"><t t-esc="cycle.phase_data.approved_count or 0"/></span>
+                            </div>
+                        </div>
+                    </t>
+
+                    <!-- MONITORING: simple message -->
+                    <t t-elif="cycle.state === 'monitoring'">
+                        <div class="pms_cycle_status_breakdown">
+                            <div class="pms_breakdown_title">The cycle is in Monitoring State.</div>
+                            <div class="pms_breakdown_items">
+                                <div class="pms_breakdown_item">
+                                    <span class="pms_breakdown_label">Approved Plans:</span>
+                                    <span class="pms_breakdown_count">
+                                        <t t-esc="cycle.phase_data.approved_plans or 0"/>/<t t-esc="cycle.total_employees or 0"/>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </t>
+
+                    <!-- APPRAISAL: 2-column status grid -->
+                    <t t-elif="cycle.state === 'appraisal'">
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 12px;">
+                            <div class="pms_breakdown_item">
+                                <span class="pms_breakdown_label">Self Rating:</span>
+                                <span class="pms_breakdown_count"><t t-esc="cycle.phase_data.self_count or 0"/></span>
+                            </div>
+                            <div class="pms_breakdown_item">
+                                <span class="pms_breakdown_label">Supervisor:</span>
+                                <span class="pms_breakdown_count"><t t-esc="cycle.phase_data.first_rating_count or 0"/></span>
+                            </div>
+                            <div class="pms_breakdown_item">
+                                <span class="pms_breakdown_label">Secondary:</span>
+                                <span class="pms_breakdown_count"><t t-esc="cycle.phase_data.secondary_rating_count or 0"/></span>
+                            </div>
+                            <div class="pms_breakdown_item">
+                                <span class="pms_breakdown_label">Reviewer:</span>
+                                <span class="pms_breakdown_count"><t t-esc="cycle.phase_data.final_rating_count or 0"/></span>
+                            </div>
+                            <div class="pms_breakdown_item">
+                                <span class="pms_breakdown_label">Completed:</span>
+                                <span class="pms_breakdown_count"><t t-esc="cycle.phase_data.completed_count or 0"/></span>
+                            </div>
+                        </div>
+                    </t>
+
+                    <!-- Alerts -->
+                    <t t-if="cycle.monitoring_state === 'at_risk'">
+                        <div class="alert alert-warning alert-sm py-1 px-2 mb-0 mt-2" style="font-size:11px;">
+                            <i class="fa fa-exclamation-triangle"/>
+                            <t t-if="cycle.state === 'planning'">Multiple plans pending approval. Review required.</t>
+                            <t t-elif="cycle.state === 'monitoring'">Monitoring phase is behind schedule.</t>
+                            <t t-else="">Multiple appraisals pending. Attention needed.</t>
+                        </div>
+                    </t>
+                    <t t-elif="cycle.monitoring_state === 'delayed'">
+                        <div class="alert alert-danger alert-sm py-1 px-2 mb-0 mt-2" style="font-size:11px;">
+                            <i class="fa fa-clock-o"/> Cycle is behind schedule. Immediate action required.
+                        </div>
+                    </t>
+
+                </div>
+
+                <div class="pms_cycle_card_footer">
+                    <button class="btn btn-sm btn-outline-primary" t-on-click="() => openCycleDetail(cycle)">
+                        <i class="fa fa-chart-line me-1"/>View Details
+                    </button>
+                </div>
+
+            </div>
+        </t>
+
+        <t t-if="!state.active_cycles_list or state.active_cycles_list.length === 0">
+            <div class="col-12 text-center text-muted py-5">
+                <i class="fa fa-inbox fa-2x mb-2"/>
+                <p>No active performance cycles at the moment.</p>
+            </div>
+        </t>
+    </div>
+</div>
+
+        <!-- Completed Cycles Table -->
+        <t t-if="state.completed_cycles_list and state.completed_cycles_list.length > 0">
+            <div class="pms_cycles_table_compact mt-3">
+                <div class="pms_table_header">
+                    <div class="d-flex align-items-center justify-content-between w-100 flex-wrap gap-2">
+                        <div class="d-flex align-items-center gap-3">
+                            <h4 class="mb-0"><i class="fa fa-check-circle me-2 text-success"/> Completed Cycles</h4>
+                            <span class="badge bg-secondary">
+                                <t t-esc="state.filtered_completed_cycles_list ? state.filtered_completed_cycles_list.length : state.completed_cycles_list.length"/>
+                                Completed
+                            </span>
+                            <t t-if="state.completed_cycles_search and state.filtered_completed_cycles_list.length != state.completed_cycles_list.length">
+                                <span class="badge bg-info">
+                                    <t t-esc="state.filtered_completed_cycles_list.length"/> showing
+                                </span>
+                            </t>
+                        </div>
+                        <div class="input-group" style="max-width: 300px;">
+                            <span class="input-group-text"><i class="fa fa-search"/></span>
+                            <input type="text"
+                                   class="form-control"
+                                   placeholder="Search by cycle name..."
+                                   t-model="state.completed_cycles_search"
+                                   t-on-input="filterCompletedCyclesList"/>
+                            <button class="btn btn-outline-secondary"
+                                    t-if="state.completed_cycles_search"
+                                    t-on-click="clearCompletedCyclesSearch"
+                                    type="button">
+                                <i class="fa fa-times"/>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-sm table-striped">
+                        <thead>
+                            <tr>
+                                <th>Cycle Name</th>
+                                <th>Type</th>
+                                <th>Start Date</th>
+                                <th>End Date</th>
+                                <th>Total Employees</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <t t-foreach="state.filtered_completed_cycles_list" t-as="cycle" t-key="cycle.id">
+                                <tr>
+                                    <td><strong><t t-esc="cycle.name"/></strong></td>
+                                    <td><span class="badge bg-secondary"><t t-esc="cycle.cycle_type or cycle.type"/></span></td>
+                                    <td><t t-esc="cycle.start_date or '-'"/></td>
+                                    <td><t t-esc="cycle.end_date or '-'"/></td>
+                                    <td><t t-esc="cycle.total_employees or 0"/></td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-primary"
+        t-on-click="() => openCompletedCycleDetailModal(cycle.id)">
+    <i class="fa fa-eye me-1"></i>View Details
+</button>
+                                    </td>
+                                </tr>
+                            </t>
+                            <t t-if="!state.filtered_completed_cycles_list or state.filtered_completed_cycles_list.length === 0">
+                                <tr>
+                                    <td colspan="7" class="text-center text-muted py-4">
+                                        <i class="fa fa-search fa-2x mb-2 d-block"></i>
+                                        No completed cycles found matching "<strong><t t-esc="state.completed_cycles_search"/></strong>"
+                                    </td>
+                                </tr>
+                            </t>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </t>
+        <t t-else="">
+            <div class="alert alert-info mt-3 text-center">
+                <i class="fa fa-info-circle"></i> No completed cycles found.
+            </div>
+        </t>
+
+        <!-- ============================================================ -->
+        <!-- COMPLETED CYCLE DETAIL MODAL -->
+        <!-- ============================================================ -->
+       <!-- Completed Cycle Detail Modal -->
+<!-- Completed Cycle Detail Modal -->
+<t t-if="state.show_completed_cycle_modal and state.selected_completed_cycle">
+    <div class="pms_plan_modal_backdrop" t-on-click="closeCompletedCycleModal">
+        <!-- Made modal much larger - full screen with some margin -->
+        <div class="pms_plan_modal" style="max-width: 98%; width: 1400px; max-height: 95vh; margin: 20px auto;" t-on-click.stop="">
+            <div class="pms_plan_modal_header" style="padding: 15px 20px;">
+                <div class="d-flex align-items-center gap-3">
+                    <span class="fs-2"><i class="fa fa-check-circle text-success"/></span>
+                    <div>
+                        <h4 class="mb-0"><t t-esc="state.selected_completed_cycle.name"/></h4>
+                        <small class="text-muted">
+                            <t t-esc="state.selected_completed_cycle.start_date"/> to <t t-esc="state.selected_completed_cycle.end_date"/>
+                        </small>
+                    </div>
+                </div>
+                <button class="btn btn-sm btn-outline-secondary" t-on-click="closeCompletedCycleModal">
+                    <i class="fa fa-times"/>
+                </button>
+            </div>
+
+            <!-- Larger body with horizontal scroll for table -->
+            <div class="pms_plan_modal_body" style="max-height: calc(95vh - 120px); overflow: auto; padding: 20px;">
+
+                <!-- Cycle Summary -->
+                <div class="alert alert-light border mb-3" style="background-color: #f8f9fa;">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <strong>Total Employees:</strong> <t t-esc="state.selected_completed_cycle.total_employees or 0"/>
+                        </div>
+                        <div class="col-md-4">
+                            <strong>Cycle Type:</strong> <t t-esc="state.selected_completed_cycle.cycle_type or state.selected_completed_cycle.type or '-'"/>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Employee Scores Table - Added print-friendly wrapper -->
+                <h5 class="mb-2"><i class="fa fa-bar-chart me-2 text-primary"/>Employee Appraisal Scores</h5>
+                <div class="table-responsive" id="completed_cycle_export_table" style="overflow-x: auto; -webkit-overflow-scrolling: touch;">
+                    <table class="table table-bordered table-striped" style="border-collapse: collapse; width: 100%; min-width: 1200px; font-size: 13px;">
+                        <thead>
+                            <tr style="background-color: #f8f9fa; border-bottom: 2px solid #dee2e6;">
+                                <th style="padding: 10px 8px; white-space: nowrap;">Emp ID</th>
+                                <th style="padding: 10px 8px; white-space: nowrap;">Employee</th>
+                                <th style="padding: 10px 8px; white-space: nowrap;">Department</th>
+                                <th style="padding: 10px 8px; white-space: nowrap;">Evaluation Group</th>
+                                <th style="padding: 10px 8px; text-align: center; white-space: nowrap;">Weightage</th>
+                                <th style="padding: 10px 8px; text-align: center; white-space: nowrap;">Self Score</th>
+                                <th style="padding: 10px 8px; text-align: center; white-space: nowrap;">Supervisor Score</th>
+                                <th style="padding: 10px 8px; text-align: center; white-space: nowrap;">Secondary Score</th>
+                                <th style="padding: 10px 8px; text-align: center; white-space: nowrap;">Reviewer Score</th>
+                                <th style="padding: 10px 8px; text-align: center; white-space: nowrap;">Final Score</th>
+                                <th style="padding: 10px 8px; white-space: nowrap;">Rating</th>
+                                <th style="padding: 10px 8px; text-align: center; white-space: nowrap;">Bonus Eligibility %</th>
+                                <th style="padding: 10px 8px; text-align: center; white-space: nowrap;">Basic Pay</th>
+                                <th style="padding: 10px 8px; text-align: center; white-space: nowrap;">Bonus Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <t t-foreach="state.completed_cycle_employees" t-as="emp" t-key="emp.employee_id">
+                                <tr>
+                                    <td style="padding: 8px; white-space: nowrap;"><t t-esc="emp.employee_id or '-'"/></td>
+                                    <td style="padding: 8px; white-space: nowrap;"><t t-esc="emp.name"/></td>
+                                    <td style="padding: 8px;"><t t-esc="emp.department or '-'"/></td>
+                                    <td style="padding: 8px;"><t t-esc="emp.evaluation_group or '-'"/></td>
+                                      <td style="padding: 8px; text-align: center;"><t t-esc="emp.weightage or '-'"/></td>
+                                    <td style="padding: 8px; text-align: center;"><t t-esc="emp.self_score or 0"/></td>
+                                    <td style="padding: 8px; text-align: center;"><t t-esc="emp.supervisor_score or 0"/></td>
+                                    <td style="padding: 8px; text-align: center;">
+                                        <t t-if="emp.secondary_score">
+                                            <t t-esc="emp.secondary_score"/>
+                                        </t>
+                                        <t t-else="">—</t>
+                                    </td>
+                                    <td style="padding: 8px; text-align: center;"><t t-esc="emp.reviewer_score or 0"/></td>
+                                    <td style="padding: 8px; text-align: center;"><strong><t t-esc="emp.final_score or 0"/></strong></td>
+                                    <td style="padding: 8px;"><t t-esc="emp.rating or '-'"/></td>
+                                    <td style="padding: 8px; text-align: center;"><t t-esc="emp.eligibility_pct or 0"/>%</td>
+                                    <td style="padding: 8px; text-align: right;"><t t-esc="emp.basic_pay_display or emp.basic_pay or 0"/></td>
+                                    <td style="padding: 8px; text-align: right; font-weight: bold;"><t t-esc="emp.bonus_amount_display or emp.bonus_amount or 0"/></td>
+                                </tr>
+                            </t>
+                            <t t-if="!state.completed_cycle_employees or state.completed_cycle_employees.length === 0">
+                                <tr>
+                                    <td colspan="13" style="padding: 40px; text-align: center; color: #6c757d;">
+                                        <i class="fa fa-inbox fa-2x mb-2 d-block"></i>
+                                        Loading employee data...
+                                    </td>
+                                </tr>
+                            </t>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="pms_plan_modal_footer" style="padding: 15px 20px;">
+                <button class="btn btn-sm btn-outline-secondary" t-on-click="closeCompletedCycleModal">
+                    <i class="fa fa-times me-1"></i>Close
+                </button>
+                <div class="dropdown d-inline-block">
+                    <button class="btn btn-sm btn-success dropdown-toggle"
+                            data-bs-toggle="dropdown"
+                            aria-expanded="false">
+                        <i class="fa fa-download me-1"></i>Download
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li>
+                            <a class="dropdown-item" href="#" t-on-click.prevent="exportCompletedCycleData">
+                                <i class="fa fa-file-excel-o me-2 text-success"></i>Export as Excel (CSV)
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="#" t-on-click.prevent="exportCompletedCycleToPDF">
+                                <i class="fa fa-file-pdf-o me-2 text-danger"></i>Export as PDF
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</t>
+
+    </div><!-- end pms_overview -->
+
+</t>
+              </t>
+
+                <!-- ============================================================ -->
+<!-- EMPLOYEE DASHBOARD                                          -->
+<!-- ============================================================ -->
+<t t-elif="state.role === 'employee'">
+    <div class="pms_employee_dashboard">
+
+
+
+        <!-- ============================================================ -->
+        <!-- ACTIVE CYCLE SECTION                                          -->
+        <!-- ============================================================ -->
+            <!-- Welcome Card + Stats Cards — all in one row -->
+<t t-if="state.employee and state.employee.current_cycle">
+
+    <!-- Cycle Name Badge -->
+    <div class="pms_cycle_title_row mb-2 d-flex align-items-center gap-2">
+        <span class="pms_cycle_card_icon">
+            <t t-if="state.employee.current_cycle.phase == 'planning'"><i class="fa fa-clipboard text-warning"/></t>
+            <t t-elif="state.employee.current_cycle.phase == 'monitoring'"><i class="fa fa-bar-chart text-primary"/></t>
+            <t t-elif="state.employee.current_cycle.phase == 'appraisal'"><i class="fa fa-bullseye text-primary"/></t>
+            <t t-else="">✅</t>
+        </span>
+        <strong><t t-esc="state.employee.current_cycle.cycle_name"/></strong>
+        <span t-att-class="'badge ' + (state.employee.current_cycle.phase == 'planning' ? 'bg-primary' : state.employee.current_cycle.phase == 'monitoring' ? 'bg-info' : state.employee.current_cycle.phase == 'appraisal' ? 'bg-warning text-dark' : 'bg-success')">
+            <t t-if="state.employee.current_cycle.phase == 'planning'">Planning Active</t>
+            <t t-elif="state.employee.current_cycle.phase == 'monitoring'">Monitoring Active</t>
+            <t t-elif="state.employee.current_cycle.phase == 'appraisal'">Appraisal Active</t>
+            <t t-else="">Completed</t>
+        </span>
+    </div>
+
+    <!-- All Cards in One Row including Welcome -->
+    <div class="pms_all_cards_row mb-3">
+
+        <!-- Welcome Card — same size as stat cards -->
+        <div class="pms_small_card green">
+            <div class="d-flex align-items-center gap-2">
+                <img t-att-src="'/web/image/hr.employee/' + state.employee_id + '/avatar_128'"
+                     style="width: 38px; height: 38px; border-radius: 50%; object-fit: cover; border: 2px solid rgba(255,255,255,0.5);"/>
+                <div>
+                    <div style="font-size: 10px; opacity: 0.85;">Hello!</div>
+                    <div class="fw-bold" style="font-size: 13px; line-height: 1.2;">
+                        <t t-esc="state.employee_name"/>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Plan Progress -->
+        <div class="pms_small_card blue">
+            <div class="pms_small_card_value"><t t-esc="state.employee.current_cycle.plan_progress or 0"/>%</div>
+            <div class="pms_small_card_label">Plan Progress</div>
+        </div>
+
+        <!-- Appraisal Progress -->
+        <div class="pms_small_card teal">
+            <div class="pms_small_card_value"><t t-esc="state.employee.current_cycle.appraisal_progress or 0"/>%</div>
+            <div class="pms_small_card_label">Appraisal Progress</div>
+        </div>
+
+        <!-- KPIs Selected -->
+        <div class="pms_small_card green">
+            <div class="pms_small_card_value">
+                <t t-esc="state.employee.current_cycle.selected_kpi_count or 0"/>/<t t-esc="state.employee.current_cycle.total_kpi_count or 0"/>
+            </div>
+            <div class="pms_small_card_label">KPIs Selected</div>
+        </div>
+
+        <!-- Date Card -->
+        <div class="pms_date_compact_card">
+            <div class="pms_date_compact_row">
+    <span class="pms_date_compact_label">Start:</span>
+    <span class="pms_date_compact_value">
+        <t t-if="state.employee.current_cycle.phase === 'appraisal'">
+            <t t-esc="state.employee.current_cycle.appraisal_start_date or '-'"/>
+        </t>
+        <t t-else="">
+            <t t-esc="state.employee.current_cycle.cycle_start_date or '-'"/>
+        </t>
+    </span>
+</div>
+            <div class="pms_date_compact_row">
+                <span class="pms_date_compact_label">
+                    <t t-if="state.employee.current_cycle.phase == 'planning'">Deadline:</t>
+                    <t t-elif="state.employee.current_cycle.phase == 'appraisal'">End Date:</t>
+                    <t t-else="">Completed:</t>
+                </span>
+                <span class="pms_date_compact_value">
+                    <t t-if="state.employee.current_cycle.phase == 'planning'">
+                        <t t-esc="state.employee.current_cycle.deadline or '-'"/>
+                    </t>
+                    <t t-elif="state.employee.current_cycle.phase == 'appraisal'">
+                        <t t-esc="state.employee.current_cycle.end_date or '-'"/>
+                    </t>
+                    <t t-else="">
+                        <t t-esc="state.employee.current_cycle.completion_date or '-'"/>
+                    </t>
+                </span>
+            </div>
+            <t t-if="state.employee.current_cycle.days_left != null and state.employee.current_cycle.phase != 'completed'">
+                <div class="pms_date_compact_row">
+                    <span class="pms_date_compact_label">Days Left:</span>
+                    <span t-att-class="'pms_date_compact_value ' + (state.employee.current_cycle.days_left &lt; 7 ? 'text-danger fw-bold' : 'text-success')">
+                        <t t-esc="state.employee.current_cycle.days_left"/> days
+                    </span>
+                </div>
+            </t>
+        </div>
+
+        <!-- Plan Status Card (planning phase only) -->
+        <t t-if="state.employee.current_cycle.phase == 'planning' and state.employee.current_plan">
+            <div class="pms_small_card orange">
+                <div class="pms_small_card_label">Plan Status</div>
+                <div class="pms_small_card_value">
+                    <span t-att-class="'badge ' + (state.employee.current_plan.state_key == 'approved' ? 'bg-success' : state.employee.current_plan.state_key == 'draft' ? 'bg-secondary' : 'bg-warning text-dark')">
+                        <t t-esc="state.employee.current_plan.state"/>
+                    </span>
+                </div>
+            </div>
+        </t>
+
+        <!-- Appraisal Status Card (appraisal phase only) -->
+        <t t-if="state.employee.current_cycle.phase == 'appraisal' and state.employee.current_appraisal">
+            <div class="pms_small_card orange">
+                <div class="pms_small_card_value">
+                    <span t-att-class="'badge ' + (state.employee.current_appraisal.state_key == 'appraisal_approved' ? 'bg-success' : state.employee.current_appraisal.state_key == 'appraisal_draft' ? 'bg-secondary' : 'bg-warning text-dark')">
+                        <t t-esc="state.employee.current_appraisal.state"/>
+                    </span>
+                </div>
+                <div class="pms_small_card_label">Appraisal Status</div>
+            </div>
+        </t>
+
+    </div>
+
+            <!-- ============================================================ -->
+            <!-- PHASE-SPECIFIC CONTENT BLOCKS                                 -->
+            <!-- ============================================================ -->
+
+            <!-- Monitoring Phase -->
+            <t t-if="state.employee.current_cycle.phase == 'monitoring'">
+                <div class="alert alert-info text-center mt-2 mb-3" style="border-radius: 12px;">
+                    <i class="fa fa-chart-line fa-3x mb-3 d-block"></i>
+                    <h4>Monitoring Phase</h4>
+                    <p>This cycle is currently in the <strong>Monitoring phase</strong>.</p>
+                    <p>Your plan has been approved. No action is required at this time.</p>
+                    <p class="text-muted small mt-2">The Appraisal phase will begin once monitoring is complete.</p>
+                </div>
+            </t>
+
+                <!-- Planning or Appraisal Phase - All 3 sections in same row -->
+<t t-elif="state.employee.current_cycle.phase == 'planning' or state.employee.current_cycle.phase == 'appraisal'">
+    <div class="row g-3 mb-3 mt-2">
+
+
+        <!-- Column 1: Pending Tasks -->
+<div t-att-class="(state.employee.current_appraisal ? 'col-md-4' : 'col-md-6')">
+    <div class="pms_pending_tasks_box h-100">
+        <div class="pms_section_header">
+            <span class="pms_section_icon"><i class="fa fa-bell text-warning"/></span>
+            <h3>My Pending Tasks</h3>
+        </div>
+        <t t-if="state.employee.pending_actions and state.employee.pending_actions.length &gt; 0">
+            <div class="list-group">
+                <t t-foreach="state.employee.pending_actions" t-as="task" t-key="task.id">
+                   <div class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+    <div>
+        <i t-att-class="'fa ' + task.icon + ' me-2 ' + (task.is_overdue ? 'text-danger' : 'text-warning')"/>
+        <span><t t-esc="task.description"/></span>
+        <t t-if="task.with_name">
+            <span class="text-muted"> (<strong><t t-esc="task.with_name"/></strong>)</span>
+        </t>
+        <span t-if="task.is_overdue" class="badge bg-danger ms-2">Overdue</span>
+    </div>
+    <button class="btn btn-sm btn-outline-primary" t-on-click="() => onDoAction(task)">
+        <t t-esc="task.button_text"/>
+    </button>
+</div>
+                </t>
+            </div>
+        </t>
+        <t t-else="">
+            <div class="text-center text-muted py-4">
+                <i class="fa fa-check-circle fa-2x mb-2 d-block text-success"/>
+                All caught up! No pending tasks.
+            </div>
+        </t>
+    </div>
+</div>
+
+        <!-- Column 2: My Plan Details -->
+        <t t-if="state.employee and (state.employee.current_plan or state.employee.approved_plan)">
+            <div t-att-class="(state.employee.current_appraisal ? 'col-md-4' : 'col-md-6')">
+                <div class="pms_table_box h-100">
+                    <div class="pms_section_header mb-3">
+                        <span class="pms_section_icon"><i class="fa fa-clipboard text-warning"/></span>
+                        <h3>My Plan Details</h3>
+                        <t t-if="state.employee.current_plan and state.employee.current_plan.state_key == 'draft'">
+                            <span class="badge bg-warning text-dark">Draft</span>
+                        </t>
+                        <t t-elif="state.employee.approved_plan or (state.employee.current_plan and state.employee.current_plan.state_key == 'approved')">
+                            <span class="badge bg-success">Approved</span>
+                        </t>
+                        <t t-else="">
+                            <span class="badge bg-secondary">View Only</span>
+                        </t>
+                    </div>
+                    <div class="d-flex flex-column gap-2 mb-3">
+                        <div class="d-flex justify-content-between border-bottom pb-2">
+                            <small class="text-muted">Cycle Name</small>
+                            <strong><t t-esc="(state.employee.current_plan or state.employee.approved_plan).cycle"/></strong>
+                        </div>
+                        <div class="d-flex justify-content-between border-bottom pb-2">
+                            <small class="text-muted">Cycle Type</small>
+                            <strong><t t-esc="(state.employee.current_plan or state.employee.approved_plan).cycle_type or '—'"/></strong>
+                        </div>
+                        <div class="d-flex justify-content-between border-bottom pb-2">
+                            <small class="text-muted">KPIs Selected</small>
+                            <strong>
+                                <t t-esc="(state.employee.current_plan or state.employee.approved_plan).selected_kpi_count"/>
+                                /
+                                <t t-esc="(state.employee.current_plan or state.employee.approved_plan).total_kpi_count"/>
+                            </strong>
+                        </div>
+                        <div class="d-flex justify-content-between pb-1">
+                            <small class="text-muted">Duration</small>
+                            <strong>
+                                <t t-esc="(state.employee.current_plan or state.employee.approved_plan).start_date or '—'"/>
+                                →
+                                <t t-esc="(state.employee.current_plan or state.employee.approved_plan).end_date or '—'"/>
+                            </strong>
+                        </div>
+                    </div>
+                    <button class="btn btn-sm btn-outline-info" t-on-click="() => openFullPlanDetails(state.employee.current_plan or state.employee.approved_plan)">
+                        <i class="fa fa-eye me-1"></i>View Full Plan Details
+                    </button>
+                </div>
+            </div>
+        </t>
+
+        <!-- Column 3: My Appraisal Details (appraisal phase only) -->
+        <t t-if="state.employee and state.employee.current_appraisal">
+            <div class="col-md-4">
+                <div class="pms_table_box h-100">
+                    <div class="pms_section_header mb-3">
+                        <span class="pms_section_icon"><i class="fa fa-bullseye text-primary"/></span>
+                        <h3>My Appraisal</h3>
+                        <span t-att-class="'badge ' + (state.employee.current_appraisal.state_key == 'appraisal_approved' ? 'bg-success' : state.employee.current_appraisal.state_key == 'appraisal_draft' ? 'bg-secondary' : 'bg-warning text-dark')">
+                            <t t-esc="state.employee.current_appraisal.state"/>
+                        </span>
+                    </div>
+                    <div class="d-flex flex-column gap-2 mb-3">
+                        <div class="d-flex justify-content-between border-bottom pb-2">
+                            <small class="text-muted">Cycle Name</small>
+                            <strong><t t-esc="state.employee.current_plan.cycle or '—'"/></strong>
+                        </div>
+                        <div class="d-flex justify-content-between border-bottom pb-2">
+                            <small class="text-muted">Type</small>
+                            <strong><t t-esc="state.employee.current_plan.cycle_type or '—'"/></strong>
+                        </div>
+                        <div class="d-flex justify-content-between pb-1">
+    <small class="text-muted">Duration</small>
+    <strong>
+        <t t-if="state.employee.current_cycle.phase === 'appraisal'">
+            <t t-esc="state.employee.current_cycle.appraisal_start_date or '—'"/>
+            -
+            <t t-esc="state.employee.current_cycle.appraisal_end_date or '—'"/>
+        </t>
+        <t t-else="">
+            <t t-esc="state.employee.current_plan.start_date or '—'"/>
+            -
+            <t t-esc="state.employee.current_plan.end_date or '—'"/>
+        </t>
+    </strong>
+</div>
+                    </div>
+                    <button class="btn btn-sm btn-outline-info"
+                        t-on-click="() => openFullAppraisalDetails(state.employee.current_appraisal)">
+                        <i class="fa fa-eye me-1"/>View Appraisal Details
+                    </button>
+                </div>
+            </div>
+        </t>
+
+    </div>
+</t>
+
+            <!-- ============================================================ -->
+        <!-- FULL PLAN DETAILS MODAL                                       -->
+        <!-- ============================================================ -->
+        <t t-if="state.show_full_plan_details and state.selected_full_plan">
+            <div class="pms_plan_modal_backdrop" t-on-click="closeFullPlanDetails">
+                <div class="pms_plan_modal" style="max-width: 95%; width: 1300px; max-height: 90vh;" t-on-click.stop="">
+                    <div class="pms_plan_modal_header">
+                        <div class="d-flex align-items-center gap-3">
+                           <span class="fs-2"><i class="fa fa-clipboard text-warning"/></span>
+                            <div>
+                                <h4 class="mb-0"><t t-esc="state.selected_full_plan.cycle"/></h4>
+                                <small class="text-muted">
+                                    Plan for <strong><t t-esc="state.selected_full_plan.name"/></strong> ·
+                                    Status: <span class="badge bg-secondary"><t t-esc="state.selected_full_plan.state"/></span>
+                                </small>
+                            </div>
+                        </div>
+                        <button class="btn btn-sm btn-outline-secondary" t-on-click="closeFullPlanDetails">
+                            <i class="fa fa-times"/>
+                        </button>
+                    </div>
+
+                   <div class="pms_plan_modal_body" style="max-height: calc(90vh - 120px); overflow-y: auto;">
+
+    <!-- Plan Information -->
+   <div class="alert alert-light border mb-3" style="background-color: #f8f9fa;">
+    <div class="row">
+        <!-- LEFT: All names -->
+        <div class="col-md-6 border-end">
+            <div class="mb-2">
+                <strong>Plan For:</strong>
+                <t t-esc="state.selected_full_plan.name or '-'"/>
+            </div>
+            <div class="mb-2">
+                <strong>Primary Manager:</strong>
+                <t t-esc="state.selected_full_plan.supervisor_name or '-'"/>
+            </div>
+            <div class="mb-2">
+                <strong>Secondary Manager:</strong>
+                <t t-if="state.selected_full_plan.secondary_name">
+                    <t t-esc="state.selected_full_plan.secondary_name"/>
+                </t>
+                <t t-else="">—</t>
+            </div>
+            <div>
+                <strong>Reviewer:</strong>
+                <t t-if="state.selected_full_plan.reviewer_name">
+                    <t t-esc="state.selected_full_plan.reviewer_name"/>
+                </t>
+                <t t-else="">—</t>
+            </div>
+        </div>
+        <!-- RIGHT: Plan details -->
+        <div class="col-md-6 ps-4">
+            <div class="mb-2">
+                <strong>Cycle Name:</strong>
+                <t t-esc="state.selected_full_plan.cycle or '-'"/>
+            </div>
+            <div class="mb-2">
+                <strong>Department:</strong>
+                <t t-esc="state.selected_full_plan.department or '-'"/>
+            </div>
+            <div class="mb-2">
+                <strong>Evaluation Group:</strong>
+                <t t-esc="state.selected_full_plan.evaluation_group or '-'"/>
+            </div>
+            <div class="mb-2">
+                <strong>Status:</strong>
+                <t t-esc="state.selected_full_plan.state or '-'"/>
+            </div>
+            <div>
+                <strong>Phase:</strong>
+                <t t-esc="state.selected_full_plan.phase or 'Planning'"/>
+            </div>
+        </div>
+    </div>
+</div>
+
+    <!-- KRA / KPI Table -->
+    <h5 class="mb-2"><i class="fa fa-list-alt me-2 text-primary"/>KRA and KPI Details</h5>
+    <div class="table-responsive">
+        <table class="table table-sm table-bordered table-striped">
+            <thead>
+                <tr style="background-color: #f8f9fa;">
+                    <th style="width: 15%">KRA / Goal</th>
+                    <th style="width: 20%">KPI / Metric</th>
+                    <th style="width: 25%">Description</th>
+                    <th style="width: 10%">Criteria</th>
+                    <th style="width: 10%">Score</th>
+                    <th style="width: 10%">Target</th>
+                </tr>
+            </thead>
+            <tbody>
+    <t t-foreach="state.selected_full_plan.kpis" t-as="kpi" t-key="kpi.id">
+        <tr>
+            <td class="fw-semibold"><t t-esc="kpi.kra_name"/></td>
+            <td><t t-esc="kpi.kpi_name"/></td>
+            <td><t t-esc="kpi.description or '-'"/></td>
+            <td class="text-center"><t t-esc="kpi.criteria or '-'"/></td>
+            <td class="text-center">
+                <t t-if="kpi.is_selected">
+                    <strong><t t-esc="kpi.weightage or 0"/>%</strong>
+                </t>
+                <t t-else="">
+                    <span style="color: #9e9e9e; font-style: italic;">— </span>
+                </t>
+            </td>
+            <td class="text-center">
+                <t t-if="!kpi.is_selected">
+                    <span class="badge"
+                          style="background-color: #fdecea; color: #c62828;
+                                 padding: 5px 12px; border-radius: 15px;">
+                        ✕ Deselected
+                    </span>
+                </t>
+                <t t-elif="kpi.target">
+                    <span style="white-space: normal; text-align: left;
+                                 display: inline-block; max-width: 100%;">
+                        <t t-esc="kpi.target"/>
+                    </span>
+                </t>
+                <t t-else="">
+                    <span class="badge"
+                          style="background-color: #fff8e1; color: #f57c00;
+                                 padding: 5px 12px; border-radius: 15px;">
+                        Pending
+                    </span>
+                </t>
+            </td>
+        </tr>
+    </t>
+    <t t-if="!state.selected_full_plan.kpis or state.selected_full_plan.kpis.length === 0">
+        <tr>
+            <td colspan="6" class="text-center text-muted py-4">
+                <i class="fa fa-inbox fa-2x mb-2 d-block"/>
+                No KPIs found for this plan.
+            </td>
+        </tr>
+    </t>
+</tbody>
+        </table>
+    </div>
+</div>
+
+                    <!-- Footer: Close + Download dropdown -->
+                    <div class="pms_plan_modal_footer">
+                        <button class="btn btn-sm btn-outline-secondary" t-on-click="closeFullPlanDetails">
+                            <i class="fa fa-times me-1"></i>Close
+                        </button>
+                        <div class="dropdown d-inline-block">
+                            <button class="btn btn-sm btn-primary dropdown-toggle"
+                                    data-bs-toggle="dropdown"
+                                    aria-expanded="false">
+                                <i class="fa fa-download me-1"></i>Download
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li>
+                                    <a class="dropdown-item" href="#" t-on-click.prevent="exportPlanToExcel">
+                                        <i class="fa fa-file-excel-o me-2 text-success"></i>Export as Excel (CSV)
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="#" t-on-click.prevent="exportPlanToPDF">
+                                        <i class="fa fa-file-pdf-o me-2 text-danger"></i>Export as PDF
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </t>
+
+            <!-- ============================================================ -->
+            <!-- MY APPRAISAL DETAILS - Show during appraisal phase            -->
+            <!-- ============================================================ -->
+            <t t-if="state.show_full_appraisal_details and state.selected_full_appraisal">
+    <div class="pms_plan_modal_backdrop" t-on-click="closeFullAppraisalDetails">
+        <div class="pms_plan_modal" style="max-width: 95%; width: 1300px; max-height: 90vh;" t-on-click.stop="">
+
+            <div class="pms_plan_modal_header">
+                <div class="d-flex align-items-center gap-3">
+                    <span class="fs-2"><i class="fa fa-bullseye text-primary"/></span>
+                    <div>
+                        <h4 class="mb-0"><t t-esc="state.selected_full_appraisal.cycle"/></h4>
+                        <small class="text-muted">
+    Appraisal for <strong><t t-esc="state.selected_full_appraisal.name"/></strong> ·
+    Status: <t t-esc="state.selected_full_appraisal.state"/>
+</small>
+                    </div>
+                </div>
+                <button class="btn btn-sm btn-outline-secondary" t-on-click="closeFullAppraisalDetails">
+                    <i class="fa fa-times"/>
+                </button>
+            </div>
+
+            <div class="pms_plan_modal_body" style="max-height: calc(90vh - 120px); overflow-y: auto;">
+
+                <!-- Appraisal Info -->
+                <div class="alert alert-light border mb-3" style="background-color: #f8f9fa;">
+    <div class="row">
+        <!-- LEFT: All names -->
+        <div class="col-md-6 border-end">
+            <div class="mb-2">
+                <strong>Appraisal For:</strong>
+                <t t-esc="state.selected_full_appraisal.name or '-'"/>
+            </div>
+            <div class="mb-2">
+                <strong>Primary Manager:</strong>
+                <t t-esc="state.selected_full_appraisal.supervisor_name or '-'"/>
+            </div>
+            <div class="mb-2">
+                <strong>Secondary Manager:</strong>
+                <t t-if="state.selected_full_appraisal.secondary_name">
+                    <t t-esc="state.selected_full_appraisal.secondary_name"/>
+                </t>
+                <t t-else="">—</t>
+            </div>
+            <div>
+                <strong>Reviewer:</strong>
+                <t t-if="state.selected_full_appraisal.reviewer_name">
+                    <t t-esc="state.selected_full_appraisal.reviewer_name"/>
+                </t>
+                <t t-else="">—</t>
+            </div>
+        </div>
+        <!-- RIGHT: Cycle details -->
+        <div class="col-md-6 ps-4">
+            <div class="mb-2">
+                <strong>Cycle Name:</strong>
+                <t t-esc="state.selected_full_appraisal.cycle or '-'"/>
+            </div>
+            <div class="mb-2">
+                <strong>Department:</strong>
+                <t t-esc="state.selected_full_appraisal.department or '-'"/>
+            </div>
+            <div class="mb-2">
+                <strong>Status:</strong>
+                <t t-esc="state.selected_full_appraisal.state or '-'"/>
+            </div>
+            <div>
+                <strong>Total Weightage:</strong>
+                <t t-esc="state.selected_full_appraisal.total_weightage or 0"/>%
+            </div>
+        </div>
+    </div>
+</div>
+
+               <!-- KPI Scores Table -->
+<h5 class="mb-2"><i class="fa fa-bar-chart me-2 text-primary"/>KPI Scores</h5>
+<div class="table-responsive mb-4">
+    <table class="table table-sm table-bordered table-striped">
+        <thead>
+            <tr style="background-color: #f8f9fa;">
+                <th>KPI</th>
+                <th class="text-center">Weightage</th>
+                <th class="text-center">Emp Score</th>
+                <th class="text-center">1st Manager</th>
+                <th class="text-center">2nd Manager</th>
+                <th class="text-center">Reviewer Score</th>
+            </tr>
+        </thead>
+        <tbody>
+            <t t-foreach="state.selected_full_appraisal.kpi_lines" t-as="line" t-key="line.id">
+                <tr>
+                    <td><t t-esc="line.kpi_name"/></td>
+                    <td class="text-center"><t t-esc="line.weightage or 0"/>%</td>
+                    <td class="text-center"><t t-esc="line.self_score or '—'"/></td>
+                    <td class="text-center"><t t-esc="line.supervisor_score or '—'"/></td>
+                    <td class="text-center"><t t-esc="line.secondary_score or '—'"/></td>
+                    <td class="text-center"><t t-esc="line.reviewer_score or '—'"/></td>
+                </tr>
+            </t>
+            <t t-if="!state.selected_full_appraisal.kpi_lines or state.selected_full_appraisal.kpi_lines.length === 0">
+                <tr>
+                    <td colspan="6" class="text-center text-muted py-3">No KPI data found.</td>
+                </tr>
+            </t>
+            <!-- TOTAL ROW for KPI -->
+            <t t-if="state.selected_full_appraisal.kpi_lines and state.selected_full_appraisal.kpi_lines.length > 0">
+                <tr style="background-color: #e9ecef; font-weight: bold;">
+                    <td class="text-end fw-bold">TOTAL:</td>
+                    <td class="text-center"><t t-esc="state.selected_full_appraisal.kpi_total_weightage or 0"/>%</td>
+                    <td class="text-center"><t t-esc="state.selected_full_appraisal.kpi_self_total or 0"/></td>
+                    <td class="text-center"><t t-esc="state.selected_full_appraisal.kpi_supervisor_total or 0"/></td>
+                    <td class="text-center"><t t-esc="state.selected_full_appraisal.kpi_secondary_total or 0"/></td>
+                    <td class="text-center"><t t-esc="state.selected_full_appraisal.kpi_reviewer_total or 0"/></td>
+                </tr>
+            </t>
+        </tbody>
+    </table>
+</div>
+
+
+<!-- Competency Scores Table -->
+<h5 class="mb-2"><i class="fa fa-lightbulb-o me-2 text-warning"/>Competency Scores</h5>
+<div class="table-responsive mb-4">
+    <table class="table table-sm table-bordered table-striped">
+        <thead>
+            <tr style="background-color: #f8f9fa;">
+                <th>Competency</th>
+                <th class="text-center">Weightage</th>
+                <th class="text-center">Self</th>
+                <th class="text-center">Supervisor</th>
+                <th class="text-center">Secondary</th>
+                <th class="text-center">Reviewer</th>
+            </tr>
+        </thead>
+        <tbody>
+            <t t-foreach="state.selected_full_appraisal.competency_lines" t-as="line" t-key="line.id">
+                <tr>
+                    <td><t t-esc="line.competency_name"/></td>
+                    <td class="text-center"><t t-esc="line.max_points or 0"/></td>
+                    <td class="text-center"><t t-esc="line.self_score or '—'"/></td>
+                    <td class="text-center"><t t-esc="line.supervisor_score or '—'"/></td>
+                    <td class="text-center"><t t-esc="line.secondary_score or '—'"/></td>
+                    <td class="text-center"><t t-esc="line.reviewer_score or '—'"/></td>
+                </tr>
+            </t>
+            <t t-if="!state.selected_full_appraisal.competency_lines or state.selected_full_appraisal.competency_lines.length === 0">
+                <tr>
+                    <td colspan="6" class="text-center text-muted py-3">No competency data found.</td>
+                </tr>
+            </t>
+            <!-- TOTAL ROW for COMPETENCY -->
+            <t t-if="state.selected_full_appraisal.competency_lines and state.selected_full_appraisal.competency_lines.length > 0">
+                <tr style="background-color: #e9ecef; font-weight: bold;">
+                    <td class="text-end fw-bold">TOTAL:</td>
+                    <td class="text-center">
+                        <t t-esc="state.selected_full_appraisal.competency_lines.reduce((s, l) => s + (l.max_points || 0), 0)"/>
+                    </td>
+                    <td class="text-center"><t t-esc="state.selected_full_appraisal.competency_self_total or 0"/></td>
+                    <td class="text-center"><t t-esc="state.selected_full_appraisal.competency_supervisor_total or 0"/></td>
+                    <td class="text-center"><t t-esc="state.selected_full_appraisal.competency_secondary_total or 0"/></td>
+                    <td class="text-center"><t t-esc="state.selected_full_appraisal.competency_reviewer_total or 0"/></td>
+                </tr>
+            </t>
+        </tbody>
+    </table>
+
+               <!-- Final Score Summary -->
+<t t-if="state.selected_full_appraisal.final_score and state.selected_full_appraisal.final_score > 0">
+    <div class="alert alert-light border" style="background-color: #f8f9fa;">
+        <div class="row">
+            <div class="col-md-6">
+                <strong>Final Score Calculation Method:</strong>
+                <span class="badge bg-info ms-2">
+                    <t t-if="state.selected_full_appraisal.calculation_method === 'reviewer'">
+                        <i class="fa fa-user-check me-1"/>Reviewer Score
+                    </t>
+                    <t t-elif="state.selected_full_appraisal.calculation_method === 'average'">
+                        <i class="fa fa-calculator me-1"/>Average of All Scores
+                    </t>
+                </span>
+                <div class="mt-2">
+                    <strong>Final Score:</strong>
+                    <span class="ms-2">
+                        KPI (<t t-esc="state.selected_full_appraisal.kpi_total or 0"/>) +
+                        Competency (<t t-esc="state.selected_full_appraisal.competency_total or 0"/>) =
+                        <strong class="text-success fs-5">
+                            <t t-esc="state.selected_full_appraisal.final_score or 0"/>
+                        </strong>
+                    </span>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <strong>Rating:</strong>
+                <span t-att-class="'badge ms-2 ' + (state.selected_full_appraisal.rating_class or 'bg-secondary')">
+                    <t t-esc="state.selected_full_appraisal.rating or '—'"/>
+                </span>
+                <div class="text-muted small mt-2">
+                    <i class="fa fa-info-circle me-1"></i>
+                    <t t-if="state.selected_full_appraisal.calculation_method === 'reviewer'">
+                        Final score uses <strong>Reviewer Score</strong> as the final score.
+                    </t>
+                    <t t-elif="state.selected_full_appraisal.calculation_method === 'average'">
+                        Final score is the <strong>average</strong> of Supervisor, Secondary, and Reviewer scores.
+                    </t>
+                </div>
+            </div>
+        </div>
+    </div>
+</t>
+            </div>
+</div>
+
+            <!-- Footer -->
+            <div class="pms_plan_modal_footer">
+                <button class="btn btn-sm btn-outline-secondary" t-on-click="closeFullAppraisalDetails">
+                    <i class="fa fa-times me-1"></i>Close
+                </button>
+                <div class="dropdown d-inline-block">
+                    <button class="btn btn-sm btn-primary dropdown-toggle"
+                            data-bs-toggle="dropdown"
+                            aria-expanded="false">
+                        <i class="fa fa-download me-1"></i>Download
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li>
+                            <a class="dropdown-item" href="#" t-on-click.prevent="exportAppraisalToExcel">
+                                <i class="fa fa-file-excel-o me-2 text-success"></i>Export as Excel (CSV)
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="#" t-on-click.prevent="exportAppraisalToPDF">
+                                <i class="fa fa-file-pdf-o me-2 text-danger"></i>Export as PDF
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</t>
+        </t>
+
+        <!-- ============================================================ -->
+        <!-- NO ACTIVE CYCLE MESSAGE                                       -->
+        <!-- ============================================================ -->
+        <t t-elif="state.employee and !state.employee.current_cycle">
+            <div class="alert alert-info mb-4 text-center" style="border-radius: 12px;">
+                <i class="fa fa-info-circle fa-3x mb-2 d-block"></i>
+                <h4>No Active Cycle</h4>
+                <p class="mb-0">You are not currently enrolled in any active performance cycle.</p>
+                <p class="text-muted small mt-2">If you have completed cycles, you can view them below.</p>
+            </div>
+        </t>
+
+        <!-- ============================================================ -->
+        <!-- COMPLETED CYCLES                                              -->
+        <!-- ============================================================ -->
+        <div class="pms_section_header mt-4">
+           <span class="pms_section_icon"><i class="fa fa-star text-warning"/></span>
+            <h3>Completed Cycles</h3>
+            <t t-if="state.employee and state.employee.past_cycles">
+                <span class="pms_section_badge"><t t-esc="state.employee.past_cycles.length"/> Cycles</span>
+            </t>
+        </div>
+
+        <div class="pms_table_box mb-3">
+            <t t-if="state.employee and state.employee.past_cycles and state.employee.past_cycles.length &gt; 0">
+                <div class="pms_table_search mb-3">
+                    <i class="fa fa-search"></i>
+                    <input type="text"
+                           class="pms_search_input"
+                           placeholder="Search by cycle name..."
+                           t-model="state.completed_cycle_search"
+                           t-on-input="filterCompletedCycles"/>
+                </div>
+               <div class="table-responsive">
+    <table class="table table-sm table-striped table-hover">
+        <thead>
+            <tr>
+                <th>Cycle Name</th>
+                <th>Period</th>
+                <th>Final Score</th>
+                <th>Rating</th>
+                <th>Completed Date</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            <t t-foreach="state.filtered_past_cycles" t-as="history" t-key="history.id">
+                <tr class="pms_row_clickable">
+                    <td><strong><t t-esc="history.cycle_name"/></strong></td>
+                    <td><t t-esc="history.start_date"/> - <t t-esc="history.end_date"/></td>
+                    <td><strong><t t-esc="history.final_score"/></strong></td>
+                    <td><span class="badge bg-secondary"><t t-esc="history.rating"/></span></td>
+                    <td><t t-esc="history.completed_date"/></td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-primary"
+                                t-att-data-cycle-id="history.id"
+                                 t-on-click="() => onOpenCompletedCycleDetail(history)">
+                            <i class="fa fa-eye me-1"></i>View Details
+                        </button>
+                    </td>
+                </tr>
+            </t>
+            <tr t-if="state.filtered_past_cycles and state.filtered_past_cycles.length == 0">
+                <td colspan="6" class="text-center text-muted py-3">
+                    <i class="fa fa-search fa-2x mb-2 d-block"></i>
+                    No completed cycles match your search.
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+            </t>
+            <t t-else="">
+                <div class="text-center text-muted py-3">
+                    <i class="fa fa-history fa-2x mb-2 d-block"></i>
+                    No completed cycles found.
+                </div>
+            </t>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- COMPLETED CYCLE DETAIL MODAL                                  -->
+        <!-- ============================================================ -->
+        <t t-if="state.selected_completed_cycle">
+    <div class="pms_plan_modal_backdrop" t-on-click="onCloseCompletedCycleModal">
+        <div class="pms_plan_modal" style="max-width: 95%; width: 1300px; max-height: 90vh;" t-on-click.stop="">
+
+            <div class="pms_plan_modal_header">
+                <div class="d-flex align-items-center gap-3">
+                    <span class="fs-2"><i class="fa fa-check-circle text-success"/></span>
+                    <div>
+                        <h4 class="mb-0"><t t-esc="state.selected_completed_cycle.cycle_name"/></h4>
+                        <small class="text-muted">
+                            Completed on <t t-esc="state.selected_completed_cycle.completed_date"/>
+                        </small>
+                    </div>
+                </div>
+                <button class="btn btn-sm btn-outline-secondary" t-on-click="onCloseCompletedCycleModal">
+                    <i class="fa fa-times"/>
+                </button>
+            </div>
+
+            <div class="pms_plan_modal_body" style="max-height: calc(90vh - 120px); overflow-y: auto;">
+
+                <!-- Appraisal Info Block -->
+<div class="alert alert-light border mb-3" style="background-color: #f8f9fa;">
+    <div class="row">
+        <!-- LEFT: All names -->
+        <div class="col-md-6 border-end">
+            <div class="mb-2">
+                <strong>Appraisal For:</strong>
+                <t t-esc="state.selected_completed_cycle.employee_name or state.employee_name or '-'"/>
+            </div>
+            <div class="mb-2">
+                <strong>Primary Manager:</strong>
+                <t t-if="state.selected_completed_cycle.supervisor_name">
+                    <t t-esc="state.selected_completed_cycle.supervisor_name"/>
+                </t>
+                <t t-else="">—</t>
+            </div>
+            <div class="mb-2">
+                <strong>Secondary Manager:</strong>
+                <t t-if="state.selected_completed_cycle.secondary_name">
+                    <t t-esc="state.selected_completed_cycle.secondary_name"/>
+                </t>
+                <t t-else="">—</t>
+            </div>
+            <div>
+                <strong>Reviewer:</strong>
+                <t t-if="state.selected_completed_cycle.reviewer_name">
+                    <t t-esc="state.selected_completed_cycle.reviewer_name"/>
+                </t>
+                <t t-else="">—</t>
+            </div>
+        </div>
+        <!-- RIGHT: Cycle details -->
+        <div class="col-md-6 ps-4">
+            <div class="mb-2">
+                <strong>Cycle Name:</strong>
+                <t t-esc="state.selected_completed_cycle.cycle_name or '-'"/>
+            </div>
+            <div class="mb-2">
+                <strong>Department:</strong>
+                <t t-esc="state.selected_completed_cycle.department or '-'"/>
+            </div>
+            <div class="mb-2">
+                <strong>Status:</strong>
+                <span>Completed</span>
+            </div>
+            <div>
+                <strong>Total Weightage:</strong>
+                <t t-esc="state.selected_completed_cycle.total_weightage or 0"/>%
+            </div>
+        </div>
+    </div>
+</div>
+
+                <!-- KPI Scores Table -->
+                <h5 class="mb-2"><i class="fa fa-bar-chart me-2 text-primary"/>KPI Scores</h5>
+                <div class="table-responsive mb-4">
+                    <table class="table table-sm table-bordered table-striped">
+                        <thead>
+                            <tr style="background-color: #f8f9fa;">
+                                <th>KPI</th>
+                                <th class="text-center">Weightage</th>
+                                <th class="text-center">Self</th>
+                                <th class="text-center">Supervisor</th>
+                                <th class="text-center">Secondary</th>
+                                <th class="text-center">Reviewer</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <t t-if="state.selected_completed_cycle.kpi_lines and state.selected_completed_cycle.kpi_lines.length > 0">
+                                <t t-foreach="state.selected_completed_cycle.kpi_lines" t-as="line" t-key="line.id">
+                                    <tr>
+                                        <td><t t-esc="line.kpi_name"/></td>
+                                        <td class="text-center"><t t-esc="line.weightage or 0"/>%</td>
+                                        <td class="text-center"><t t-esc="line.self_score or '—'"/></td>
+                                        <td class="text-center"><t t-esc="line.supervisor_score or '—'"/></td>
+                                        <td class="text-center"><t t-esc="line.secondary_score or '—'"/></td>
+                                        <td class="text-center"><t t-esc="line.reviewer_score or '—'"/></td>
+                                    </tr>
+                                </t>
+                                <!-- KPI Totals Row -->
+                                <tr style="background-color: #e8f4f8; font-weight: bold;">
+                                    <td>Total</td>
+                                    <td class="text-center">
+                                        <t t-esc="state.selected_completed_cycle.kpi_lines.reduce((s, l) => s + (l.weightage || 0), 0)"/>%
+                                    </td>
+                                    <td class="text-center text-primary">
+                                        <t t-esc="state.selected_completed_cycle.kpi_lines.reduce((s, l) => s + (l.self_score || 0), 0).toFixed(1)"/>
+                                    </td>
+                                    <td class="text-center text-primary">
+                                        <t t-esc="state.selected_completed_cycle.kpi_lines.reduce((s, l) => s + (l.supervisor_score || 0), 0).toFixed(1)"/>
+                                    </td>
+                                    <td class="text-center text-primary">
+                                        <t t-esc="state.selected_completed_cycle.kpi_lines.reduce((s, l) => s + (l.secondary_score || 0), 0).toFixed(1)"/>
+                                    </td>
+                                    <td class="text-center text-primary">
+                                        <t t-esc="state.selected_completed_cycle.kpi_lines.reduce((s, l) => s + (l.reviewer_score || 0), 0).toFixed(1)"/>
+                                    </td>
+                                </tr>
+                            </t>
+                            <t t-else="">
+                                <tr>
+                                    <td colspan="6" class="text-center text-muted py-3">No KPI data found.</td>
+                                </tr>
+                            </t>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Competency Scores Table -->
+                <h5 class="mb-2"><i class="fa fa-lightbulb-o me-2 text-warning"/>Competency Scores</h5>
+                <div class="table-responsive mb-4">
+                    <table class="table table-sm table-bordered table-striped">
+                        <thead>
+                            <tr style="background-color: #f8f9fa;">
+                                <th>Competency</th>
+                                <th class="text-center">Weightage</th>
+                                <th class="text-center">Self</th>
+                                <th class="text-center">Supervisor</th>
+                                <th class="text-center">Secondary</th>
+                                <th class="text-center">Reviewer</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <t t-if="state.selected_completed_cycle.competency_lines and state.selected_completed_cycle.competency_lines.length > 0">
+                                <t t-foreach="state.selected_completed_cycle.competency_lines" t-as="line" t-key="line.id">
+                                    <tr>
+                                        <td><t t-esc="line.competency_name"/></td>
+                                        <td class="text-center"><t t-esc="line.max_points or 0"/></td>
+                                        <td class="text-center"><t t-esc="line.self_score or '—'"/></td>
+                                        <td class="text-center"><t t-esc="line.supervisor_score or '—'"/></td>
+                                        <td class="text-center"><t t-esc="line.secondary_score or '—'"/></td>
+                                        <td class="text-center"><t t-esc="line.reviewer_score or '—'"/></td>
+                                    </tr>
+                                </t>
+                                <!-- Competency Totals Row -->
+                                <tr style="background-color: #fef9e7; font-weight: bold;">
+                                    <td>Total</td>
+                                    <td class="text-center">
+                                        <t t-esc="state.selected_completed_cycle.competency_lines.reduce((s, l) => s + (l.max_points || 0), 0)"/>
+                                    </td>
+                                    <td class="text-center text-warning">
+                                        <t t-esc="state.selected_completed_cycle.competency_lines.reduce((s, l) => s + (l.self_score || 0), 0).toFixed(1)"/>
+                                    </td>
+                                    <td class="text-center text-warning">
+                                        <t t-esc="state.selected_completed_cycle.competency_lines.reduce((s, l) => s + (l.supervisor_score || 0), 0).toFixed(1)"/>
+                                    </td>
+                                    <td class="text-center text-warning">
+                                        <t t-esc="state.selected_completed_cycle.competency_lines.reduce((s, l) => s + (l.secondary_score || 0), 0).toFixed(1)"/>
+                                    </td>
+                                    <td class="text-center text-warning">
+                                        <t t-esc="state.selected_completed_cycle.competency_lines.reduce((s, l) => s + (l.reviewer_score || 0), 0).toFixed(1)"/>
+                                    </td>
+                                </tr>
+                            </t>
+                            <t t-else="">
+                                <tr>
+                                    <td colspan="6" class="text-center text-muted py-3">No competency data found.</td>
+                                </tr>
+                            </t>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Final Score Summary -->
+                <div class="alert alert-light border" style="background-color: #f8f9fa;">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <strong>Final Score:</strong>
+                            <span class="ms-2">
+                                <strong class="text-success fs-5">
+                                    <t t-esc="state.selected_completed_cycle.final_score or 0"/>
+                                </strong>
+                            </span>
+                        </div>
+                        <div class="col-md-4">
+                            <strong>Rating:</strong>
+                            <span t-att-class="'badge ms-2 ' + (state.selected_completed_cycle.rating_class or 'bg-secondary')">
+                                <t t-esc="state.selected_completed_cycle.rating or '—'"/>
+                            </span>
+                        </div>
+                        <div class="col-md-4">
+                            <strong>Calculation Method:</strong>
+                            <span class="badge bg-info ms-2">
+                                <t t-esc="state.selected_completed_cycle.calculation_method or '—'"/>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Footer -->
+            <div class="pms_plan_modal_footer">
+                <button class="btn btn-sm btn-outline-secondary" t-on-click="onCloseCompletedCycleModal">
+                    <i class="fa fa-times me-1"/>Close
+                </button>
+                <div class="dropdown d-inline-block">
+                    <button class="btn btn-sm btn-primary dropdown-toggle"
+                            data-bs-toggle="dropdown"
+                            aria-expanded="false">
+                        <i class="fa fa-download me-1"/>Download
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li>
+                            <a class="dropdown-item" href="#" t-on-click.prevent="exportCompletedCycleToExcel">
+                                <i class="fa fa-file-excel-o me-2 text-success"/>Export as Excel (CSV)
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="#" t-on-click.prevent="exportCompletedCycleToPDF">
+                                <i class="fa fa-file-pdf-o me-2 text-danger"/>Export as PDF
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</t>
+
+
+
+    </div>
+</t>
+
+
+<!-- ============================================================ -->
+<!-- UNIFIED SUPERVISOR / REVIEWER DASHBOARD                      -->
+<!-- ============================================================ -->
+<t t-elif="state.role === 'supervisor' or state.role === 'reviewer'">
+
+    <!-- Derived role variables -->
+    <t t-set="isSupervisor" t-value="state.role === 'supervisor'"/>
+    <t t-set="roleData" t-value="isSupervisor ? state.supervisor : state.reviewer"/>
+
+    <div t-attf-class="pms_#{state.role}_dashboard">
+<t t-if="!state.show_cycle_detail and !state.is_monitoring_cycle">
+<div class="pms_dashboard_header_row">
+    <!-- Welcome card - now same size as stat cards -->
+    <div class="pms_welcome_card card shadow-sm pms_card">
+        <div class="pms_card_top_row">
+            <div class="pms_card_icon"><i class="fa fa-tachometer"/></div>
+            <div class="pms_card_value">Manager</div>
+        </div>
+        <div class="pms_card_label">Dashboard</div>
+    </div>
+
+    <!-- Stat Cards -->
+    <div class="pms_stat_cards">
+        <!-- Total Cycles -->
+        <div class="pms_card orange pms_card_clickable" t-on-click="onClickTotalCycles">
+            <div class="pms_card_top_row">
+                <div class="pms_card_icon"><i class="fa fa-calendar"/></div>
+                <div class="pms_card_value"><t t-esc="state.stats.total_cycles_count or 0"/></div>
+            </div>
+            <div class="pms_card_label">Total Cycles</div>
+        </div>
+
+        <!-- Probation Active Cycles -->
+        <div class="pms_card yellow pms_card_clickable" t-on-click="onClickProbationActiveCycles">
+            <div class="pms_card_top_row">
+                <div class="pms_card_icon"><i class="fa fa-clock-o"/></div>
+                <div class="pms_card_value"><t t-esc="state.stats.probation_active_cycles_count or 0"/></div>
+            </div>
+            <div class="pms_card_label">Probation Active Cycles</div>
+        </div>
+
+        <!-- Total Active Employees -->
+        <div class="pms_card green pms_card_clickable" t-on-click="onClickTotalActiveEmployees">
+            <div class="pms_card_top_row">
+                <div class="pms_card_icon"><i class="fa fa-user-check"/></div>
+                <div class="pms_card_value"><t t-esc="state.stats.total_active_employees or 0"/></div>
+            </div>
+            <div class="pms_card_label">Total Active Employees</div>
+        </div>
+
+        <!-- Total Employees -->
+        <div class="pms_card blue pms_card_clickable" t-on-click="onClickTotalEmployees">
+            <div class="pms_card_top_row">
+                <div class="pms_card_icon"><i class="fa fa-users"/></div>
+                <div class="pms_card_value"><t t-esc="state.stats.total_employees"/></div>
+            </div>
+            <div class="pms_card_label">Total Employees</div>
+        </div>
+
+        <!-- Active Cycles -->
+        <div class="pms_card purple pms_card_clickable" t-on-click="onClickActiveCycles">
+            <div class="pms_card_top_row">
+                <div class="pms_card_icon"><i class="fa fa-refresh"/></div>
+                <div class="pms_card_value"><t t-esc="state.stats.active_cycles_count"/></div>
+            </div>
+            <div class="pms_card_label">Active Cycles</div>
+        </div>
+
+        <!-- Employees in Active Cycles -->
+        <div class="pms_card teal pms_card_clickable" t-on-click="onClickEmployeesInActiveCycles">
+            <div class="pms_card_top_row">
+                <div class="pms_card_icon"><i class="fa fa-users"/></div>
+                <div class="pms_card_value"><t t-esc="state.stats.employees_in_active_cycles or 0"/></div>
+            </div>
+            <div class="pms_card_label">Employees in Active Cycles</div>
+        </div>
+    </div>
+</div>
+</t>
+
+        <!-- ============================================================ -->
+        <!-- ACTIVE CYCLES SECTION                                        -->
+        <!-- ============================================================ -->
+        <t t-if="!state.show_cycle_detail">
+            <div class="pms_section_header">
+                <span class="pms_section_icon"><i class="fa fa-refresh text-primary"/></span>
+                <h3>
+                    <t t-if="isSupervisor">Active Performance Cycles</t>
+                    <t t-else="">Active Cycles Pending Review</t>
+                </h3>
+                <span class="pms_section_badge"><t t-esc="roleData.active_cycles_count or 0"/> Active</span>
+            </div>
+
+            <div class="pms_cycle_cards_grid mb-4">
+                <t t-foreach="roleData.active_cycles or []" t-as="cycle" t-key="cycle.id">
+                    <div t-attf-class="pms_cycle_card #{cycle.state} pms_card_clickable"
+                         t-on-click="() => openCycleDetail(cycle)">
+                        <div t-attf-class="pms_cycle_card_header #{cycle.state}">
+                            <div class="pms_cycle_card_title">
+                                <span class="pms_cycle_card_icon">
+                                    <t t-if="cycle.state === 'planning'"><i class="fa fa-clipboard-list"/></t>
+                                    <t t-elif="cycle.state === 'monitoring'"><i class="fa fa-chart-line"/></t>
+                                    <t t-elif="cycle.state === 'appraisal'"><i class="fa fa-star"/></t>
+                                    <t t-else=""><i class="fa fa-check-circle"/></t>
+                                </span>
+                                <strong><t t-esc="cycle.name"/></strong>
+                            </div>
+                            <span class="badge"
+                                  t-attf-style="#{cycle.state === 'planning' ? 'background:#dbeafe;color:#1e40af;' : cycle.state === 'monitoring' ? 'background:#e0f2fe;color:#0369a1;' : 'background:#d1fae5;color:#065f46;'}">
+                                <i t-attf-class="fa #{cycle.state === 'planning' ? 'fa-pencil-square-o' : cycle.state === 'monitoring' ? 'fa-line-chart' : 'fa-check-circle'} me-1"/>
+                                <t t-if="cycle.state === 'planning'">Planning Active</t>
+                                <t t-elif="cycle.state === 'monitoring'">Monitoring Active</t>
+                                <t t-else="">Appraisal Active</t>
+                            </span>
+                        </div>
+
+                        <div class="pms_cycle_card_body">
+                            <div class="pms_cycle_dates">
+                                <div class="pms_date_row">
+                                    <span class="pms_date_label">Start:</span>
+                                    <span class="pms_date_value"><t t-esc="cycle.start_date or '-'"/></span>
+                                </div>
+                                <div class="pms_date_row">
+                                    <span class="pms_date_label">
+                                        <t t-if="cycle.state === 'planning'">Deadline:</t>
+                                        <t t-else="">End Date:</t>
+                                    </span>
+                                    <span class="pms_date_value">
+                                        <t t-if="cycle.state === 'planning'">
+                                            <t t-esc="cycle.planning_deadline or '-'"/>
+                                        </t>
+                                        <t t-else="">
+                                            <t t-esc="cycle.end_date or '-'"/>
+                                        </t>
+                                    </span>
+                                </div>
+                                <t t-if="cycle.days_left !== null">
+                                    <div class="pms_date_row">
+                                        <span class="pms_date_label">Days Left:</span>
+                                        <span t-attf-class="pms_date_value #{cycle.days_left &lt; 7 ? 'text-danger' : 'text-success'}">
+                                            <t t-esc="cycle.days_left"/> days
+                                        </span>
+                                    </div>
+                                </t>
+                            </div>
+
+                            <!-- Pending summary -->
+                            <div class="pms_pending_summary mt-2">
+                                <t t-if="cycle.state === 'planning'">
+                                    <div class="pms_pending_item">
+                                        <span class="pms_pending_label">
+                                            <i class="fa fa-clipboard text-warning"/>
+                                            <t t-if="isSupervisor"> Pending Plans:</t>
+                                            <t t-else=""> Pending Final Plans:</t>
+                                        </span>
+                                        <span t-attf-class="pms_pending_count #{(cycle.pending_plan_count or 0) > 0 ? 'text-danger' : 'text-success'}">
+                                            <t t-esc="cycle.pending_plan_count or 0"/>
+                                        </span>
+                                    </div>
+                                </t>
+                                <t t-elif="cycle.state === 'monitoring'">
+                                    <div class="pms_pending_item">
+                                        <span class="pms_pending_label"><i class="fa fa-bar-chart text-primary"/> Monitoring Phase:</span>
+                                        <span class="pms_pending_count text-info">
+                                            <t t-if="isSupervisor">Active - No action needed</t>
+                                            <t t-else="">Monitoring phase is active</t>
+                                        </span>
+                                    </div>
+                                </t>
+                                <t t-elif="cycle.state === 'appraisal'">
+                                    <div class="pms_pending_item">
+                                        <span class="pms_pending_label">
+                                            <i class="fa fa-bullseye text-primary"/>
+                                            <t t-if="isSupervisor"> Pending Appraisals:</t>
+                                            <t t-else=""> Pending Final Appraisals:</t>
+                                        </span>
+                                        <span t-attf-class="pms_pending_count #{(cycle.pending_appraisal_count or 0) > 0 ? 'text-danger' : 'text-success'}">
+                                            <t t-if="isSupervisor">
+                                                <t t-esc="(cycle.pending_appraisal_pending_list or []).length"/>
+                                            </t>
+                                            <t t-else="">
+                                                <t t-esc="cycle.pending_appraisal_count or 0"/>
+                                            </t>
+                                        </span>
+                                    </div>
+                                </t>
+                            </div>
+                        </div>
+
+                        <div class="pms_cycle_card_footer">
+                            <button class="btn btn-sm btn-outline-primary" t-on-click.stop="() => openCycleDetail(cycle)">
+                                <i class="fa fa-eye me-1"/>View Details
+                            </button>
+                        </div>
+                    </div>
+                </t>
+
+                <t t-if="!roleData.active_cycles or roleData.active_cycles.length === 0">
+                    <div class="alert alert-info">
+                        <i class="fa fa-info-circle me-2"/>
+                        <t t-if="isSupervisor">No active cycles found for your team.</t>
+                        <t t-else="">No active cycles pending your review.</t>
+                    </div>
+                </t>
+            </div>
+        </t>
+
+
+       <!-- ============================================================ -->
+<!-- CYCLE DETAIL VIEW                                            -->
+<!-- ============================================================ -->
+<t t-if="state.show_cycle_detail and state.selected_cycle">
+    <div style="height: calc(100vh - 80px); display: flex; flex-direction: column; overflow: hidden;">
+
+        <!-- ① Back button -->
+        <div class="mb-2 flex-shrink-0">
+            <button class="btn btn-sm btn-outline-secondary" t-on-click="closeCycleDetail">
+                <i class="fa fa-arrow-left me-1"/>Back to Active Cycles
+            </button>
+        </div>
+
+        <!-- ② Cycle header -->
+        <div class="pms_cycle_detail_header_compact mb-2 flex-shrink-0">
+            <div class="d-flex align-items-center gap-2 flex-wrap">
+                <span class="pms_cycle_detail_icon">
+                    <t t-if="state.selected_cycle.state === 'planning'"><i class="fa fa-clipboard text-warning"/></t>
+                    <t t-elif="state.selected_cycle.state === 'monitoring'"><i class="fa fa-bar-chart text-primary"/></t>
+                    <t t-elif="state.selected_cycle.state === 'appraisal'"><i class="fa fa-bullseye text-primary"/></t>
+                </span>
+                <h3 class="mb-0"><t t-esc="state.selected_cycle.name"/></h3>
+                <span t-attf-class="badge #{state.selected_cycle.state === 'planning' ? 'bg-warning text-dark' : state.selected_cycle.state === 'monitoring' ? 'bg-info' : state.selected_cycle.state === 'appraisal' ? 'bg-primary' : 'bg-secondary'}">
+                    <t t-if="state.selected_cycle.state === 'planning'">Planning Active</t>
+                    <t t-elif="state.selected_cycle.state === 'monitoring'">Monitoring Active</t>
+                    <t t-elif="state.selected_cycle.state === 'appraisal'">Appraisal Active</t>
+                    <t t-else="">Completed</t>
+                </span>
+            </div>
+        </div>
+
+        <!-- ③ Stat cards -->
+        <div class="pms_all_cards_row mb-2 flex-shrink-0">
+            <div class="pms_small_card blue">
+                <div class="pms_small_card_value">
+                    <t t-if="isSupervisor"><t t-esc="state.selected_cycle.total_team_members or 0"/></t>
+                    <t t-else=""><t t-esc="state.selected_cycle.total_employees or 0"/></t>
+                </div>
+                <div class="pms_small_card_label">
+                    <t t-if="isSupervisor">Team Members</t>
+                    <t t-else="">Total Employees</t>
+                </div>
+            </div>
+            <t t-if="state.selected_cycle.state === 'planning' or state.selected_cycle.state === 'appraisal'">
+                <div class="pms_small_card orange">
+                    <div class="pms_small_card_value"><t t-esc="state.selected_cycle.pending_plan_count or 0"/></div>
+                    <div class="pms_small_card_label">
+                        <t t-if="isSupervisor">Plans Pending Approval</t>
+                        <t t-else="">Plans Pending Final Approval</t>
+                    </div>
+                </div>
+                <div class="pms_small_card green">
+                    <div class="pms_small_card_value"><t t-esc="state.selected_cycle.approved_plan_count or 0"/></div>
+                    <div class="pms_small_card_label">
+                        Approved Plans
+                        <t t-if="!isSupervisor"><small class="text-muted"> (Global)</small></t>
+                    </div>
+                </div>
+            </t>
+            <t t-if="state.selected_cycle.state === 'appraisal'">
+                <div class="pms_small_card orange" style="border-top-color:#8b5cf6;">
+                    <div class="pms_small_card_value">
+                        <t t-if="isSupervisor">
+                            <t t-esc="(state.selected_cycle.pending_appraisal_pending_list or []).length"/>
+                        </t>
+                        <t t-else="">
+                            <t t-esc="state.selected_cycle.pending_appraisal_count or 0"/>
+                        </t>
+                    </div>
+                    <div class="pms_small_card_label">
+                        <t t-if="isSupervisor">Pending Appraisals</t>
+                        <t t-else="">Pending Final Rating</t>
+                    </div>
+                </div>
+                <div class="pms_small_card green" style="border-top-color:#059669;">
+                    <div class="pms_small_card_value"><t t-esc="state.selected_cycle.completed_appraisal_count or 0"/></div>
+                    <div class="pms_small_card_label">Completed Appraisals</div>
+                </div>
+            </t>
+        </div>
+
+        <!-- ④ Tabs -->
+        <ul class="nav nav-tabs mb-2 flex-shrink-0">
+            <li class="nav-item">
+                <a t-attf-class="nav-link #{state.cycle_active_tab === 'planning' ? 'active' : ''}"
+                   t-on-click="() => setCycleTab('planning')">
+                    <i class="fa fa-clipboard me-1"/>Planning Phase
+                    <t t-if="(state.selected_cycle.pending_plan_list or []).length > 0">
+                        <span class="badge bg-danger ms-1">
+                            <t t-esc="(state.selected_cycle.pending_plan_list or []).length"/>
+                        </span>
+                    </t>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a t-attf-class="nav-link #{state.cycle_active_tab === 'appraisal' ? 'active' : ''}"
+                   t-on-click="() => setCycleTab('appraisal')">
+                    <i class="fa fa-star me-1"/>Appraisal Phase
+                    <t t-if="isSupervisor and (state.selected_cycle.pending_approval_appraisals or []).length > 0">
+                        <span class="badge bg-danger ms-1">
+                            <t t-esc="(state.selected_cycle.pending_approval_appraisals or []).length"/>
+                        </span>
+                    </t>
+                    <t t-elif="!isSupervisor and (state.selected_cycle.pending_appraisal_list or []).length > 0">
+                        <span class="badge bg-danger ms-1">
+                            <t t-esc="(state.selected_cycle.pending_appraisal_list or []).length"/>
+                        </span>
+                    </t>
+                </a>
+            </li>
+        </ul>
+
+        <!-- ⑤ Tab content — takes ALL remaining height, never overflows outward -->
+        <div style="flex: 1; overflow: hidden; display: flex; flex-direction: column; min-height: 0;">
+
+            <!-- ══════════════════════════════════════════════════════════════ -->
+            <!-- PLANNING TAB                                                   -->
+            <!-- ══════════════════════════════════════════════════════════════ -->
+            <t t-if="state.cycle_active_tab === 'planning'">
+
+                <t t-if="isSupervisor and state.selected_cycle.state === 'appraisal'">
+                    <div class="alert alert-info mb-2 flex-shrink-0" style="border-radius:10px;">
+                        <i class="fa fa-info-circle me-2"/>
+                        This cycle has moved to the <strong>Appraisal phase</strong>.
+                        Planning data is shown below for reference only.
+                    </div>
+                </t>
+
+                <div class="row g-3" style="flex: 1; overflow: hidden; min-height: 0; margin: 0;">
+
+                    <!-- LEFT: Pending plans -->
+                    <t t-if="!isSupervisor or state.selected_cycle.state !== 'appraisal'">
+                        <div class="col-12 col-xl-4 d-flex flex-column" style="min-height: 0; height: 100%;">
+                            <div class="pms_table_box d-flex flex-column" style="flex: 1; min-height: 0; overflow: hidden;">
+                                <div class="pms_section_header flex-shrink-0">
+                                    <span class="pms_section_icon"><i class="fa fa-bell text-warning"/></span>
+                                    <h3>
+                                        <t t-if="isSupervisor">Plans Pending Your Approval</t>
+                                        <t t-else="">Plans Pending Final Approval</t>
+                                    </h3>
+                                    <span class="badge bg-secondary">
+                                        <t t-esc="(state.selected_cycle.pending_plan_list or []).length"/> Awaiting
+                                    </span>
+                                </div>
+                                <!-- ↓ ONLY this div scrolls -->
+                                <div style="flex: 1; overflow-y: auto; min-height: 0;">
+                                    <table class="table table-sm table-hover mb-0">
+                                        <thead style="position: sticky; top: 0; background: white; z-index: 1;">
+                                            <tr>
+                                                <th>Employee</th>
+                                                <th>Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <t t-foreach="state.selected_cycle.pending_plan_list or []"
+                                               t-as="plan" t-key="plan.employee_id">
+                                                <tr>
+                                                    <td>
+                                                        <div class="d-flex align-items-center gap-2">
+                                                            <img t-attf-src="/web/image/hr.employee/#{plan.employee_id}/avatar_128"
+                                                                 style="width:26px;height:26px;border-radius:50%;object-fit:cover;" alt=""/>
+                                                            <span style="font-size:12px;"><t t-esc="plan.name"/></span>
+                                                        </div>
+                                                    </td>
+                                                    <td>
+                                                        <button class="btn btn-sm btn-primary"
+                                                                t-on-click="() => onOpenPlanRecord(plan)">
+                                                            <i class="fa fa-check me-1"/>Review
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            </t>
+                                            <t t-if="!(state.selected_cycle.pending_plan_list or []).length">
+                                                <tr>
+                                                    <td colspan="2" class="text-center text-muted py-3">
+                                                        <i class="fa fa-check-circle text-success me-1"/>
+                                                        No plans waiting for approval.
+                                                    </td>
+                                                </tr>
+                                            </t>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </t>
+
+                    <!-- RIGHT: All plans status -->
+                    <div t-attf-class="col-12 #{(!isSupervisor or state.selected_cycle.state !== 'appraisal') ? 'col-xl-8' : 'col-xl-12'} d-flex flex-column"
+                         style="min-height: 0; height: 100%;">
+                        <div class="pms_table_box d-flex flex-column" style="flex: 1; min-height: 0; overflow: hidden;">
+                            <div class="pms_section_header flex-shrink-0">
+                                <span class="pms_section_icon"><i class="fa fa-clipboard text-warning"/></span>
+                                <h3>
+                                    <t t-if="isSupervisor">Planning Status - Team Members</t>
+                                    <t t-else="">All Plans Status</t>
+                                </h3>
+                                <span class="badge bg-primary">
+                                    <t t-if="isSupervisor">
+                                        <t t-esc="(state.selected_cycle.team_plans or []).length"/> Members
+                                    </t>
+                                    <t t-else="">
+                                        <t t-esc="(state.selected_cycle.all_plans or []).length"/> Total Plans
+                                    </t>
+                                </span>
+                            </div>
+                            <t t-set="planList"
+                               t-value="isSupervisor ? (state.selected_cycle.team_plans or []) : (state.selected_cycle.all_plans or [])"/>
+                            <t t-if="planList.length > 0">
+                                <!-- ↓ ONLY this div scrolls -->
+                               <div style="flex: 1; overflow-y: auto; min-height: 0;">
+    <table class="table table-sm table-striped table-hover mb-0">
+        <thead style="position: sticky; top: 0; background: white; z-index: 1;">
+            <tr>
+                <th>Employee</th>
+                <th>Department</th>
+                <th>KPIs</th>
+                <th>Status</th>
+                <th>Progress</th>
+            </tr>
+        </thead>
+        <tbody>
+            <t t-foreach="planList" t-as="plan" t-key="plan.employee_id">
+                <tr class="pms_row_clickable" t-on-click="() => onOpenPlanRecord(plan)">
+
+                    <td>
+                        <div class="d-flex align-items-center gap-2">
+                            <img t-attf-src="/web/image/hr.employee/#{plan.employee_id}/avatar_128"
+                                 style="width:26px;height:26px;border-radius:50%;object-fit:cover;" alt=""/>
+                            <span style="font-size:12px;"><t t-esc="plan.name"/></span>
+                        </div>
+                    </td>
+                    <td style="font-size:12px;"><t t-esc="plan.department"/></td>
+                    <td>
+                        <t t-if="plan.selected_kpi">
+                            <span class="badge bg-info">
+                                <t t-esc="plan.selected_kpi"/>/<t t-esc="plan.total_kpi or 0"/>
+                            </span>
+                        </t>
+                        <t t-else="">—</t>
+                    </td>
+                    <td>
+                        <div class="d-flex align-items-center gap-2">
+                            <t t-if="plan.state_key === 'draft'">
+                                <span class="text-muted">
+                                    <i class="fa fa-user me-1"></i><t t-esc="plan.name"/> (Self Rating)
+                                </span>
+                            </t>
+                            <t t-elif="plan.state_key === 'pending_supervisor'">
+                                <span class="text-primary">
+                                    <i class="fa fa-user-tie me-1"></i><t t-esc="plan.supervisor_name"/> (1st Approver)
+                                </span>
+                            </t>
+                            <t t-elif="plan.state_key === 'pending_secondary_supervisor'">
+                                <span class="text-warning">
+                                    <i class="fa fa-users me-1"></i><t t-esc="plan.secondary_name"/> (2nd Approver)
+                                </span>
+                            </t>
+                            <t t-elif="plan.state_key === 'pending_reviewer'">
+                                <span class="text-info">
+                                    <i class="fa fa-check-double me-1"></i><t t-esc="plan.reviewer_name"/> (Final Approver)
+                                </span>
+                            </t>
+                            <t t-elif="plan.state_key === 'approved'">
+                                <span class="text-success">
+                                    <i class="fa fa-check-circle me-1"></i>Completed
+                                </span>
+                            </t>
+                            <t t-else="">
+                                <span class="text-muted">—</span>
+                            </t>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="progress" style="height:4px;width:60px;">
+                                <div class="progress-bar bg-success"
+                                     t-attf-style="width:#{plan.progress}%"/>
+                            </div>
+                            <span style="font-size:12px;"><t t-esc="plan.progress"/>%</span>
+                        </div>
+                    </td>
+                </tr>
+            </t>
+        </tbody>
+    </table>
+</div>
+                            </t>
+                            <t t-else="">
+                                <div class="text-center text-muted py-3">
+                                    <i class="fa fa-info-circle me-1"/>
+                                    <t t-if="isSupervisor">No team members found.</t>
+                                    <t t-else="">No plans found.</t>
+                                </div>
+                            </t>
+                        </div>
+                    </div>
+
+                </div>
+            </t>
+
+            <!-- ══════════════════════════════════════════════════════════════ -->
+            <!-- APPRAISAL TAB                                                  -->
+            <!-- ══════════════════════════════════════════════════════════════ -->
+            <t t-if="state.cycle_active_tab === 'appraisal'">
+
+                <t t-set="pendingAppraisalReviewList"
+                   t-value="isSupervisor
+                     ? [...(state.selected_cycle.pending_appraisal_supervisor_list or []), ...(state.selected_cycle.pending_appraisal_secondary_list or [])]
+                     : (state.selected_cycle.pending_appraisal_list or [])"/>
+                <t t-set="appraisalList"
+                   t-value="isSupervisor ? (state.selected_cycle.team_appraisals or []) : (state.selected_cycle.all_appraisals or [])"/>
+
+                <div class="row g-3" style="flex: 1; overflow: hidden; min-height: 0; margin: 0;">
+
+                    <!-- LEFT: Pending appraisals -->
+                    <div class="col-12 col-xl-4 d-flex flex-column" style="min-height: 0; height: 100%;">
+                        <div class="pms_table_box d-flex flex-column"
+                             style="flex: 1; min-height: 0; overflow: hidden; border-left: 4px solid #8b5cf6;">
+                            <div class="pms_section_header flex-shrink-0">
+                                <span class="pms_section_icon"><i class="fa fa-bell text-warning"/></span>
+                                <h3>
+                                    <t t-if="isSupervisor">Appraisals Pending Your Review</t>
+                                    <t t-else="">Appraisals Pending Final Rating</t>
+                                </h3>
+                                <span class="badge text-white" style="background:#8b5cf6;">
+                                    <t t-esc="pendingAppraisalReviewList.length"/> Awaiting
+                                </span>
+                            </div>
+                            <!-- ↓ ONLY this div scrolls -->
+                            <div style="flex: 1; overflow-y: auto; min-height: 0;">
+                                <table class="table table-sm table-hover mb-0">
+                                    <thead style="position: sticky; top: 0; background: white; z-index: 1;">
+                                        <tr>
+                                            <th>Employee</th>
+                                            <th>Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <t t-foreach="pendingAppraisalReviewList"
+                                           t-as="appraisal" t-key="appraisal.employee_id">
+                                            <tr>
+                                                <td>
+                                                    <div class="d-flex align-items-center gap-2">
+                                                        <img t-attf-src="/web/image/hr.employee/#{appraisal.employee_id}/avatar_128"
+                                                             style="width:26px;height:26px;border-radius:50%;object-fit:cover;" alt=""/>
+                                                        <span style="font-size:12px;"><t t-esc="appraisal.name"/></span>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <button t-attf-class="btn btn-sm fw-bold #{isSupervisor ? 'text-white' : 'btn-outline-primary'}"
+                                                            t-attf-style="#{isSupervisor ? 'background:#8b5cf6;' : ''}"
+                                                            t-on-click="() => onOpenAppraisalRecord({id: appraisal.appraisal_id, appraisal_id: appraisal.appraisal_id, employee_id: appraisal.employee_id})">
+                                                        <i class="fa fa-star me-1"/>
+                                                        <t t-if="isSupervisor">Score</t>
+                                                        <t t-else="">Rate</t>
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        </t>
+                                        <t t-if="!pendingAppraisalReviewList.length">
+                                            <tr>
+                                                <td t-attf-colspan="#{isSupervisor ? 2 : 3}" class="text-center text-muted py-3">
+                                                    <i class="fa fa-check-circle text-success me-1"/>
+                                                    <t t-if="isSupervisor">No appraisals waiting.</t>
+                                                    <t t-else="">No appraisals pending.</t>
+                                                </td>
+                                            </tr>
+                                        </t>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- RIGHT: All appraisals status -->
+                    <div class="col-12 col-xl-8 d-flex flex-column" style="min-height: 0; height: 100%;">
+                        <div class="pms_table_box d-flex flex-column" style="flex: 1; min-height: 0; overflow: hidden;">
+                            <div class="pms_section_header flex-shrink-0">
+                                <span class="pms_section_icon"><i class="fa fa-bullseye text-primary"/></span>
+                                <h3>
+                                    <t t-if="isSupervisor">Appraisal Status - Team Members</t>
+                                    <t t-else="">All Appraisals Status</t>
+                                </h3>
+                                <span class="badge bg-primary">
+                                    <t t-esc="appraisalList.length"/>
+                                    <t t-if="isSupervisor"> Members</t>
+                                    <t t-else=""> Total</t>
+                                </span>
+                            </div>
+                            <t t-if="appraisalList.length > 0">
+                                <!-- ↓ ONLY this div scrolls -->
+                                <div style="flex: 1; overflow-y: auto; min-height: 0;">
+                                    <table class="table table-sm table-striped table-hover mb-0">
+                                        <thead style="position: sticky; top: 0; background: white; z-index: 1;">
+                                            <tr>
+                                                <th>Employee</th>
+                                                <th>Department</th>
+                                                <th class="text-center">Self</th>
+                                                <th class="text-center">Supervisor</th>
+                                                <th class="text-center">Secondary</th>
+                                                <th class="text-center">Reviewer</th>
+                                                <th class="text-center">Final</th>
+                                                <th>Rating</th>
+                                                <th>Status</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <t t-foreach="appraisalList" t-as="appraisal" t-key="appraisal.employee_id">
+                                                 <tr class="pms_row_clickable" t-on-click="() => onClickEmployeeAppraisal(appraisal)">
+                                                    <td>
+                                                        <div class="d-flex align-items-center gap-2">
+                                                            <img t-attf-src="/web/image/hr.employee/#{appraisal.employee_id}/avatar_128"
+                                                                 style="width:26px;height:26px;border-radius:50%;object-fit:cover;" alt=""/>
+                                                            <span style="font-size:12px;"><t t-esc="appraisal.name"/></span>
+                                                        </div>
+                                                    </td>
+                                                    <td style="font-size:12px;"><t t-esc="appraisal.department"/></td>
+                                                    <td class="text-center"><strong><t t-esc="appraisal.self_score or '—'"/></strong></td>
+                                                    <td class="text-center"><strong><t t-esc="appraisal.supervisor_score or '—'"/></strong></td>
+                                                    <td class="text-center"><strong><t t-esc="appraisal.secondary_score or '—'"/></strong></td>
+                                                    <td class="text-center"><strong><t t-esc="appraisal.reviewer_score or '—'"/></strong></td>
+                                                    <td class="text-center"><strong class="text-primary"><t t-esc="appraisal.final_score or '—'"/></strong></td>
+                                                    <td>
+                                                        <t t-if="appraisal.rating">
+                                                            <span class="badge bg-success" style="font-size:11px;"><t t-esc="appraisal.rating"/></span>
+                                                        </t>
+                                                        <t t-else="">—</t>
+                                                    </td>
+                                                    <td>
+    <div class="d-flex align-items-center gap-2">
+        <t t-if="appraisal.state_key === 'appraisal_draft'">
+            <span class="text-muted">
+                <i class="fa fa-user me-1"></i><t t-esc="appraisal.name"/> (Self Rating)
+            </span>
+        </t>
+        <t t-elif="appraisal.state_key === 'appraisal_pending_supervisor'">
+            <span class="text-primary">
+                <i class="fa fa-user-tie me-1"></i><t t-esc="appraisal.supervisor_name"/> (1st Approver)
+            </span>
+        </t>
+        <t t-elif="appraisal.state_key === 'appraisal_pending_secondary_supervisor'">
+            <span class="text-warning">
+                <i class="fa fa-users me-1"></i><t t-esc="appraisal.secondary_name"/> (2nd Approver)
+            </span>
+        </t>
+        <t t-elif="appraisal.state_key === 'appraisal_pending_reviewer'">
+            <span class="text-info">
+                <i class="fa fa-check-double me-1"></i><t t-esc="appraisal.reviewer_name"/> (Final Approver)
+            </span>
+        </t>
+        <t t-elif="appraisal.state_key === 'appraisal_approved'">
+            <span class="text-success">
+                <i class="fa fa-check-circle me-1"></i>Completed
+            </span>
+        </t>
+        <t t-else="">
+            <span class="text-muted">—</span>
+        </t>
+    </div>
+</td>
+                                                </tr>
+                                            </t>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </t>
+                            <t t-else="">
+                                <div class="text-center text-muted py-3">
+                                    <i class="fa fa-info-circle me-1"/>No appraisals found.
+                                </div>
+                            </t>
+                        </div>
+                    </div>
+
+                </div>
+            </t>
+
+        </div>
+    </div>
+
+</t>
+    </div>
+</t>
+            </div>
+        </div>
+    </t>
+</templates>

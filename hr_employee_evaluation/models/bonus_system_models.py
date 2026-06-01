@@ -6,10 +6,6 @@ from dateutil.relativedelta import relativedelta
 
 _logger = logging.getLogger(__name__)
 
-
-# ---------------------------------------------------------------------------
-# Rating Definition 
-# ---------------------------------------------------------------------------
 class PMSRatingDefinition(models.Model):
     _name = 'pms.rating.definition'
     _description = 'Rating Definition'
@@ -65,10 +61,6 @@ class PMSRatingDefinition(models.Model):
             for r in self
         ]
 
-
-# ---------------------------------------------------------------------------
-# Bonus Engine Rating Eligibility (inherits rating tiers)
-# ---------------------------------------------------------------------------
 class PMSBonusEngineRatingEligibility(models.Model):
     _name = 'pms.bonus.engine.rating.eligibility'
     _description = 'Bonus Engine Rating Eligibility'
@@ -107,10 +99,6 @@ class PMSBonusEngineRatingEligibility(models.Model):
          'Eligibility % must be between 0 and 100!'),
     ]
 
-
-# ---------------------------------------------------------------------------
-# Bonus Engine
-# ---------------------------------------------------------------------------
 class PMSBonusEngine(models.Model):
     _name = 'pms.bonus.engine'
     _description = 'Bonus Engine'
@@ -234,8 +222,12 @@ class PMSBonusEngine(models.Model):
             'months_served': 12.0,
         }
 
+    @api.model
+    def default_get(self, fields_list):
+        result = super().default_get(fields_list)
+        return result
+
     def action_validate_formula(self):
-        """Validate the bonus formula"""
         self._compute_validation()
         if not self.validation_status:
             raise UserError(_("Formula validation failed:\n%s") % self.validation_error)
@@ -254,9 +246,14 @@ class PMSBonusEngine(models.Model):
         }
 
     def action_sync_rating_tiers(self):
-        
         self.ensure_one()
+        active_ratings = self.env['pms.rating.definition'].search([('active', '=', True)])
+        
+        if not active_ratings:
+            raise UserError(_('No active rating tiers found. Please create rating tiers first.'))
+        
         self._sync_rating_eligibility_lines()
+        
         return {
             'type': 'ir.actions.client',
             'tag': 'display_notification',
@@ -269,13 +266,15 @@ class PMSBonusEngine(models.Model):
         }
 
     def get_eligibility_for_rating(self, rating_id):
-        """Get eligibility percentage for a specific rating from this engine"""
         line = self.rating_eligibility_ids.filtered(lambda l: l.rating_id.id == rating_id)
         return line.eligibility_percentage if line else 0.0
 
     def _sync_rating_eligibility_lines(self):
-        """Synchronize rating eligibility lines with active rating definitions"""
         self.ensure_one()
+        
+        if not self.id:
+            _logger.warning("Cannot sync rating eligibility lines for unsaved record")
+            return
         
         active_ratings = self.env['pms.rating.definition'].search([('active', '=', True)])
         
@@ -283,62 +282,47 @@ class PMSBonusEngine(models.Model):
             _logger.warning(f"No active rating tiers found for engine {self.name}")
             return
         
-        existing_ratings = self.rating_eligibility_ids.mapped('rating_id')
+        existing_lines = {line.rating_id.id: line for line in self.rating_eligibility_ids}
+        current_rating_ids = set(active_ratings.ids)
+        existing_rating_ids = set(existing_lines.keys())
         
-        # Create new lines for ratings that don't exist
-        for rating in active_ratings:
-            if rating not in existing_ratings:
-                try:
-                    self.env['pms.bonus.engine.rating.eligibility'].create({
-                        'engine_id': self.id,
-                        'rating_id': rating.id,
-                        'eligibility_percentage': 0.0,
-                    })
-                    _logger.info(f"Created eligibility line for rating: {rating.name}")
-                except Exception as e:
-                    _logger.error(f"Error creating eligibility line for rating {rating.name}: {e}")
+        for rating_id in current_rating_ids - existing_rating_ids:
+            try:
+                self.env['pms.bonus.engine.rating.eligibility'].create({
+                    'engine_id': self.id,
+                    'rating_id': rating_id,
+                    'eligibility_percentage': 0.0,
+                })
+                _logger.info(f"Created eligibility line for rating ID {rating_id}")
+            except Exception as e:
+                _logger.error(f"Error creating eligibility line for rating ID {rating_id}: {e}")
         
-        # Remove lines for inactive ratings
-        for line in self.rating_eligibility_ids:
-            if not line.rating_id.active:
-                _logger.info(f"Removing eligibility line for inactive rating: {line.rating_name}")
-                line.unlink()
+        for rating_id in existing_rating_ids - current_rating_ids:
+            if rating_id in existing_lines:
+                _logger.info(f"Removing eligibility line for inactive rating ID {rating_id}")
+                existing_lines[rating_id].unlink()
 
     @api.model_create_multi
     def create(self, vals_list):
-        """Create bonus engine with immediate rating eligibility lines"""
         records = super().create(vals_list)
         
         for record in records:
-            # Get all active ratings
-            active_ratings = self.env['pms.rating.definition'].search([('active', '=', True)])
-            
-            if not active_ratings:
-                _logger.warning("No active rating tiers found. Please create rating tiers first.")
-                continue
-            
-            # Create eligibility lines for each active rating
-            for rating in active_ratings:
-                try:
-                    self.env['pms.bonus.engine.rating.eligibility'].create({
-                        'engine_id': record.id,
-                        'rating_id': rating.id,
-                        'eligibility_percentage': 0.0,
-                    })
-                    _logger.info(f"Created eligibility line for engine {record.name} with rating {rating.name}")
-                except Exception as e:
-                    _logger.error(f"Error creating eligibility line: {e}")
-                    continue
+            try:
+                record._sync_rating_eligibility_lines()
+            except Exception as e:
+                _logger.error(f"Error syncing rating eligibility lines for engine {record.name}: {e}")
         
         return records
 
     def write(self, vals):
         result = super().write(vals)
         
-        # If we're not directly writing to rating_eligibility_ids, sync them
         if 'rating_eligibility_ids' not in vals:
             for record in self:
-                record._sync_rating_eligibility_lines()
+                try:
+                    record._sync_rating_eligibility_lines()
+                except Exception as e:
+                    _logger.error(f"Error syncing rating eligibility lines for engine {record.name}: {e}")
         
         return result
 
@@ -377,112 +361,10 @@ class PMSBonusEngine(models.Model):
             _logger.error("BonusEngine.calculate_bonus error: %s", exc)
             return fallback
 
-
-# ---------------------------------------------------------------------------
-# Employee Bonus Fields
-# ---------------------------------------------------------------------------
 class HrEmployee(models.Model):
     _inherit = 'hr.employee'
-    
-    latest_bonus_amount = fields.Monetary(
-        string='Latest Bonus Amount',
-        currency_field='currency_id',
-        compute='_compute_latest_bonus',
-        help='Most recent bonus amount calculated'
-    )
-    
-    latest_bonus_date = fields.Date(
-        string='Latest Bonus Date',
-        compute='_compute_latest_bonus',
-        help='Date of most recent bonus'
-    )
-    
-    total_bonus_ytd = fields.Monetary(
-        string='Total Bonus YTD',
-        currency_field='currency_id',
-        compute='_compute_bonus_totals',
-        help='Total bonus amount for current year'
-    )
-    
-    total_bonus_all_time = fields.Monetary(
-        string='Total Bonus All Time',
-        currency_field='currency_id',
-        compute='_compute_bonus_totals',
-        help='Total bonus amount all time'
-    )
-    
-    bonus_count = fields.Integer(
-        string='Bonus Count',
-        compute='_compute_bonus_totals',
-        help='Number of bonus payments received'
-    )
-    
-    currency_id = fields.Many2one(
-        'res.currency',
-        default=lambda self: self.env.company.currency_id
-    )
-    
-    def _compute_latest_bonus(self):
-        for employee in self:
-            if not employee.id:
-                employee.latest_bonus_amount = 0.0
-                employee.latest_bonus_date = False
-                continue
-                
-            latest_line = self.env['pms.bonus.calculation.line'].search([
-                ('employee_id', '=', employee.id),
-                ('calculation_state', '=', 'calculated')
-            ], order='calculation_date desc', limit=1)
-            
-            if latest_line:
-                employee.latest_bonus_amount = latest_line.bonus_amount
-                employee.latest_bonus_date = latest_line.calculation_date
-            else:
-                employee.latest_bonus_amount = 0.0
-                employee.latest_bonus_date = False
-    
-    def _compute_bonus_totals(self):
-        for employee in self:
-            if not employee.id:
-                employee.total_bonus_ytd = 0.0
-                employee.total_bonus_all_time = 0.0
-                employee.bonus_count = 0
-                continue
-                
-            bonus_lines = self.env['pms.bonus.calculation.line'].search([
-                ('employee_id', '=', employee.id),
-                ('calculation_state', '=', 'calculated')
-            ])
-            
-            current_year = fields.Date.today().year
-            ytd_total = 0.0
-            all_time_total = 0.0
-            
-            for line in bonus_lines:
-                all_time_total += line.bonus_amount
-                if line.calculation_date and line.calculation_date.year == current_year:
-                    ytd_total += line.bonus_amount
-            
-            employee.total_bonus_ytd = ytd_total
-            employee.total_bonus_all_time = all_time_total
-            employee.bonus_count = len(bonus_lines)
-    
-    def action_view_my_bonus(self):
-        self.ensure_one()
-        return {
-            'type': 'ir.actions.act_window',
-            'name': _('My Bonus - %s') % self.name,
-            'res_model': 'pms.bonus.calculation.line',
-            'view_mode': 'list,form',
-            'domain': [('employee_id', '=', self.id)],
-            'context': {'default_employee_id': self.id},
-            'target': 'current',
-        }
+    pass
 
-
-# ---------------------------------------------------------------------------
-# Bonus Calculation 
-# ---------------------------------------------------------------------------
 class PMSBonusCalculation(models.Model):
     _name = 'pms.bonus.calculation'
     _description = 'Bonus Calculation'
@@ -538,7 +420,6 @@ class PMSBonusCalculation(models.Model):
             record.eligible_employee_count = len(record.line_ids)
     
     def _get_eligible_employees(self):
-        """Get eligible employees from the cycle with completed appraisals"""
         self.ensure_one()
         
         appraisals = self.env['pms.appraisal'].search([
@@ -550,7 +431,6 @@ class PMSBonusCalculation(models.Model):
         return employees
     
     def _get_employee_appraisal(self, employee):
-        """Get employee's completed appraisal for the cycle"""
         return self.env['pms.appraisal'].search([
             ('employee_id', '=', employee.id),
             ('cycle_id', '=', self.cycle_id.id),
@@ -592,19 +472,6 @@ class PMSBonusCalculation(models.Model):
         return 0.0
 
     def _calculate_months_served(self, cycle):
-        """
-        Calculate months served based on cycle type (total cycle duration)
-        
-        For annual cycle: returns 12 months
-        For semi-annual cycle: returns 6 months
-        For probation cycle: returns 3 months
-        
-        Args:
-            cycle: The PMS cycle object (pms.cycle)
-        
-        Returns:
-            float: Total months of the cycle (12, 6, or 3)
-        """
         _logger.info("=" * 60)
         _logger.info("CALCULATING MONTHS SERVED (TOTAL CYCLE DURATION)")
         
@@ -612,7 +479,6 @@ class PMSBonusCalculation(models.Model):
             _logger.warning("No cycle provided")
             return 0.0
         
-        # Get cycle type and determine months
         cycle_type = cycle.cycle_type
         if cycle_type == 'annual':
             months_served = 12
@@ -631,7 +497,6 @@ class PMSBonusCalculation(models.Model):
         return float(months_served)
 
     def _run_calculation(self):
-        """Run calculation based on employee selection"""
         self.ensure_one()
         engine = self.bonus_engine_id
         
@@ -647,14 +512,12 @@ class PMSBonusCalculation(models.Model):
         
         calculated, skipped, skipped_list = 0, 0, []
         
-        # Get the cycle object
         cycle = self.cycle_id
         
         if not cycle:
             _logger.warning("No cycle selected for bonus calculation!")
             return 0, 0, ['No cycle selected for bonus calculation.']
         
-        # Calculate months served based on cycle type (total cycle duration)
         months_served = self._calculate_months_served(cycle)
         
         _logger.info("=" * 60)
@@ -745,7 +608,6 @@ class PMSBonusCalculation(models.Model):
         return calculated, skipped, skipped_list
 
     def action_calculate(self):
-        """Run calculation - simplified without state workflow"""
         self.ensure_one()
         
         if not self.bonus_engine_id:
@@ -768,7 +630,6 @@ class PMSBonusCalculation(models.Model):
 
         self.state = 'calculated'
         
-        # Force reload of the form to show the newly created lines
         return {
             'type': 'ir.actions.act_window',
             'res_model': self._name,
@@ -780,7 +641,6 @@ class PMSBonusCalculation(models.Model):
         }
 
     def action_export_to_payroll(self):
-        """Export to payroll - available after calculation"""
         self.ensure_one()
         if self.state != 'calculated':
             raise UserError(_('Please run the calculation first before exporting.'))
@@ -794,10 +654,6 @@ class PMSBonusCalculation(models.Model):
             'context': {'default_calculation_id': self.id},
         }
 
-
-# ---------------------------------------------------------------------------
-# Bonus Calculation Line
-# ---------------------------------------------------------------------------
 class PMSBonusCalculationLine(models.Model):
     _name = 'pms.bonus.calculation.line'
     _description = 'Bonus Calculation Line'
@@ -880,10 +736,6 @@ class PMSBonusCalculationLine(models.Model):
             'target': 'current',
         }
 
-
-# ---------------------------------------------------------------------------
-# Payroll Export Wizard
-# ---------------------------------------------------------------------------
 class PMSBonusPayrollExportWizard(models.TransientModel):
     _name = 'pms.bonus.payroll.export.wizard'
     _description = 'Bonus Payroll Export Wizard'

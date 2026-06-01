@@ -110,29 +110,23 @@ export class KraTabs extends Component {
             isDeleting: false,
             showRestorePanel: false,
             activeCompGroup: 0,
-            // competencyGroups holds the authoritative in-memory state for
-            // competency rows. It is loaded once from the server and then
-            // mutated locally on every score/remark change so that tab
-            // switches never wipe unsaved edits.
             competencyGroups: [],
             competencyTotals: { max: 0, self: 0, supervisor: 0, secondary: 0, reviewer: 0 },
             hasCompetencyData: false,
             isLoading: true,
+            kraAttachments: {},
+            editingKraId: null,
+            kraEditName: "",
+            draggedKraId: null,
+            dragOverKraId: null,
         });
-
-        // Track whether we have already loaded competency data for the
-        // current record so we do NOT reload on every prop update.
-        this._loadedForResId = null;
 
         onWillUpdateProps(async (nextProps) => {
             const nextResId = nextProps.record.resId;
-
-            // Only reload from server when the record itself changes
-            // (e.g. user navigates to a different appraisal).
             if (nextResId !== this._loadedForResId) {
                 await this._loadCompetencyDataFromServer(nextResId, nextProps.record);
             }
-            // Adjust the active KRA tab index if KRAs were added/removed.
+            await this._loadAttachmentsFromServer(nextProps.record);
             const nextCount = nextProps.record.data[this.props.name]?.records?.length || 0;
             if (this.state.activeTabIndex >= nextCount && nextCount > 0) {
                 this.state.activeTabIndex = nextCount - 1;
@@ -147,7 +141,10 @@ export class KraTabs extends Component {
                 this.props.record.resId,
                 this.props.record
             );
+            await this._loadAttachmentsFromServer(this.props.record);
         })();
+
+        this._loadedForResId = null;
 
         // Scroll-fade
         useEffect(() => {
@@ -177,7 +174,7 @@ export class KraTabs extends Component {
         });
     }
 
-    // ─── Internal: load from server and reset in-memory cache ────────────────
+    // ─── Internal: load from server ──────────────────────────────────────────
 
     async _loadCompetencyDataFromServer(resId, record) {
         if (!resId) {
@@ -186,7 +183,6 @@ export class KraTabs extends Component {
             this._loadedForResId = null;
             return;
         }
-
         try {
             this.state.isLoading = true;
             const result = await this.orm.call(
@@ -195,37 +191,30 @@ export class KraTabs extends Component {
                 [[resId]],
                 {}
             );
-
             if (result) {
                 this.state.hasCompetencyData = result.has_competency_data || false;
-
-                // Build in-memory row objects. Each row keeps:
-                //   • id       — the competency.framework.line DB id (display/key only)
-                //   • score_id — the appraisal.competency.score DB id  ← THE KEY FIX
-                //                This is what save_competency_score() expects.
-                //   • data     — reactive object the template reads for display
                 const processedGroups = (result.competency_groups || []).map(group => ({
                     ...group,
                     rows: (group.rows || []).map(row => ({
                         id: row.id,
-                        score_id: row.score_id || false,   // real appraisal.competency.score id
+                        score_id: row.score_id || false,
                         data: {
                             line_full_code: row.line_full_code || '',
                             line_name: row.line_name || '',
                             line_description: row.line_description || '',
                             line_points: row.line_points || 0.0,
-                            self_score: row.self_score || 0.0,
+                            // Set default values to 0 instead of false
+                            self_score: row.self_score !== false && row.self_score !== null ? row.self_score : 0,
                             self_remarks: row.self_remarks || '',
-                            supervisor_score: row.supervisor_score || 0.0,
+                            supervisor_score: row.supervisor_score !== false && row.supervisor_score !== null ? row.supervisor_score : 0,
                             supervisor_remarks: row.supervisor_remarks || '',
-                            secondary_supervisor_score: row.secondary_supervisor_score || 0.0,
+                            secondary_supervisor_score: row.secondary_supervisor_score !== false && row.secondary_supervisor_score !== null ? row.secondary_supervisor_score : 0,
                             secondary_supervisor_remarks: row.secondary_supervisor_remarks || '',
-                            reviewer_score: row.reviewer_score || 0.0,
+                            reviewer_score: row.reviewer_score !== false && row.reviewer_score !== null ? row.reviewer_score : 0,
                             reviewer_remarks: row.reviewer_remarks || '',
                         },
                     }))
                 }));
-
                 this.state.competencyGroups = processedGroups;
                 this.state.competencyTotals = result.competency_totals || {
                     max: 0, self: 0, supervisor: 0, secondary: 0, reviewer: 0,
@@ -240,7 +229,31 @@ export class KraTabs extends Component {
         }
     }
 
-    // ─── Recompute totals from in-memory rows (no server call needed) ─────────
+    async _loadAttachmentsFromServer(record) {
+        const kraRecords = record.data[this.props.name]?.records || [];
+        const allAttachmentIds = [];
+        kraRecords.forEach(kra => {
+            const recs = kra.data.evidence_attachment_ids?.records || [];
+            recs.forEach(r => {
+                const id = r.resId || r.id;
+                if (typeof id === 'number') allAttachmentIds.push(id);
+            });
+        });
+        if (allAttachmentIds.length > 0) {
+            const attachments = await this.orm.searchRead('ir.attachment', [['id', 'in', allAttachmentIds]], ['id', 'name', 'file_size']);
+            const attMap = {};
+            attachments.forEach(a => attMap[a.id] = a);
+            kraRecords.forEach(kra => {
+                const kraKey = kra.resId || kra.id;
+                const recs = kra.data.evidence_attachment_ids?.records || [];
+                this.state.kraAttachments[kraKey] = recs.map(r => attMap[r.resId || r.id]).filter(Boolean);
+            });
+        } else {
+            kraRecords.forEach(kra => {
+                this.state.kraAttachments[kra.resId || kra.id] = [];
+            });
+        }
+    }
 
     _recomputeCompetencyTotals() {
         let max = 0, self = 0, supervisor = 0, secondary = 0, reviewer = 0;
@@ -256,7 +269,8 @@ export class KraTabs extends Component {
         this.state.competencyTotals = { max, self, supervisor, secondary, reviewer };
     }
 
-    // Mode detection
+    // ─── Mode detection ───────────────────────────────────────────────────────
+
     get mode() {
         if (this.props.record.resModel === 'appraisal.template') return 'template';
         if (this.props.options?.mode) return this.props.options.mode;
@@ -265,25 +279,42 @@ export class KraTabs extends Component {
         return 'employee';
     }
 
-    get isTemplateMode() { return this.mode === 'template'; }
-    get isEmployeeMode() { return this.mode === 'employee'; }
-    get isSupervisorMode() { return this.mode === 'supervisor'; }
-    get isAppraisalEmployeeMode() { return this.mode === 'appraisal_employee'; }
-    get isAppraisalSupervisorMode() { return this.mode === 'appraisal_supervisor'; }
-    get isAppraisalPhase() { return this.isAppraisalEmployeeMode || this.isAppraisalSupervisorMode; }
+    get isTemplateMode()           { return this.mode === 'template'; }
+    get isEmployeeMode()           { return this.mode === 'employee'; }
+    get isSupervisorMode()         { return this.mode === 'supervisor'; }
+    get isAppraisalEmployeeMode()  { return this.mode === 'appraisal_employee'; }
+    get isAppraisalSupervisorMode(){ return this.mode === 'appraisal_supervisor'; }
+    get isAppraisalPhase()         { return this.isAppraisalEmployeeMode || this.isAppraisalSupervisorMode; }
 
-    // KRA helpers
+    // ─── Convenience access-flag getters (read from record data, not props) ───
+
+    get canEmployeeEdit() {
+        return !!this.props.record.data.can_employee_edit;
+    }
+
+    get canSupervisorEditTarget() {
+        return !!this.props.record.data.can_supervisor_edit_target;
+    }
+
+    get canSecondaryEditTarget() {
+        return !!this.props.record.data.can_secondary_supervisor_edit_target;
+    }
+
+    get canSupervisorLevelEdit() {
+        return this.canSupervisorEditTarget || this.canSecondaryEditTarget;
+    }
+
+    // ─── KRA / KPI helpers ───────────────────────────────────────────────────
+
     get kraRecords() {
-        return this.props.record.data[this.props.name]?.records || [];
+        const records = this.props.record.data.kra_ids?.records || [];
+        return [...records].sort((a, b) => (a.data.sequence || 0) - (b.data.sequence || 0));
     }
 
-    get hasKras() { return this.kraRecords.length > 0; }
-    get activeKRA() { return this.kraRecords[this.state.activeTabIndex] || null; }
-    get activeKPIs() { return this.activeKRA?.data.kpi_ids?.records || []; }
-
-    get activeDeselectedKPIs() {
-        return this.activeKPIs.filter(kpi => !kpi.data.is_selected);
-    }
+    get hasKras()              { return this.kraRecords.length > 0; }
+    get activeKRA()            { return this.kraRecords[this.state.activeTabIndex] || null; }
+    get activeKPIs()           { return this.activeKRA?.data.kpi_ids?.records || []; }
+    get activeDeselectedKPIs() { return this.activeKPIs.filter(kpi => !kpi.data.is_selected); }
 
     get activeTotalScore() {
         if (this.isTemplateMode)
@@ -293,15 +324,26 @@ export class KraTabs extends Component {
             .reduce((s, k) => s + (k.data.weightage || 0), 0);
     }
 
-    // Competency helpers — read directly from reactive in-memory state
-    get competencyGroups() { return this.state.competencyGroups; }
-    get hasCompetencyData() { return this.state.hasCompetencyData; }
+    // ─── Competency helpers ───────────────────────────────────────────────────
+
+    get competencyGroups()      { return this.state.competencyGroups; }
+    get hasCompetencyData()     { return this.state.hasCompetencyData; }
     get activeCompetencyGroup() { return this.competencyGroups[this.state.activeCompGroup] || null; }
-    get activeCompetencyRows() { return this.activeCompetencyGroup?.rows || []; }
-    get competencyTotals() { return this.state.competencyTotals; }
+    get activeCompetencyRows()  { return this.activeCompetencyGroup?.rows || []; }
+    get competencyTotals()      { return this.state.competencyTotals; }
     get isCompetencyTabActive() { return this.state.isCompetencyActive; }
 
-    // Tab switching
+    // ─── Number input focus handler (FIX for 0 removal) ─────────────────────
+    
+    onNumberInputFocus(event) {
+        // If the current value is 0 or "0", clear it on focus
+        if (event.target.value === '0' || event.target.value === 0) {
+            event.target.value = '';
+        }
+    }
+
+    // ─── Tab switching ────────────────────────────────────────────────────────
+
     setActiveKraTab(idx) {
         this.state.activeTabIndex = idx;
         this.state.isCompetencyActive = false;
@@ -313,105 +355,141 @@ export class KraTabs extends Component {
         this.state.showRestorePanel = false;
     }
 
-    setActiveTab(idx) { this.setActiveKraTab(idx); }
-    isActiveTab(idx) { return this.state.activeTabIndex === idx; }
-
+    setActiveTab(idx)    { this.setActiveKraTab(idx); }
+    isActiveTab(idx)     { return this.state.activeTabIndex === idx; }
     setActiveCompGroup(idx) { this.state.activeCompGroup = idx; }
-    isActiveCompGroup(idx) { return this.state.activeCompGroup === idx; }
+    isActiveCompGroup(idx)  { return this.state.activeCompGroup === idx; }
+
+    // ─── KRA name editing ─────────────────────────────────────────────────────
+
+    onEditKraName(kra, ev) {
+        ev.stopPropagation();
+        this.state.editingKraId = kra.id;
+        this.state.kraEditName = kra.data.name || '';
+    }
+
+    async onSaveKraName(kra, ev) {
+        if (ev) ev.stopPropagation();
+        const newName = this.state.kraEditName.trim();
+        if (newName && newName !== kra.data.name) {
+            await kra.update({ name: newName });
+        }
+        this.state.editingKraId = null;
+    }
+
+    onCancelEditKraName(ev) {
+        if (ev) ev.stopPropagation();
+        this.state.editingKraId = null;
+    }
+
+    onKraNameKeydown(kra, ev) {
+        if (ev.key === "Enter")  this.onSaveKraName(kra, ev);
+        else if (ev.key === "Escape") this.onCancelEditKraName(ev);
+    }
+
+    // ─── KRA drag & drop (template mode only) ────────────────────────────────
+
+    onDragStart(kra, ev) {
+        if (!this.isTemplateMode) return;
+        this.state.draggedKraId = kra.id;
+        setTimeout(() => { ev.target.style.opacity = '0.4'; }, 0);
+    }
+
+    onDragEnd(ev) {
+        ev.target.style.opacity = '1';
+        this.state.draggedKraId = null;
+        this.state.dragOverKraId = null;
+    }
+
+    onDragOver(kra, ev) {
+        ev.preventDefault();
+        if (!this.isTemplateMode || this.state.draggedKraId === kra.id) return;
+        this.state.dragOverKraId = kra.id;
+    }
+
+    onDragLeave(kra, ev) {
+        if (this.state.dragOverKraId === kra.id) this.state.dragOverKraId = null;
+    }
+
+    async onDrop(targetKra, ev) {
+        ev.preventDefault();
+        const draggedId = this.state.draggedKraId;
+        this.state.dragOverKraId = null;
+        if (!draggedId || draggedId === targetKra.id) return;
+
+        const kras = this.kraRecords;
+        const draggedIndex = kras.findIndex(k => k.id === draggedId);
+        const targetIndex  = kras.findIndex(k => k.id === targetKra.id);
+        if (draggedIndex === -1 || targetIndex === -1) return;
+
+        const reordered = [...kras];
+        const [draggedItem] = reordered.splice(draggedIndex, 1);
+        reordered.splice(targetIndex, 0, draggedItem);
+
+        for (let i = 0; i < reordered.length; i++) {
+            const newSeq = (i + 1) * 10;
+            if (reordered[i].data.sequence !== newSeq) {
+                await reordered[i].update({ sequence: newSeq });
+            }
+        }
+    }
 
     // ─── Competency score change ──────────────────────────────────────────────
-    // Scores are persisted immediately via the dedicated `save_competency_score`
-    // method on pms.appraisal.
-    //
-    // IMPORTANT: we pass scoreRow.score_id (the appraisal.competency.score DB id)
-    // to the server method — NOT scoreRow.id (which is the competency.framework.line
-    // id and belongs to a completely different model).
-    //
-    // The local in-memory row.data is also updated immediately so switching
-    // KRA tabs never wipes unsaved values from the UI.
-    //
-    // FIX: If score_id is falsy (row was not yet synced when the page loaded),
-    // we reload competency data from the server first — which calls
-    // _sync_competency_scores() server-side — and then retry.  This ensures
-    // all raters (primary supervisor, secondary supervisor, reviewer) can score
-    // without hitting the "record not found" guard.
 
     async onCompetencyScoreChange(scoreRow, fieldName, event) {
         if (this.props.readonly) return;
 
         let value = event.target.value;
-
-        const scoreFields = [
-            'self_score', 'supervisor_score',
-            'secondary_supervisor_score', 'reviewer_score',
-        ];
+        const scoreFields = ['self_score', 'supervisor_score', 'secondary_supervisor_score', 'reviewer_score'];
 
         if (scoreFields.includes(fieldName)) {
-            value = parseFloat(value) || 0.0;
+            // Handle empty/undefined values
+            if (value === '' || value === null || value === undefined) {
+                value = 0; // Set to 0 instead of false
+            } else {
+                value = parseFloat(value);
+                if (isNaN(value)) { 
+                    value = 0; // Set to 0 instead of false
+                }
+            }
+            
+            // Always ensure value is a number (not false)
             const maxPoints = scoreRow.data.line_points || 0;
-
             if (value < 0) {
-                this.notification.add(
-                    `${fieldName.replace(/_/g, ' ')} cannot be negative.`,
-                    { type: 'warning' }
-                );
-                event.target.value = scoreRow.data[fieldName] || 0;
+                this.notification.add(`${fieldName.replace(/_/g, ' ')} cannot be negative.`, { type: 'warning' });
+                const prev = scoreRow.data[fieldName];
+                event.target.value = (prev !== undefined && prev !== null) ? prev : 0;
                 return;
             }
-
             if (value > maxPoints) {
-                this.notification.add(
-                    `${fieldName.replace(/_/g, ' ')} cannot exceed ${maxPoints} points.`,
-                    { type: 'warning' }
-                );
-                event.target.value = scoreRow.data[fieldName] || 0;
+                this.notification.add(`${fieldName.replace(/_/g, ' ')} cannot exceed ${maxPoints} points.`, { type: 'warning' });
+                const prev = scoreRow.data[fieldName];
+                event.target.value = (prev !== undefined && prev !== null) ? prev : 0;
                 return;
             }
         } else {
-            // Remark text fields — keep as string
             value = String(value);
         }
 
-        // ── score_id guard with automatic recovery ────────────────────────────
-        // score_id should always be populated because get_competency_data now
-        // calls _sync_competency_scores() before returning.  But as a defensive
-        // measure we attempt a single server reload if score_id is still falsy,
-        // which will create any missing rows and refresh the in-memory state.
         if (!scoreRow.score_id) {
-            console.warn('score_id missing for competency row — attempting reload from server.');
+            console.warn('score_id missing — reloading from server.');
             await this._loadCompetencyDataFromServer(this.props.record.resId, this.props.record);
-
-            // After reload scoreRow is a stale reference; find the refreshed row.
             let refreshedRow = null;
             for (const group of this.state.competencyGroups) {
                 refreshedRow = group.rows.find(r => r.id === scoreRow.id);
                 if (refreshedRow) break;
             }
-
             if (!refreshedRow || !refreshedRow.score_id) {
-                this.notification.add(
-                    'Could not find the competency score record. Please save the record and try again.',
-                    { type: 'danger' }
-                );
+                this.notification.add('Could not find the competency score record. Please save and try again.', { type: 'danger' });
                 return;
             }
-
-            // Continue with the freshly loaded row that now has a valid score_id.
             scoreRow = refreshedRow;
         }
-        // ─────────────────────────────────────────────────────────────────────
 
-        // 1. Capture the previous value for rollback, then apply optimistic update.
         const previousValue = scoreRow.data[fieldName];
         scoreRow.data[fieldName] = value;
         this._recomputeCompetencyTotals();
 
-        // 2. Persist to the database via the dedicated appraisal method.
-        //    save_competency_score(score_id, field_name, value) runs sudo()
-        //    internally after verifying the current user is authorised for
-        //    the appraisal's current state.
-        //    We pass scoreRow.score_id — the appraisal.competency.score row id —
-        //    NOT scoreRow.id which is the competency.framework.line id.
         try {
             await this.orm.call(
                 'pms.appraisal',
@@ -421,14 +499,10 @@ export class KraTabs extends Component {
             );
         } catch (err) {
             console.error('Could not persist competency score:', err);
-            // Roll back the optimistic local update so the UI is not misleading.
             scoreRow.data[fieldName] = previousValue;
             this._recomputeCompetencyTotals();
-            event.target.value = previousValue;
-            this.notification.add(
-                'Could not save the score. Please try again.',
-                { type: 'danger' }
-            );
+            event.target.value = (previousValue !== undefined && previousValue !== null) ? previousValue : 0;
+            this.notification.add('Could not save the score. Please try again.', { type: 'danger' });
         }
     }
 
@@ -442,46 +516,46 @@ export class KraTabs extends Component {
         });
     }
 
-    // KPI field change with immediate validation
+    // ─── KPI field change ─────────────────────────────────────────────────────
+
     async onKPIFieldChange(kpiRecord, fieldName, event) {
-        if (this.props.readonly) return;
         let value = event.target.value;
 
         if (['score', 'weightage', 'self_score', 'supervisor_score',
-            'secondary_supervisor_score', 'reviewer_score'].includes(fieldName)) {
-            value = parseFloat(value) || 0.0;
-
-            let maxValue = 0;
-            if (['self_score', 'supervisor_score',
-                 'secondary_supervisor_score', 'reviewer_score'].includes(fieldName)) {
-                maxValue = kpiRecord.data.weightage || 0;
-            } else if (fieldName === 'score' || fieldName === 'weightage') {
-                maxValue = 999999;
+             'secondary_supervisor_score', 'reviewer_score'].includes(fieldName)) {
+            if (value === '' || value === null || value === undefined) {
+                value = false;
+            } else {
+                value = parseFloat(value);
+                if (isNaN(value)) { value = false; }
             }
-
-            if (value < 0) {
-                this.notification.add(
-                    `${fieldName.replace(/_/g, ' ')} cannot be negative.`,
-                    { type: 'warning' }
-                );
-                event.target.value = kpiRecord.data[fieldName] || 0;
-                return;
-            }
-
-            if (maxValue > 0 && maxValue < 999999 && value > maxValue) {
-                this.notification.add(
-                    `${fieldName.replace(/_/g, ' ')} cannot exceed ${maxValue}.`,
-                    { type: 'warning' }
-                );
-                event.target.value = kpiRecord.data[fieldName] || 0;
-                return;
+            if (value !== false) {
+                let maxValue = 0;
+                if (['self_score', 'supervisor_score', 'secondary_supervisor_score', 'reviewer_score'].includes(fieldName)) {
+                    maxValue = kpiRecord.data.weightage || 0;
+                } else if (fieldName === 'score' || fieldName === 'weightage') {
+                    maxValue = 999999;
+                }
+                if (value < 0) {
+                    this.notification.add(`${fieldName.replace(/_/g, ' ')} cannot be negative.`, { type: 'warning' });
+                    const prev = kpiRecord.data[fieldName];
+                    event.target.value = (prev !== false && prev !== null) ? prev : '';
+                    return;
+                }
+                if (maxValue > 0 && maxValue < 999999 && value > maxValue) {
+                    this.notification.add(`${fieldName.replace(/_/g, ' ')} cannot exceed ${maxValue}.`, { type: 'warning' });
+                    const prev = kpiRecord.data[fieldName];
+                    event.target.value = (prev !== false && prev !== null) ? prev : '';
+                    return;
+                }
             }
         }
 
         await kpiRecord.update({ [fieldName]: value });
     }
 
-    // KRA actions
+    // ─── KPI history / expand ─────────────────────────────────────────────────
+
     onViewKpiHistory(kpiRecord, historyType) {
         this.dialog.add(KpiHistoryDialog, {
             kpiName: kpiRecord.data.name || '',
@@ -499,6 +573,8 @@ export class KraTabs extends Component {
             onFieldChange: (kpi, field, ev) => this.onKPIFieldChange(kpi, field, ev),
         });
     }
+
+    // ─── KRA CRUD ─────────────────────────────────────────────────────────────
 
     async onAddKRA() {
         if (this.props.readonly || !this.isTemplateMode) return;
@@ -541,50 +617,60 @@ export class KraTabs extends Component {
         const files = ev.target.files;
         if (!files || files.length === 0) return;
 
-        if (files.length > 1) {
-            this.notification.add(
-                `You can only attach one document per KRA. Only the first file ("${files[0].name}") was kept.`,
-                { type: 'warning' }
-            );
-        }
+        const MAX_TOTAL_SIZE = 300 * 1024;
+        const kraKey = kra.resId || kra.id;
 
-        const file = files[0];
-        const maxSize = 300 * 1024;
+        let newFilesSize = 0;
+        for (let i = 0; i < files.length; i++) newFilesSize += files[i].size;
 
-        if (file.size > maxSize) {
+        const existingAttachments = this.state.kraAttachments[kraKey] || [];
+        const existingSize = existingAttachments.reduce((sum, att) => sum + (att.file_size || 0), 0);
+
+        if (existingSize + newFilesSize > MAX_TOTAL_SIZE) {
             this.notification.add(
-                `File "${file.name}" exceeds 300KB limit.`,
+                `Total KRA evidence size cannot exceed 300KB. You are trying to add ${(newFilesSize / 1024).toFixed(1)}KB to the existing ${(existingSize / 1024).toFixed(1)}KB.`,
                 { type: 'danger' }
             );
             ev.target.value = "";
             return;
         }
 
-        const base64Data = await new Promise((resolve) => {
-            const reader = new FileReader();
-            reader.onload = (e) => resolve(e.target.result.split(',')[1]);
-            reader.readAsDataURL(file);
-        });
+        const newAtts = [];
+        const commands = [];
+        for (let i = 0; i < files.length; i++) {
+            const file = files[i];
+            const base64Data = await new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onload = (e) => resolve(e.target.result.split(',')[1]);
+                reader.readAsDataURL(file);
+            });
+            const attId = await this.orm.create("ir.attachment", [{
+                name: file.name,
+                type: 'binary',
+                datas: base64Data,
+                res_model: 'pms.appraisal.kra',
+                res_id: kra.resId || 0,
+            }]);
+            newAtts.push({ id: attId[0], name: file.name, file_size: file.size });
+            commands.push([4, attId[0]]);
+        }
 
-        const attachmentId = await this.orm.create("ir.attachment", [{
-            name: file.name,
-            type: 'binary',
-            datas: base64Data,
-            res_model: 'pms.appraisal.kra',
-            res_id: kra.resId || 0,
-        }]);
-
-        await kra.update({
-            evidence_attachment_ids: [[6, 0, [attachmentId[0]]]]
-        });
-
+        this.state.kraAttachments[kraKey] = [...existingAttachments, ...newAtts];
+        await kra.update({ evidence_attachment_ids: commands });
         ev.target.value = "";
     }
 
     async onRemoveDocument(kra, attachmentResId) {
-        await kra.update({
-            evidence_attachment_ids: [[3, attachmentResId]]
-        });
+        if (!attachmentResId) return;
+        const kraKey = kra.resId || kra.id;
+        const existingAttachments = this.state.kraAttachments[kraKey] || [];
+        this.state.kraAttachments[kraKey] = existingAttachments.filter(a => a.id !== attachmentResId);
+        await kra.update({ evidence_attachment_ids: [[3, attachmentResId]] });
+        try {
+            await this.orm.unlink('ir.attachment', [attachmentResId]);
+        } catch (e) {
+            console.error("Could not delete attachment from DB", e);
+        }
     }
 
     onViewDocument(attachmentResId) {
@@ -600,7 +686,8 @@ export class KraTabs extends Component {
             const newLen = this.kraRecords.length;
             if (this.state.activeTabIndex >= newLen && newLen > 0)
                 this.state.activeTabIndex = newLen - 1;
-            else if (newLen === 0) this.state.activeTabIndex = 0;
+            else if (newLen === 0)
+                this.state.activeTabIndex = 0;
         } catch (e) { console.error("Error deleting KRA:", e); }
         finally { this.state.isDeleting = false; }
     }

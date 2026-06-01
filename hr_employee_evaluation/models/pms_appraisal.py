@@ -46,7 +46,6 @@ class PMSAppraisal(models.Model):
     template_id = fields.Many2one(
         'appraisal.template',
         string='Template Used',
-        # required=True, remove it for now to remove any db inconsistencies
         ondelete='restrict',
         tracking=True
     )
@@ -170,6 +169,12 @@ class PMSAppraisal(models.Model):
         string='Past Planning Deadline',
         compute='_compute_is_past_planning_deadline'
     )
+    self_planning_deadline = fields.Date(
+        string='Self-Planning Deadline',
+        compute='_compute_self_planning_deadline',
+        store=True,
+        help='Deadline for the employee to complete self-planning (5 days before the actual deadline).'
+    )
 
     # Appraisal phase access flags
     can_employee_self_rate = fields.Boolean(
@@ -190,7 +195,7 @@ class PMSAppraisal(models.Model):
         compute='_compute_access_flags',
     )
 
-    planning_total_score = fields.Float( #planning here
+    planning_total_score = fields.Float(
         string='Planning Total Score',
         compute='_compute_planning_total_score',
         store=True,
@@ -219,15 +224,13 @@ class PMSAppraisal(models.Model):
         'pms.evaluation.group', related='employee_id.evaluation_group_id',
         string='Evaluation Group', store=False, readonly=True
     )
-
     planning_start_date = fields.Date(
-        related='cycle_id.start_date',
-        string='Planning Start', store=False, readonly=True
+        string='Planning Start', store=True, readonly=True
     )
     planning_end_date = fields.Date(
-        related='cycle_id.planning_deadline',
-        string='Planning Deadline', store=False, readonly=True
+        string='Planning Deadline', store=True, readonly=True
     )
+
     template_total_score = fields.Float(
         related='template_id.total_kpi_score',
         string='Template Total Score', store=False, readonly=True,
@@ -256,9 +259,17 @@ class PMSAppraisal(models.Model):
         related='cycle_id.appraisal_start_date',
         string='Appraisal Start Date', store=False, readonly=True
     )
+    # Full cycle end date — kept for display / HR reference
     appraisal_end_date_display = fields.Date(
         related='cycle_id.end_date',
-        string='Appraisal End Date', store=False, readonly=True
+        string='Cycle End Date', store=False, readonly=True
+    )
+    # Employee-facing deadline: 10 days before the cycle ends
+    appraisal_end_date = fields.Date(
+        string='Appraisal Employee Deadline',
+        compute='_compute_appraisal_end_date',
+        store=True,
+        help='Last day an employee may submit self-ratings (cycle end − 10 days).'
     )
 
     self_has_zero_scores = fields.Boolean(
@@ -353,6 +364,15 @@ class PMSAppraisal(models.Model):
         compute='_compute_final_appraisal_score',
         store=True,
         help='Final score combining KRA and competency scores'
+    )
+
+    # Competency Framework HTML field for planning phase display
+    competency_framework_html = fields.Html(
+        string='Competency Framework',
+        compute='_compute_competency_framework_html',
+        store=False,
+        readonly=True,
+        sanitize=False,
     )
 
     # ─────────────────────────────────────────────────────────────
@@ -536,7 +556,9 @@ class PMSAppraisal(models.Model):
         'secondary_supervisor_id.user_id',
         'reviewer_id.user_id',
         'cycle_id.state',
-        'cycle_id.planning_deadline',
+        'planning_end_date',
+        'self_planning_deadline',
+        'appraisal_end_date',
         'draft_reset_date',
         'resubmission_deadline',
     )
@@ -556,23 +578,23 @@ class PMSAppraisal(models.Model):
             is_sec_sup  = bool(sec_sup_user and sec_sup_user.id == current_user.id)
             is_rev      = bool(rev_user     and rev_user.id     == current_user.id)
 
-            cycle_in_planning  = record.cycle_id.state == 'planning'
             cycle_in_appraisal = record.cycle_id.state == 'appraisal'
 
-            has_started = bool(
-                record.cycle_id.start_date and record.cycle_id.start_date <= today
-            )
+            # Ensure individual has started and cycle allows planning
+            has_started = bool(record.planning_start_date and record.planning_start_date <= today)
+            cycle_allows_planning = record.cycle_id.state in ('planning', 'monitoring')
 
             record.is_own_appraisal                        = is_own
             record.is_supervisor_of_appraisal              = is_sup
             record.is_secondary_supervisor_of_appraisal    = is_sec_sup
             record.is_reviewer_of_appraisal                = is_rev
 
-            if not is_own or not cycle_in_planning or not has_started:
+            # ── Planning edit window ──────────────────────────────────────
+            if not is_own or not cycle_allows_planning or not has_started:
                 record.can_employee_edit = False
             elif record.state == 'approved':
                 record.can_employee_edit = False
-            elif record.cycle_id.planning_deadline and record.cycle_id.planning_deadline < today:
+            elif record.self_planning_deadline and record.self_planning_deadline < today:
                 if record.state == 'draft' and record.draft_reset_date and record.resubmission_deadline:
                     record.can_employee_edit = now <= record.resubmission_deadline
                 else:
@@ -585,18 +607,21 @@ class PMSAppraisal(models.Model):
             record.can_supervisor_edit_target = bool(
                 is_sup
                 and record.state == 'pending_supervisor'
-                and cycle_in_planning
+                and cycle_allows_planning
             )
             record.can_secondary_supervisor_edit_target = bool(
                 is_sec_sup
                 and record.state == 'pending_secondary_supervisor'
-                and cycle_in_planning
+                and cycle_allows_planning
             )
 
             record.is_editable = record.can_employee_edit
 
             record.can_employee_self_rate = bool(
-                is_own and record.state == 'appraisal_draft' and cycle_in_appraisal
+                is_own
+                and record.state == 'appraisal_draft'
+                and cycle_in_appraisal
+                and (not record.appraisal_end_date or today <= record.appraisal_end_date)
             )
             record.can_supervisor_rate = bool(
                 is_sup and record.state == 'appraisal_pending_supervisor' and cycle_in_appraisal
@@ -608,31 +633,165 @@ class PMSAppraisal(models.Model):
                 is_rev and record.state == 'appraisal_pending_reviewer' and cycle_in_appraisal
             )
 
-    @api.depends('cycle_id.planning_deadline')
+    @api.depends('planning_end_date')
     def _compute_is_past_planning_deadline(self):
         today = fields.Date.today()
         for record in self:
             record.is_past_planning_deadline = bool(
-                record.cycle_id.planning_deadline
-                and record.cycle_id.planning_deadline < today
+                record.planning_end_date
+                and record.planning_end_date < today
             )
 
-    @api.depends('draft_reset_date', 'cycle_id.resubmission_days', 'cycle_id.planning_deadline')
+    @api.depends('draft_reset_date', 'cycle_id.resubmission_days', 'self_planning_deadline')
     def _compute_resubmission_deadline(self):
         for record in self:
             if record.draft_reset_date and record.cycle_id.resubmission_days:
                 reset_plus_days = record.draft_reset_date + timedelta(
                     days=record.cycle_id.resubmission_days
                 )
-                if record.cycle_id.planning_deadline:
+                if record.self_planning_deadline:
                     planning_dt = fields.Datetime.from_string(
-                        str(record.cycle_id.planning_deadline)
+                        str(record.self_planning_deadline)
                     )
                     record.resubmission_deadline = max(planning_dt, reset_plus_days)
                 else:
                     record.resubmission_deadline = reset_plus_days
             else:
                 record.resubmission_deadline = False
+
+    @api.depends('planning_end_date')
+    def _compute_self_planning_deadline(self):
+        for record in self:
+            if record.planning_end_date:
+                record.self_planning_deadline = record.planning_end_date - timedelta(days=5)
+            else:
+                record.self_planning_deadline = False
+
+    @api.depends('cycle_id.end_date')
+    def _compute_appraisal_end_date(self):
+        """Employee self-rating closes 10 days before the cycle end date."""
+        for record in self:
+            if record.cycle_id.end_date:
+                record.appraisal_end_date = record.cycle_id.end_date - timedelta(days=10)
+            else:
+                record.appraisal_end_date = False
+
+    @api.depends('kra_ids.kpi_ids.is_selected', 'kra_ids.kpi_ids.weightage')
+    def _compute_planning_total_score(self):
+        for record in self:
+            selected_kpis = record.kra_ids.mapped('kpi_ids').filtered(lambda k: k.is_selected)
+            record.planning_total_score = sum(selected_kpis.mapped('weightage'))
+
+    def _compute_competency_framework_html(self):
+        """Compute HTML representation of competency framework for display in planning phase"""
+        S = {
+            'table':       'width:100%;border-collapse:collapse;font-size:0.88em;font-family:inherit;margin-top:10px;',
+            'th':          ('background-color:#1a3c5e;color:#ffffff;font-size:0.75em;font-weight:700;'
+                            'text-transform:uppercase;letter-spacing:0.06em;padding:10px 10px;'
+                            'border-bottom:3px solid #e8a020;white-space:nowrap;text-align:left;'),
+            'th_code':     'width:70px;text-align:center;',
+            'th_pts':      'width:90px;text-align:right;',
+            'th_targets':  'width:44%;',
+            'grp_base':    ('font-weight:700;padding:10px 14px;border-top:3px solid #e8a020;'
+                            'border-bottom:1px solid rgba(255,255,255,0.15);'),
+            'grp_exact':   'background-color:#1a3c5e;color:#ffffff;',
+            'grp_under':   'background-color:#134e6f;color:#fef3c7;',
+            'grp_over':    'background-color:#7f1d1d;color:#fee2e2;',
+            'grp_code':    ('font-family:monospace;font-size:0.82em;font-weight:700;'
+                            'background-color:rgba(255,255,255,0.18);border-radius:3px;'
+                            'padding:2px 8px;margin-right:10px;letter-spacing:0.04em;'),
+            'grp_pts_lbl': ('font-size:0.78em;font-weight:600;text-transform:uppercase;'
+                            'letter-spacing:0.05em;opacity:0.75;margin-right:4px;'),
+            'grp_pts_val': 'font-size:1em;font-weight:700;',
+            'grp_right':   'text-align:right;white-space:nowrap;',
+            'even':        ('background-color:#ffffff;padding:8px 10px;'
+                            'border-bottom:1px solid #e2e8f0;vertical-align:top;color:#1e293b;'),
+            'odd':         ('background-color:#f8faff;padding:8px 10px;'
+                            'border-bottom:1px solid #e2e8f0;vertical-align:top;color:#1e293b;'),
+            'code_pill':   ('font-family:monospace;font-size:0.82em;font-weight:700;'
+                            'color:#1d4ed8;background-color:#eff6ff;border:1px solid #93c5fd;'
+                            'border-radius:4px;padding:2px 7px;display:inline-block;'),
+            'td_code':     'text-align:center;width:70px;',
+            'td_targets':  ('color:#334155;font-size:0.875em;word-break:break-word;'
+                            'line-height:1.65;padding-top:6px;padding-bottom:6px;'),
+            'td_pts':      'text-align:right;font-weight:600;white-space:nowrap;',
+            'foot':        ('background-color:#dbeafe;border-top:2px solid #1a3c5e;'
+                            'padding:8px 10px;font-weight:700;color:#0f172a;font-size:0.88em;'),
+            'foot_pts':    'text-align:right;font-weight:700;',
+        }
+
+        for appraisal in self:
+            comp_tmpl = appraisal._get_competency_template()
+            
+            if not comp_tmpl or not comp_tmpl.group_ids:
+                appraisal.competency_framework_html = (
+                    '<p style="color:#94a3b8;font-size:0.9em;padding:16px;">'
+                    'No competency framework defined for this template.</p>'
+                )
+                continue
+
+            rows = [
+                '<table style="{table}"><thead><tr>'
+                '<th style="{th}{th_code}">Sl. No</th>'
+                '<th style="{th}">Competency</th>'
+                '<th style="{th}{th_targets}">Targets</th>'
+                '<th style="{th}{th_pts}">Points</th>'
+                '<tr></thead><tbody>'.format(**S)
+            ]
+
+            total_pts = 0.0
+
+            for group in comp_tmpl.group_ids.sorted(key=lambda g: (g.sequence, g.id)):
+                status = group.points_status or 'under'
+                grp_style = S['grp_base'] + S['grp_{}'.format(status)]
+                grp_name = (group.name or '').replace('<', '&lt;').replace('>', '&gt;')
+                grp_code = (group.hr_code or '').replace('<', '&lt;').replace('>', '&gt;')
+
+                rows.append(
+                    '<tr>'
+                    '<td colspan="3" style="{gs}">'
+                    '<span style="{gc}">{code}</span>{name}'
+                    '</td>'
+                    '<td style="{gs}{gr}">'
+                    '<span style="{gl}">Total Points</span>'
+                    '<span style="{gv}">{pts:.2f}</span>'
+                    '</td>'
+                    '</tr>'.format(
+                        gs=grp_style, gc=S['grp_code'], gr=S['grp_right'],
+                        gl=S['grp_pts_lbl'], gv=S['grp_pts_val'],
+                        code=grp_code, name=grp_name, pts=group.points,
+                    )
+                )
+
+                for i, line in enumerate(group.line_ids.sorted(key=lambda l: (l.sequence, l.id))):
+                    td = S['even'] if i % 2 == 0 else S['odd']
+                    targets = (line.description or '').replace('<', '&lt;').replace('>', '&gt;')
+                    lname = (line.name or '').replace('<', '&lt;').replace('>', '&gt;')
+                    code = (line.full_code or '').replace('<', '&lt;').replace('>', '&gt;')
+
+                    rows.append(
+                        '<tr>'
+                        '<td style="{td}{tc}"><span style="{cp}">{code}</span></td>'
+                        '<td style="{td}">{name}</td>'
+                        '<td style="{td}{tt}">{targets}</td>'
+                        '<td style="{td}{tp}">{pts:.2f}</td>'
+                        '</tr>'.format(
+                            td=td, tc=S['td_code'], cp=S['code_pill'],
+                            tt=S['td_targets'], tp=S['td_pts'],
+                            code=code, name=lname, targets=targets, pts=line.points,
+                        )
+                    )
+                    total_pts += line.points
+
+            rows.append(
+                '<tr>'
+                '<td colspan="3" style="{f}">Total Framework Points</td>'
+                '<td style="{f}{fp}">{total:.2f}</td>'
+                '</tr></tbody>~<tr>'.format(
+                    f=S['foot'], fp=S['foot_pts'], total=total_pts,
+                )
+            )
+            appraisal.competency_framework_html = ''.join(rows)
 
     # ─────────────────────────────────────────────────────────────
     # Constraints
@@ -651,13 +810,6 @@ class PMSAppraisal(models.Model):
                     f'An appraisal for {record.employee_id.name} in cycle '
                     f'{record.cycle_id.name} already exists.'
                 )
-    
-
-    @api.depends('kra_ids.kpi_ids.is_selected', 'kra_ids.kpi_ids.weightage')
-    def _compute_planning_total_score(self):
-        for record in self:
-            selected_kpis = record.kra_ids.mapped('kpi_ids').filtered(lambda k: k.is_selected)
-            record.planning_total_score = sum(selected_kpis.mapped('weightage'))
 
     # ─────────────────────────────────────────────────────────────
     # ORM overrides
@@ -814,6 +966,36 @@ class PMSAppraisal(models.Model):
             self._sync_competency_scores()
         return result
 
+    def _get_submit_confirmation_action(self, role, zero_kpis, zero_comps):
+        message = ""
+        if zero_kpis or zero_comps:
+            message += "<div style='color: #856404; background-color: #fff3cd; border-color: #ffeeba; padding: 15px; border: 1px solid transparent; border-radius: 4px;'>"
+            message += "<h4 style='margin-top:0;'>⚠️ Warning: Some items have a score of 0</h4>"
+            message += "<ul>"
+            for kpi in zero_kpis:
+                message += f"<li><strong>KPI:</strong> {kpi.name}</li>"
+            for comp in zero_comps:
+                message += f"<li><strong>Competency:</strong> {comp.line_name}</li>"
+            message += "</ul></div>"
+            message += "<p class='mt-3'>Are you sure you want to proceed and submit these 0 scores?</p>"
+        else:
+            message = "<p class='fs-5'>Are you sure you want to submit your appraisal scores?</p>"
+            
+        wizard = self.env['pms.appraisal.submit.wizard'].create({
+            'appraisal_id': self.id,
+            'role': role,
+            'message': message
+        })
+        
+        return {
+            'name': 'Confirm Submission',
+            'type': 'ir.actions.act_window',
+            'res_model': 'pms.appraisal.submit.wizard',
+            'res_id': wizard.id,
+            'view_mode': 'form',
+            'target': 'new',
+        }
+
     # ─────────────────────────────────────────────────────────────
     # Filtering helpers
     # ─────────────────────────────────────────────────────────────
@@ -895,13 +1077,13 @@ class PMSAppraisal(models.Model):
                     new_vals.append({
                         'appraisal_id': appraisal.id,
                         'competency_line_id': line.id,
-                        'self_score': 0.0,
+                        'self_score': False,
                         'self_remarks': '',
-                        'supervisor_score': 0.0,
+                        'supervisor_score': False,
                         'supervisor_remarks': '',
-                        'secondary_supervisor_score': 0.0,
+                        'secondary_supervisor_score': False,
                         'secondary_supervisor_remarks': '',
-                        'reviewer_score': 0.0,
+                        'reviewer_score': False,
                         'reviewer_remarks': '',
                     })
             if new_vals:
@@ -910,14 +1092,8 @@ class PMSAppraisal(models.Model):
     def get_competency_data(self):
         """Returns competency framework data formatted for the frontend widget."""
         self.ensure_one()
-
-        # ── Guarantee every competency line has a score row ───────────────────
-        # _sync_competency_scores is idempotent: it only creates rows that are
-        # missing.  Calling it here ensures score_id is never False/0 for any
-        # rater (employee, supervisor, secondary supervisor, reviewer), even when
-        # the appraisal was created before a template change or a DB migration.
+       
         self.sudo()._sync_competency_scores()
-        # ─────────────────────────────────────────────────────────────────────
 
         comp_tmpl = self._get_competency_template()
 
@@ -944,18 +1120,12 @@ class PMSAppraisal(models.Model):
         for group in comp_tmpl.group_ids.sorted(key=lambda g: (g.sequence, g.id)):
             group_lines = []
             for line in group.line_ids.sorted(key=lambda l: (l.sequence, l.id)):
-                # Use [:1] to guard against any duplicate rows — always yields
-                # a single record (or an empty recordset, though _sync above
-                # ensures the former).
                 score_record = self.competency_score_ids.filtered(
                     lambda s: s.competency_line_id.id == line.id
                 )[:1]
 
                 line_data = {
                     'id': line.id,
-                    # score_id is the appraisal.competency.score DB id.
-                    # The JS widget passes THIS to save_competency_score(),
-                    # NOT line.id (which belongs to competency.framework.line).
                     'score_id': score_record.id or False,
                     'line_full_code': line.full_code or '',
                     'line_name': line.name or '',
@@ -966,13 +1136,13 @@ class PMSAppraisal(models.Model):
                     'group_name': group.name or '',
                     'group_hr_code': group.hr_code or '',
                     'group_sequence': group.sequence or 0,
-                    'self_score': score_record.self_score if score_record else 0.0,
+                    'self_score': score_record.self_score if score_record and score_record.self_score else False,
+                    'supervisor_score': score_record.supervisor_score if score_record and score_record.supervisor_score else False,
+                    'secondary_supervisor_score': score_record.secondary_supervisor_score if score_record and score_record.secondary_supervisor_score else False,
+                    'reviewer_score': score_record.reviewer_score if score_record and score_record.reviewer_score else False,
                     'self_remarks': score_record.self_remarks if score_record and score_record.self_remarks else '',
-                    'supervisor_score': score_record.supervisor_score if score_record else 0.0,
                     'supervisor_remarks': score_record.supervisor_remarks if score_record and score_record.supervisor_remarks else '',
-                    'secondary_supervisor_score': score_record.secondary_supervisor_score if score_record else 0.0,
                     'secondary_supervisor_remarks': score_record.secondary_supervisor_remarks if score_record and score_record.secondary_supervisor_remarks else '',
-                    'reviewer_score': score_record.reviewer_score if score_record else 0.0,
                     'reviewer_remarks': score_record.reviewer_remarks if score_record and score_record.reviewer_remarks else '',
                 }
 
@@ -1013,9 +1183,9 @@ class PMSAppraisal(models.Model):
         """
         Persist one competency score field from the JS widget.
 
-        :param score_id:   int  – ID of the appraisal.competency.score row
-        :param field_name: str  – field to update (e.g. 'self_score')
-        :param value:      any  – new value (float for scores, str for remarks)
+        :param score_id:   int  - ID of the appraisal.competency.score row
+        :param field_name: str  - field to update (e.g. 'self_score')
+        :param value:      any  - new value (float for scores, str for remarks)
         :returns: True
         :raises UserError: if the caller is not authorised or value is invalid
         """
@@ -1116,13 +1286,13 @@ class PMSAppraisal(models.Model):
                         'target': kpi.target,
                         'planning_remarks': kpi.planning_remarks,
                         'is_selected': kpi.is_selected,
-                        'self_score': kpi.self_score,
+                        'self_score': kpi.self_score if kpi.self_score else False,
+                        'supervisor_score': kpi.supervisor_score if kpi.supervisor_score else False,
+                        'secondary_supervisor_score': kpi.secondary_supervisor_score if kpi.secondary_supervisor_score else False,
+                        'reviewer_score': kpi.reviewer_score if kpi.reviewer_score else False,
                         'self_remarks': kpi.self_remarks,
-                        'supervisor_score': kpi.supervisor_score,
                         'supervisor_remarks': kpi.supervisor_remarks,
-                        'secondary_supervisor_score': kpi.secondary_supervisor_score,
                         'secondary_supervisor_score_remarks': kpi.secondary_supervisor_score_remarks,
-                        'reviewer_score': kpi.reviewer_score,
                         'reviewer_remarks': kpi.reviewer_remarks,
                         'snapshot_employee_target': kpi.snapshot_employee_target,
                         'snapshot_employee_criteria': kpi.snapshot_employee_criteria,
@@ -1146,70 +1316,6 @@ class PMSAppraisal(models.Model):
         return {
             'kra_records': kra_records,
         }
-
-    # ─────────────────────────────────────────────────────────────
-    # Score validation helpers
-    # ─────────────────────────────────────────────────────────────
-
-    def _validate_all_scores_filled(self):
-        """Validate that all required scores have been filled before submission."""
-        self.ensure_one()
-
-        # Check KPI scores
-        selected_kpis = self.kra_ids.mapped('kpi_ids').filtered(lambda k: k.is_selected)
-
-        if self.state == 'appraisal_draft':
-            # Employee self-rating phase
-            for kpi in selected_kpis:
-                if kpi.self_score == 0.0:
-                    raise UserError(
-                        f'Please enter self score for KPI: "{kpi.name}" before submitting.'
-                    )
-            # Check competency scores
-            for competency in self.competency_score_ids:
-                if competency.self_score == 0.0 and competency.line_points > 0:
-                    raise UserError(
-                        f'Please enter self score for competency: "{competency.line_name}" before submitting.'
-                    )
-
-        elif self.state == 'appraisal_pending_supervisor':
-            # Supervisor rating phase
-            for kpi in selected_kpis:
-                if kpi.supervisor_score == 0.0:
-                    raise UserError(
-                        f'Please enter supervisor score for KPI: "{kpi.name}" before submitting.'
-                    )
-            for competency in self.competency_score_ids:
-                if competency.supervisor_score == 0.0 and competency.line_points > 0:
-                    raise UserError(
-                        f'Please enter supervisor score for competency: "{competency.line_name}" before submitting.'
-                    )
-
-        elif self.state == 'appraisal_pending_secondary_supervisor':
-            # Secondary supervisor rating phase
-            for kpi in selected_kpis:
-                if kpi.secondary_supervisor_score == 0.0:
-                    raise UserError(
-                        f'Please enter secondary supervisor score for KPI: "{kpi.name}" before submitting.'
-                    )
-            for competency in self.competency_score_ids:
-                if competency.secondary_supervisor_score == 0.0 and competency.line_points > 0:
-                    raise UserError(
-                        f'Please enter secondary supervisor score for competency: "{competency.line_name}" before submitting.'
-                    )
-
-        elif self.state == 'appraisal_pending_reviewer':
-            # Reviewer rating phase
-            for kpi in selected_kpis:
-                if kpi.reviewer_score == 0.0:
-                    raise UserError(
-                        f'Please enter reviewer score for KPI: "{kpi.name}" before submitting.'
-                    )
-            for competency in self.competency_score_ids:
-                if competency.reviewer_score == 0.0 and competency.line_points > 0:
-                    raise UserError(
-                        f'Please enter reviewer score for competency: "{competency.line_name}" before submitting.'
-                    )
 
     # ─────────────────────────────────────────────────────────────
     # State routing helpers
@@ -1334,9 +1440,27 @@ class PMSAppraisal(models.Model):
         if any(k.weightage <= 0 for k in selected_kpis):
             raise UserError('All selected KPIs must have a weightage greater than zero.')
 
-        incomplete_kpis = selected_kpis.filtered(lambda k: not k.target)
-        if incomplete_kpis:
-            raise UserError('All selected KPIs must have a Target filled.')
+        errors = []
+        for kpi in selected_kpis:
+            missing = []
+            tgt = str(kpi.target).strip() if kpi.target else ''
+            rem = str(kpi.planning_remarks).strip() if kpi.planning_remarks else ''
+            
+            if not tgt or tgt in ('<p><br></p>', 'False', 'None'):
+                missing.append('Target')
+ 
+            if missing:
+                kra_name = kpi.kra_id.name or 'Unknown KRA'
+                missing_str = ' & '.join(missing)
+                errors.append(f'• [{kra_name}] → {kpi.name} ({missing_str} missing)')
+
+        if errors:
+            error_lines = '\n'.join(errors)
+            raise UserError(
+                f'Cannot submit. The following {len(errors)} KPI(s) are missing required fields:\n\n'
+                f'{error_lines}\n\n'
+                f'Please fill in all missing Targets and Remarks before submitting.'
+            )
 
         template_total = self.template_id.total_kpi_score
         employee_total = sum(selected_kpis.mapped('weightage'))
@@ -1543,275 +1667,6 @@ class PMSAppraisal(models.Model):
     # Report actions
     # ─────────────────────────────────────────────────────────────
 
-    # def action_view_plan_summary(self):
-    #     self.ensure_one()
-    #     report = self.env.ref('hr_employee_evaluation.action_report_plan_summary')
-    #     return {
-    #         'type': 'ir.actions.act_url',
-    #         'url': '/report/html/%s/%s' % (report.report_name, self.id),
-    #         'target': 'new',
-    #     }
-
-    # def action_view_appraisal_summary(self):
-    #     self.ensure_one()
-    #     report = self.env.ref('hr_employee_evaluation.action_report_appraisal_summary')
-    #     return {
-    #         'type': 'ir.actions.act_url',
-    #         'url': '/report/html/%s/%s' % (report.report_name, self.id),
-    #         'target': 'new',
-    #     }
-
-    # ─────────────────────────────────────────────────────────────
-    # Appraisal phase actions with validation
-    # ─────────────────────────────────────────────────────────────
-
-    def action_submit_self_rating(self):
-        self.ensure_one()
-        if self.state != 'appraisal_draft':
-            raise UserError('Only appraisal plans in draft can be self-rated.')
-        if not self.can_employee_self_rate:
-            raise UserError(
-                'Cannot submit: you do not own this plan or the cycle is not in appraisal.'
-            )
-
-        selected_kpis = self.kra_ids.mapped('kpi_ids').filtered(lambda k: k.is_selected)
-
-        # Validate KPI scores
-        for kpi in selected_kpis:
-            if kpi.self_score < 0:
-                raise UserError(f'Self score for "{kpi.name}" cannot be negative.')
-            if kpi.self_score > kpi.weightage:
-                raise UserError(
-                    f'Self score ({kpi.self_score}) for "{kpi.name}" '
-                    f'cannot exceed the allocated score ({kpi.weightage}).'
-                )
-
-        # Validate Competency scores
-        for competency in self.competency_score_ids:
-            if competency.self_score < 0:
-                raise UserError(f'Self score for competency "{competency.line_name}" cannot be negative.')
-            if competency.self_score > competency.line_points:
-                raise UserError(
-                    f'Self score ({competency.self_score}) for competency "{competency.line_name}" '
-                    f'cannot exceed the maximum points ({competency.line_points}).'
-                )
-
-        # Validate all scores are filled
-        self._validate_all_scores_filled()
-
-        self.with_context(skip_edit_check=True).write({'state': 'appraisal_pending_supervisor'})
-
-        if self.supervisor_id and self.supervisor_id.user_id:
-            self.activity_schedule(
-                activity_type_id=self.env.ref('mail.mail_activity_data_todo').id,
-                user_id=self.supervisor_id.user_id.id,
-                summary=f'Rate performance for {self.employee_id.name}',
-                note=f'{self.employee_id.name} has submitted their self-rating.',
-            )
-
-        self.message_post(
-            body=f'Self-rating submitted by {self.employee_id.name}.',
-            message_type='notification',
-        )
-        return True
-
-    def action_supervisor_submit_rating(self):
-        self.ensure_one()
-        if self.state != 'appraisal_pending_supervisor':
-            raise UserError('Only plans pending supervisor rating can be rated here.')
-        if not self.is_supervisor_of_appraisal:
-            raise UserError('Only the assigned supervisor can submit a rating.')
-
-        selected_kpis = self.kra_ids.mapped('kpi_ids').filtered(lambda k: k.is_selected)
-
-        for kpi in selected_kpis:
-            if kpi.supervisor_score < 0:
-                raise UserError(f'Supervisor score for "{kpi.name}" cannot be negative.')
-            if kpi.supervisor_score > kpi.weightage:
-                raise UserError(
-                    f'Supervisor score ({kpi.supervisor_score}) for "{kpi.name}" '
-                    f'cannot exceed the allocated score ({kpi.weightage}).'
-                )
-
-        # Validate competency scores
-        for competency in self.competency_score_ids:
-            if competency.supervisor_score < 0:
-                raise UserError(f'Supervisor score for competency "{competency.line_name}" cannot be negative.')
-            if competency.supervisor_score > competency.line_points:
-                raise UserError(
-                    f'Supervisor score ({competency.supervisor_score}) for competency "{competency.line_name}" '
-                    f'cannot exceed the maximum points ({competency.line_points}).'
-                )
-
-        # Validate all scores are filled
-        self._validate_all_scores_filled()
-
-        next_state = self._next_appraisal_state_after_supervisor()
-        self.with_context(skip_edit_check=True).write({
-            'state': next_state,
-            'supervisor_review_date': fields.Datetime.now(),
-        })
-        self._notify_next_appraisal_rater(next_state)
-        self.message_post(
-            body=(
-                f'Supervisor rating submitted by {self.supervisor_id.name}. '
-                f'Status → {self._state_label(next_state)}.'
-            ),
-            message_type='notification',
-        )
-        return True
-
-    def action_secondary_supervisor_submit_rating(self):
-        self.ensure_one()
-        if self.state != 'appraisal_pending_secondary_supervisor':
-            raise UserError('Only plans pending secondary supervisor rating can be rated here.')
-        if not self.is_secondary_supervisor_of_appraisal:
-            raise UserError('Only the assigned secondary supervisor can submit a rating.')
-
-        selected_kpis = self.kra_ids.mapped('kpi_ids').filtered(lambda k: k.is_selected)
-
-        for kpi in selected_kpis:
-            if kpi.secondary_supervisor_score < 0:
-                raise UserError(f'Secondary supervisor score for "{kpi.name}" cannot be negative.')
-            if kpi.secondary_supervisor_score > kpi.weightage:
-                raise UserError(
-                    f'Secondary supervisor score ({kpi.secondary_supervisor_score}) for "{kpi.name}" '
-                    f'cannot exceed the allocated score ({kpi.weightage}).'
-                )
-
-        # Validate competency scores
-        for competency in self.competency_score_ids:
-            if competency.secondary_supervisor_score < 0:
-                raise UserError(f'Secondary supervisor score for competency "{competency.line_name}" cannot be negative.')
-            if competency.secondary_supervisor_score > competency.line_points:
-                raise UserError(
-                    f'Secondary supervisor score ({competency.secondary_supervisor_score}) for competency "{competency.line_name}" '
-                    f'cannot exceed the maximum points ({competency.line_points}).'
-                )
-
-        # Validate all scores are filled
-        self._validate_all_scores_filled()
-
-        next_state = self._next_appraisal_state_after_secondary()
-        self.with_context(skip_edit_check=True).write({
-            'state': next_state,
-            'secondary_supervisor_review_date': fields.Datetime.now(),
-        })
-        self._notify_next_appraisal_rater(next_state)
-        self.message_post(
-            body=(
-                f'Secondary supervisor rating submitted by {self.secondary_supervisor_id.name}. '
-                f'Status → {self._state_label(next_state)}.'
-            ),
-            message_type='notification',
-        )
-        return True
-
-    def action_reviewer_submit_rating(self):
-        self.ensure_one()
-        if self.state != 'appraisal_pending_reviewer':
-            raise UserError('Only plans pending reviewer rating can be rated here.')
-        if not self.is_reviewer_of_appraisal:
-            raise UserError('Only the assigned reviewer can submit the final rating.')
-
-        selected_kpis = self.kra_ids.mapped('kpi_ids').filtered(lambda k: k.is_selected)
-
-        for kpi in selected_kpis:
-            if kpi.reviewer_score < 0:
-                raise UserError(f'Reviewer score for "{kpi.name}" cannot be negative.')
-            if kpi.reviewer_score > kpi.weightage:
-                raise UserError(
-                    f'Reviewer score ({kpi.reviewer_score}) for "{kpi.name}" '
-                    f'cannot exceed the allocated score ({kpi.weightage}).'
-                )
-
-        # Validate competency scores
-        for competency in self.competency_score_ids:
-            if competency.reviewer_score < 0:
-                raise UserError(f'Reviewer score for competency "{competency.line_name}" cannot be negative.')
-            if competency.reviewer_score > competency.line_points:
-                raise UserError(
-                    f'Reviewer score ({competency.reviewer_score}) for competency "{competency.line_name}" '
-                    f'cannot exceed the maximum points ({competency.line_points}).'
-                )
-
-        # Validate all scores are filled
-        self._validate_all_scores_filled()
-
-        self.with_context(skip_edit_check=True).write({
-            'state': 'appraisal_approved',
-            'reviewer_approval_date': fields.Datetime.now(),
-        })
-
-        if self.employee_id.user_id:
-            self.activity_schedule(
-                activity_type_id=self.env.ref('mail.mail_activity_data_todo').id,
-                user_id=self.employee_id.user_id.id,
-                summary='Your appraisal is complete',
-                note='Your performance appraisal has been fully rated.',
-            )
-
-        self.message_post(
-            body=f'Appraisal complete. Final rating submitted by {self.reviewer_id.name}.',
-            message_type='notification',
-        )
-        return True
-
-    def action_hr_reset_appraisal_to_draft(self):
-        self.ensure_one()
-        if not self.env.user.has_group('hr_employee_evaluation.group_pms_hr_manager'):
-            raise UserError('Only HR/Admin can reset an appraisal.')
-
-        appraisal_states = {
-            'appraisal_draft', 'appraisal_pending_supervisor',
-            'appraisal_pending_secondary_supervisor',
-            'appraisal_pending_reviewer', 'appraisal_approved',
-        }
-        if self.state not in appraisal_states:
-            raise UserError('Can only reset records that are in the appraisal phase.')
-
-        self.kra_ids.mapped('kpi_ids').write({
-            'self_score': 0.0,
-            'self_remarks': False,
-            'supervisor_score': 0.0,
-            'supervisor_remarks': False,
-            'secondary_supervisor_score': 0.0,
-            'secondary_supervisor_score_remarks': False,
-            'reviewer_score': 0.0,
-            'reviewer_remarks': False,
-        })
-
-        self.competency_score_ids.write({
-            'self_score': 0.0,
-            'self_remarks': '',
-            'supervisor_score': 0.0,
-            'supervisor_remarks': '',
-            'secondary_supervisor_score': 0.0,
-            'secondary_supervisor_remarks': '',
-            'reviewer_score': 0.0,
-            'reviewer_remarks': '',
-        })
-
-        self.with_context(skip_edit_check=True).write({
-            'state': 'appraisal_draft',
-            'appraisal_reset_date': fields.Datetime.now(),
-        })
-
-        if self.employee_id.user_id:
-            self.activity_schedule(
-                activity_type_id=self.env.ref('mail.mail_activity_data_todo').id,
-                user_id=self.employee_id.user_id.id,
-                summary='Your appraisal has been reset',
-                note='HR has reset your appraisal to draft. Please re-enter your self-rating.',
-            )
-
-        self.message_post(
-            body=f'Appraisal reset to draft by HR ({self.env.user.name}). All scores cleared.',
-            message_type='notification',
-        )
-        return True
-    
-
     def action_view_plan_summary(self):
         self.ensure_one()
         self._generate_excel_attachment('plan')
@@ -1830,6 +1685,21 @@ class PMSAppraisal(models.Model):
             'type': 'ir.actions.act_url',
             'url': '/report/html/%s/%s' % (report.report_name, self.id),
             'target': 'new',
+        }
+
+    def action_sync_competency_scores(self):
+        """Manual sync action for HR to trigger competency score synchronization"""
+        self.ensure_one()
+        self._sync_competency_scores()
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'display_notification',
+            'params': {
+                'title': 'Success',
+                'message': 'Competency scores synchronized successfully.',
+                'type': 'success',
+                'sticky': False,
+            }
         }
 
     def _generate_excel_attachment(self, report_type):
@@ -1869,12 +1739,14 @@ class PMSAppraisal(models.Model):
                     
             filename = f'Plan_Summary_{self.employee_id.name.replace(" ", "_")}.xlsx'
             
-        else: # Appraisal
+        else:  # Appraisal
             sheet = workbook.add_worksheet('Appraisal Summary')
             
             headers = ['KRA Name', 'KPI Name', 'Criteria', 'Target', 'Max', 'Emp Score', 'Sup Score']
-            if self.secondary_supervisor_id: headers.append('2nd Sup Score')
-            if self.reviewer_id: headers.append('Rev Score')
+            if self.secondary_supervisor_id:
+                headers.append('2nd Sup Score')
+            if self.reviewer_id:
+                headers.append('Rev Score')
 
             for col, head in enumerate(headers):
                 sheet.write(0, col, head, header_format)
@@ -1927,4 +1799,240 @@ class PMSAppraisal(models.Model):
             'mimetype': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
         })
 
-        
+    # ─────────────────────────────────────────────────────────────
+    # Appraisal phase actions with validation
+    # ─────────────────────────────────────────────────────────────
+
+    def action_submit_self_rating(self):
+        self.ensure_one()
+        if self.state != 'appraisal_draft':
+            raise UserError('Only appraisal plans in draft can be self-rated.')
+        if not self.can_employee_self_rate:
+            raise UserError(
+                'Cannot submit: you do not own this plan or the cycle is not in appraisal.'
+            )
+
+        selected_kpis = self.kra_ids.mapped('kpi_ids').filtered(lambda k: k.is_selected)
+
+        # Validate KPI scores
+        for kpi in selected_kpis:
+            if kpi.self_score < 0:
+                raise UserError(f'Self score for "{kpi.name}" cannot be negative.')
+            if kpi.self_score > kpi.weightage:
+                raise UserError(
+                    f'Self score ({kpi.self_score}) for "{kpi.name}" '
+                    f'cannot exceed the allocated score ({kpi.weightage}).'
+                )
+
+        # Validate Competency scores
+        for competency in self.competency_score_ids:
+            if competency.self_score < 0:
+                raise UserError(f'Self score for competency "{competency.line_name}" cannot be negative.')
+            if competency.self_score > competency.line_points:
+                raise UserError(
+                    f'Self score ({competency.self_score}) for competency "{competency.line_name}" '
+                    f'cannot exceed the maximum points ({competency.line_points}).'
+                )
+
+        self.with_context(skip_edit_check=True).write({'state': 'appraisal_pending_supervisor'})
+
+        if self.supervisor_id and self.supervisor_id.user_id:
+            self.activity_schedule(
+                activity_type_id=self.env.ref('mail.mail_activity_data_todo').id,
+                user_id=self.supervisor_id.user_id.id,
+                summary=f'Rate performance for {self.employee_id.name}',
+                note=f'{self.employee_id.name} has submitted their self-rating.',
+            )
+
+        self.message_post(
+            body=f'Self-rating submitted by {self.employee_id.name}.',
+            message_type='notification',
+        )
+        return True
+
+    def action_supervisor_submit_rating(self):
+        self.ensure_one()
+        if self.state != 'appraisal_pending_supervisor':
+            raise UserError('Only plans pending supervisor rating can be rated here.')
+        if not self.is_supervisor_of_appraisal:
+            raise UserError('Only the assigned supervisor can submit a rating.')
+
+        selected_kpis = self.kra_ids.mapped('kpi_ids').filtered(lambda k: k.is_selected)
+
+        for kpi in selected_kpis:
+            if kpi.supervisor_score < 0:
+                raise UserError(f'Supervisor score for "{kpi.name}" cannot be negative.')
+            if kpi.supervisor_score > kpi.weightage:
+                raise UserError(
+                    f'Supervisor score ({kpi.supervisor_score}) for "{kpi.name}" '
+                    f'cannot exceed the allocated score ({kpi.weightage}).'
+                )
+
+        # Validate competency scores
+        for competency in self.competency_score_ids:
+            if competency.supervisor_score < 0:
+                raise UserError(f'Supervisor score for competency "{competency.line_name}" cannot be negative.')
+            if competency.supervisor_score > competency.line_points:
+                raise UserError(
+                    f'Supervisor score ({competency.supervisor_score}) for competency "{competency.line_name}" '
+                    f'cannot exceed the maximum points ({competency.line_points}).'
+                )
+
+        next_state = self._next_appraisal_state_after_supervisor()
+        self.with_context(skip_edit_check=True).write({
+            'state': next_state,
+            'supervisor_review_date': fields.Datetime.now(),
+        })
+        self._notify_next_appraisal_rater(next_state)
+        self.message_post(
+            body=(
+                f'Supervisor rating submitted by {self.supervisor_id.name}. '
+                f'Status → {self._state_label(next_state)}.'
+            ),
+            message_type='notification',
+        )
+        return True
+
+    def action_secondary_supervisor_submit_rating(self):
+        self.ensure_one()
+        if self.state != 'appraisal_pending_secondary_supervisor':
+            raise UserError('Only plans pending secondary supervisor rating can be rated here.')
+        if not self.is_secondary_supervisor_of_appraisal:
+            raise UserError('Only the assigned secondary supervisor can submit a rating.')
+
+        selected_kpis = self.kra_ids.mapped('kpi_ids').filtered(lambda k: k.is_selected)
+
+        for kpi in selected_kpis:
+            if kpi.secondary_supervisor_score < 0:
+                raise UserError(f'Secondary supervisor score for "{kpi.name}" cannot be negative.')
+            if kpi.secondary_supervisor_score > kpi.weightage:
+                raise UserError(
+                    f'Secondary supervisor score ({kpi.secondary_supervisor_score}) for "{kpi.name}" '
+                    f'cannot exceed the allocated score ({kpi.weightage}).'
+                )
+
+        # Validate competency scores
+        for competency in self.competency_score_ids:
+            if competency.secondary_supervisor_score < 0:
+                raise UserError(f'Secondary supervisor score for competency "{competency.line_name}" cannot be negative.')
+            if competency.secondary_supervisor_score > competency.line_points:
+                raise UserError(
+                    f'Secondary supervisor score ({competency.secondary_supervisor_score}) for competency "{competency.line_name}" '
+                    f'cannot exceed the maximum points ({competency.line_points}).'
+                )
+
+        next_state = self._next_appraisal_state_after_secondary()
+        self.with_context(skip_edit_check=True).write({
+            'state': next_state,
+            'secondary_supervisor_review_date': fields.Datetime.now(),
+        })
+        self._notify_next_appraisal_rater(next_state)
+        self.message_post(
+            body=(
+                f'Secondary supervisor rating submitted by {self.secondary_supervisor_id.name}. '
+                f'Status → {self._state_label(next_state)}.'
+            ),
+            message_type='notification',
+        )
+        return True
+
+    def action_reviewer_submit_rating(self):
+        self.ensure_one()
+        if self.state != 'appraisal_pending_reviewer':
+            raise UserError('Only plans pending reviewer rating can be rated here.')
+        if not self.is_reviewer_of_appraisal:
+            raise UserError('Only the assigned reviewer can submit the final rating.')
+
+        selected_kpis = self.kra_ids.mapped('kpi_ids').filtered(lambda k: k.is_selected)
+
+        for kpi in selected_kpis:
+            if kpi.reviewer_score < 0:
+                raise UserError(f'Reviewer score for "{kpi.name}" cannot be negative.')
+            if kpi.reviewer_score > kpi.weightage:
+                raise UserError(
+                    f'Reviewer score ({kpi.reviewer_score}) for "{kpi.name}" '
+                    f'cannot exceed the allocated score ({kpi.weightage}).'
+                )
+
+        # Validate competency scores
+        for competency in self.competency_score_ids:
+            if competency.reviewer_score < 0:
+                raise UserError(f'Reviewer score for competency "{competency.line_name}" cannot be negative.')
+            if competency.reviewer_score > competency.line_points:
+                raise UserError(
+                    f'Reviewer score ({competency.reviewer_score}) for competency "{competency.line_name}" '
+                    f'cannot exceed the maximum points ({competency.line_points}).'
+                )
+
+        self.with_context(skip_edit_check=True).write({
+            'state': 'appraisal_approved',
+            'reviewer_approval_date': fields.Datetime.now(),
+        })
+
+        if self.employee_id.user_id:
+            self.activity_schedule(
+                activity_type_id=self.env.ref('mail.mail_activity_data_todo').id,
+                user_id=self.employee_id.user_id.id,
+                summary='Your appraisal is complete',
+                note='Your performance appraisal has been fully rated.',
+            )
+
+        self.message_post(
+            body=f'Appraisal complete. Final rating submitted by {self.reviewer_id.name}.',
+            message_type='notification',
+        )
+        return True
+
+    def action_hr_reset_appraisal_to_draft(self):
+        self.ensure_one()
+        if not self.env.user.has_group('hr_employee_evaluation.group_pms_hr_manager'):
+            raise UserError('Only HR/Admin can reset an appraisal.')
+
+        appraisal_states = {
+            'appraisal_draft', 'appraisal_pending_supervisor',
+            'appraisal_pending_secondary_supervisor',
+            'appraisal_pending_reviewer', 'appraisal_approved',
+        }
+        if self.state not in appraisal_states:
+            raise UserError('Can only reset records that are in the appraisal phase.')
+
+        self.kra_ids.mapped('kpi_ids').write({
+            'self_score': False,
+            'self_remarks': False,
+            'supervisor_score': False,
+            'supervisor_remarks': False,
+            'secondary_supervisor_score': False,
+            'secondary_supervisor_score_remarks': False,
+            'reviewer_score': False,
+            'reviewer_remarks': False,
+        })
+
+        self.competency_score_ids.write({
+            'self_score': False,
+            'self_remarks': '',
+            'supervisor_score': False,
+            'supervisor_remarks': '',
+            'secondary_supervisor_score': False,
+            'secondary_supervisor_remarks': '',
+            'reviewer_score': False,
+            'reviewer_remarks': '',
+        })
+
+        self.with_context(skip_edit_check=True).write({
+            'state': 'appraisal_draft',
+            'appraisal_reset_date': fields.Datetime.now(),
+        })
+
+        if self.employee_id.user_id:
+            self.activity_schedule(
+                activity_type_id=self.env.ref('mail.mail_activity_data_todo').id,
+                user_id=self.employee_id.user_id.id,
+                summary='Your appraisal has been reset',
+                note='HR has reset your appraisal to draft. Please re-enter your self-rating.',
+            )
+
+        self.message_post(
+            body=f'Appraisal reset to draft by HR ({self.env.user.name}). All scores cleared.',
+            message_type='notification',
+        )
+        return True

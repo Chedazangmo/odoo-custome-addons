@@ -77,6 +77,7 @@ class PMSAppraisalKPI(models.Model):
     self_score = fields.Float(
         string='Self Score',
         tracking=True,
+        default=False,
         help='Employee self-assessment score'
     )
     
@@ -89,6 +90,7 @@ class PMSAppraisalKPI(models.Model):
     supervisor_score = fields.Float(
         string='Supervisor Score',
         tracking=True,
+        default=False,
         help='Supervisor evaluation score'
     )
     
@@ -101,6 +103,7 @@ class PMSAppraisalKPI(models.Model):
     secondary_supervisor_score = fields.Float(
         string='Secondary Supervisor Score',
         tracking=True,
+        default=False,
         help='Secondary Supervisor evaluation score (if avialable)'
     )
 
@@ -113,6 +116,7 @@ class PMSAppraisalKPI(models.Model):
     reviewer_score = fields.Float(
         string='Reviewer Score',
         tracking=True,
+        default=False,
         help='Final reviewer score'
     )
     

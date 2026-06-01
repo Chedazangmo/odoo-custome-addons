@@ -3,7 +3,6 @@
 
     <t t-name="hr_employee_evaluation.KraTabs">
         <div class="o_kra_widget_root">
-
             <div class="o_kra_tabs_container" t-ref="kraBlock">
 
                 <div class="mb-4 px-3 pt-3" t-if="!props.readonly and isTemplateMode">
@@ -16,9 +15,40 @@
                     <div class="o_kra_tabs_nav">
                         <t t-foreach="kraRecords" t-as="kra" t-key="kra.id">
                             <div class="o_kra_tab"
-                                 t-att-class="{ 'o_active_tab': isActiveTab(kra_index) and !isCompetencyTabActive }"
+                                 t-att-class="{
+                                    'o_active_tab': isActiveTab(kra_index) and !isCompetencyTabActive,
+                                    'o_drag_over': state.dragOverKraId === kra.id
+                                 }"
+                                 t-att-draggable="isTemplateMode and isActiveTab(kra_index) ? 'true' : 'false'"
+                                 t-on-dragstart="(ev) => this.onDragStart(kra, ev)"
+                                 t-on-dragend="(ev) => this.onDragEnd(ev)"
+                                 t-on-dragover="(ev) => this.onDragOver(kra, ev)"
+                                 t-on-dragleave="(ev) => this.onDragLeave(kra, ev)"
+                                 t-on-drop="(ev) => this.onDrop(kra, ev)"
                                  t-on-click="() => this.setActiveKraTab(kra_index)">
-                                <span t-esc="kra.data.name || 'Unnamed KRA'"/>
+
+                                <t t-if="state.editingKraId === kra.id">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <input type="text" class="form-control form-control-sm p-1 m-0 shadow-none border-primary"
+                                               style="min-width: 140px; font-size: inherit; font-weight: 500;"
+                                               t-att-value="state.kraEditName"
+                                               t-on-input="(ev) => state.kraEditName = ev.target.value"
+                                               t-on-keydown="(ev) => this.onKraNameKeydown(kra, ev)"
+                                               t-on-click.stop=""/>
+                                        <i class="fa fa-check text-success cursor-pointer fs-6" t-on-click.stop="(ev) => this.onSaveKraName(kra, ev)" title="Save"/>
+                                        <i class="fa fa-times text-danger cursor-pointer fs-6" t-on-click.stop="(ev) => this.onCancelEditKraName(ev)" title="Cancel"/>
+                                    </div>
+                                </t>
+                                <t t-else="">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <i t-if="isTemplateMode and isActiveTab(kra_index) and !isCompetencyTabActive"
+                                           class="fa fa-ellipsis-v text-muted cursor-grab" title="Drag to reorder"/>
+                                        <span t-esc="kra.data.name || 'Unnamed KRA'"/>
+                                        <i t-if="isTemplateMode and isActiveTab(kra_index) and !isCompetencyTabActive"
+                                           class="fa fa-pencil text-muted cursor-pointer hover-primary"
+                                           t-on-click.stop="(ev) => this.onEditKraName(kra, ev)" title="Edit Name"/>
+                                    </div>
+                                </t>
                             </div>
                         </t>
                         <t t-if="hasCompetencyData and isAppraisalPhase">
@@ -31,8 +61,7 @@
                     </div>
                 </div>
 
-                <div class="o_kra_no_content"
-                     t-if="!hasKras and !(hasCompetencyData and isAppraisalPhase)">
+                <div class="o_kra_no_content" t-if="!hasKras and !(hasCompetencyData and isAppraisalPhase)">
                     <i class="fa fa-folder-open-o"/>
                     <p>No Key Result Areas (KRAs) defined.</p>
                     <small class="text-muted mt-2" t-if="!props.readonly and isTemplateMode">
@@ -43,6 +72,7 @@
                 <div class="o_kra_content" t-if="activeKRA and !isCompetencyTabActive">
                     <div class="o_kra_kpi_section">
 
+                        <!-- Header row: title + action buttons -->
                         <div class="d-flex justify-content-between align-items-center mb-3">
                             <h5 class="m-0">
                                 <t t-esc="activeKRA.data.name"/>
@@ -52,50 +82,62 @@
                             </h5>
 
                             <div t-if="!props.readonly and isTemplateMode">
-                                <button class="btn btn-light text-danger btn-sm border me-2" t-on-click="onDeleteKRA"> Delete KRA </button>
-                                <button class="btn btn-light text-primary btn-sm border" t-on-click="onAddKPI"> Add KPI </button>
+                                <button class="btn btn-light text-danger btn-sm border me-2" t-on-click="onDeleteKRA">Delete KRA</button>
+                                <button class="btn btn-light text-primary btn-sm border" t-on-click="onAddKPI">Add KPI</button>
                             </div>
 
-                            <div t-if="!props.readonly and isEmployeeMode">
-                                <button class="btn btn-light btn-sm border" t-if="activeDeselectedKPIs.length > 0" t-on-click="onToggleRestorePanel">
+                            <div t-if="isEmployeeMode">
+                                <button class="btn btn-light btn-sm border"
+                                    t-if="canEmployeeEdit and activeDeselectedKPIs.length > 0"
+                                    t-on-click="onToggleRestorePanel">
                                     <i class="fa fa-undo me-1"/> Restore KPI (<t t-esc="activeDeselectedKPIs.length"/>)
                                 </button>
                             </div>
 
-                            <div class="d-flex align-items-center gap-3 ms-auto" t-if="isAppraisalEmployeeMode or isAppraisalSupervisorMode">
-                                <t t-set="hasDoc" t-value="activeKRA.data.evidence_attachment_ids and activeKRA.data.evidence_attachment_ids.records.length > 0"/>
-                                <t t-if="hasDoc">
-                                    <t t-set="doc" t-value="activeKRA.data.evidence_attachment_ids.records[0]"/>
-                                    <div class="d-flex flex-column align-items-center position-relative mt-2" style="width: 70px; flex-shrink: 0;">
-                                        <div class="position-relative border rounded bg-white shadow-sm d-flex align-items-center justify-content-center"
-                                            style="width: 40px; height: 40px; cursor: pointer;"
-                                            t-on-click="() => this.onViewDocument(doc.resId)" title="Click to view document">
-                                            <i class="fa fa-file-text-o text-primary fs-5"/>
-                                            <span t-if="isAppraisalEmployeeMode and props.record.data.can_employee_self_rate and !props.readonly"
-                                                class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger shadow"
-                                                style="font-size: 0.65em; cursor: pointer; z-index: 10;"
-                                                t-on-click.stop="() => this.onRemoveDocument(activeKRA, doc.resId)" title="Remove File">
-                                                <i class="fa fa-times"/>
-                                            </span>
+                            <!-- Evidence attachments (appraisal phase) -->
+                            <div class="d-flex align-items-start gap-3 ms-auto" t-if="isAppraisalEmployeeMode or isAppraisalSupervisorMode">
+                                <t t-set="kraKey" t-value="activeKRA.resId || activeKRA.id"/>
+                                <t t-set="attachments" t-value="state.kraAttachments[kraKey] || []"/>
+
+                                <div class="d-flex flex-wrap gap-2" t-if="attachments.length > 0">
+                                    <t t-foreach="attachments" t-as="doc" t-key="doc.id">
+                                        <div class="d-flex flex-column align-items-center position-relative mt-2" style="width: 70px; flex-shrink: 0;">
+                                            <div class="position-relative border rounded bg-white shadow-sm d-flex align-items-center justify-content-center"
+                                                 style="width: 40px; height: 40px; cursor: pointer;"
+                                                 t-on-click="() => this.onViewDocument(doc.id)" title="Click to view document">
+                                                <i class="fa fa-file-text-o text-primary fs-5"/>
+                                                <span t-if="isAppraisalEmployeeMode and props.record.data.can_employee_self_rate and !props.readonly"
+                                                      class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger shadow"
+                                                      style="font-size: 0.65em; cursor: pointer; z-index: 10;"
+                                                      t-on-click.stop="() => this.onRemoveDocument(activeKRA, doc.id)" title="Remove File">
+                                                    <i class="fa fa-times"/>
+                                                </span>
+                                            </div>
+                                            <small class="text-truncate text-center w-100 mt-2 text-muted" style="font-size: 0.65rem;"
+                                                   t-att-title="doc.name" t-esc="doc.name || 'Document'"/>
                                         </div>
-                                        <small class="text-truncate text-center w-100 mt-2 text-muted" style="font-size: 0.65rem;" t-att-title="doc.data.name" t-esc="doc.data.name || 'Document'"/>
-                                    </div>
-                                </t>
+                                    </t>
+                                </div>
 
                                 <label t-if="isAppraisalEmployeeMode and props.record.data.can_employee_self_rate and !props.readonly"
-                                    class="btn btn-sm btn-outline-primary mb-0 d-flex align-items-center" style="cursor: pointer; white-space: nowrap;">
-                                    <i class="fa fa-paperclip me-1"/> <t t-esc="hasDoc ? 'Replace File' : 'Attach Document'"/>
-                                    <input type="file" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.xls,.xlsx,.txt,.csv,.ppt,.pptx" class="d-none" t-on-change="(ev) => this.onUploadDocuments(activeKRA, ev)"/>
+                                       class="btn btn-sm btn-outline-primary mb-0 mt-2 d-flex align-items-center" style="cursor: pointer; white-space: nowrap;">
+                                    <i class="fa fa-paperclip me-1"/> Attach Document(s)
+                                    <input type="file" multiple="multiple" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.xls,.xlsx,.txt,.csv,.ppt,.pptx"
+                                           class="d-none" t-on-change="(ev) => this.onUploadDocuments(activeKRA, ev)"/>
                                 </label>
                             </div>
 
                             <button class="btn btn-outline-secondary btn-sm bg-white d-flex align-items-center justify-content-center p-0 d-xl-none"
-                                title="Expand Table View" t-if="isAppraisalEmployeeMode or isAppraisalSupervisorMode" t-on-click="onExpandAppraisal">
+                                    title="Expand Table View"
+                                    t-if="isAppraisalEmployeeMode or isAppraisalSupervisorMode"
+                                    t-on-click="onExpandAppraisal">
                                 <img src="/hr_employee_evaluation/static/img/expand_icon.svg" style="width: 22px; height: 22px; vertical-align: middle;" alt="Expand"/>
                             </button>
                         </div>
 
-                        <div class="border rounded p-3 mb-3 bg-light" t-if="!props.readonly and isEmployeeMode and state.showRestorePanel and activeDeselectedKPIs.length > 0">
+                        <!-- Restore panel -->
+                        <div class="border rounded p-3 mb-3 bg-light"
+                             t-if="isEmployeeMode and canEmployeeEdit and state.showRestorePanel and activeDeselectedKPIs.length > 0">
                             <div class="d-flex justify-content-between align-items-center mb-2">
                                 <strong class="text-secondary"><i class="fa fa-undo me-1"/></strong>
                                 <button class="btn btn-link btn-sm text-muted p-0" t-on-click="onToggleRestorePanel"><i class="fa fa-times"/></button>
@@ -110,9 +152,7 @@
                             </t>
                         </div>
 
-                        <!-- ═══════════════════════════════════════════════════
-                             TEMPLATE MODE TABLE
-                        ════════════════════════════════════════════════════ -->
+                        <!-- TEMPLATE MODE TABLE -->
                         <div class="table-responsive" t-if="isTemplateMode">
                             <table class="table">
                                 <thead>
@@ -121,7 +161,7 @@
                                         <th style="min-width:200px;white-space:nowrap;">Description</th>
                                         <th style="min-width:80px;white-space:nowrap;">Score</th>
                                         <th style="min-width:180px;white-space:nowrap;">Criteria</th>
-                                        <th style="min-width:40px;" t-if="!props.readonly"/>
+                                        <th style="min-width:40px;" t-if="!props.readonly"></th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -132,7 +172,7 @@
                                         <tr>
                                             <td><textarea class="form-control" rows="1" placeholder="Name" t-att-readonly="props.readonly" oninput="this.style.height='';this.style.height=this.scrollHeight+'px'" t-on-change="(e) => this.onKPIFieldChange(kpi,'name',e)" t-esc="kpi.data.name"/></td>
                                             <td><textarea class="form-control" rows="1" placeholder="Enter Description..." t-att-readonly="props.readonly" oninput="this.style.height='';this.style.height=this.scrollHeight+'px'" t-on-change="(e) => this.onKPIFieldChange(kpi,'description',e)" t-esc="kpi.data.description"/></td>
-                                            <td><input type="number" class="form-control text-end" t-att-value="kpi.data.score" t-att-readonly="props.readonly" step="1" t-on-change="(e) => this.onKPIFieldChange(kpi,'score',e)"/></td>
+                                            <td><input type="number" class="form-control text-end" t-att-value="kpi.data.score" t-att-readonly="props.readonly" step="1" t-on-focus="onNumberInputFocus" t-on-change="(e) => this.onKPIFieldChange(kpi,'score',e)"/></td>
                                             <td><textarea class="form-control" rows="1" placeholder="Enter Criteria..." t-att-readonly="props.readonly" oninput="this.style.height='';this.style.height=this.scrollHeight+'px'" t-on-change="(e) => this.onKPIFieldChange(kpi,'criteria',e)" t-esc="kpi.data.criteria"/></td>
                                             <td t-if="!props.readonly" class="text-center align-middle">
                                                 <button class="btn btn-link text-muted p-0" t-on-click="() => this.onDeleteKPI(kpi)"><i class="fa fa-times"/></button>
@@ -143,23 +183,21 @@
                             </table>
                         </div>
 
-                        <!-- ═══════════════════════════════════════════════════
-                             EMPLOYEE PLANNING MODE TABLE
-                        ════════════════════════════════════════════════════ -->
+                        <!-- EMPLOYEE PLANNING MODE TABLE -->
                         <div class="table-responsive" t-if="isEmployeeMode">
                             <table class="table" style="min-width:900px;">
                                 <thead>
                                     <tr>
                                         <th style="min-width:140px;white-space:nowrap;">KPI Name</th>
-                                        <th style="min-width:160px;white-space:nowrap;">Description</th>
-                                        <th style="min-width:80px;white-space:nowrap;">Score</th>
+                                        <th style="min-width:220px;white-space:nowrap;">Description</th>
+                                        <th style="min-width:80px;max-width:100px;white-space:nowrap;">Score</th>
                                         <th style="min-width:150px;white-space:nowrap;">Criteria</th>
-                                        <th style="min-width:30px;width:30px;"/>
+                                        <th style="min-width:30px;width:30px;"></th>
                                         <th style="min-width:150px;white-space:nowrap;">Target</th>
-                                        <th style="min-width:30px;width:30px;"/>
+                                        <th style="min-width:30px;width:30px;"></th>
                                         <th style="min-width:150px;white-space:nowrap;">Employee Remarks</th>
-                                        <th t-if="!props.readonly" style="min-width:30px;width:30px;"/>
-                                        <th t-if="!props.readonly" style="min-width:30px;width:30px;"/>
+                                        <th t-if="canEmployeeEdit" style="min-width:30px;width:30px;"></th>
+                                        <th t-if="canEmployeeEdit" style="min-width:30px;width:30px;"></th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -168,26 +206,38 @@
                                     </t>
                                     <t t-foreach="activeKPIs" t-as="kpi" t-key="kpi.id">
                                         <tr t-if="kpi.data.is_selected">
-                                            <td><textarea class="form-control" t-att-value="kpi.data.name" readonly="readonly"/></td>
+                                            <td><textarea class="form-control" rows="1" readonly="readonly" oninput="this.style.height='';this.style.height=this.scrollHeight+'px'" t-esc="kpi.data.name"/></td>
                                             <td><textarea class="form-control" rows="1" readonly="readonly" oninput="this.style.height='';this.style.height=this.scrollHeight+'px'" t-esc="kpi.data.description"/></td>
-                                            <td><input type="number" class="form-control text-end" t-att-value="kpi.data.weightage" t-att-readonly="props.readonly" step="1" t-on-change="(e) => this.onKPIFieldChange(kpi,'weightage',e)"/></td>
-                                            <td style="white-space:pre-wrap;word-break:break-word;"><textarea class="form-control" rows="1" placeholder="Enter criteria" t-att-readonly="props.readonly" oninput="this.style.height='';this.style.height=this.scrollHeight+'px'" t-on-change="(e) => this.onKPIFieldChange(kpi,'criteria',e)" t-esc="kpi.data.criteria"/></td>
+                                            <td>
+                                                <input t-if="canEmployeeEdit" type="number" class="form-control text-end" t-att-value="kpi.data.weightage" step="1" t-on-focus="onNumberInputFocus" t-on-change="(e) => this.onKPIFieldChange(kpi,'weightage',e)"/>
+                                                <input t-else="" type="number" class="form-control text-end" t-att-value="kpi.data.weightage" readonly="readonly"/>
+                                            </td>
+                                            <td style="white-space:pre-wrap;word-break:break-word;">
+                                                <textarea t-if="canEmployeeEdit" class="form-control" rows="1" placeholder="Enter criteria" oninput="this.style.height='';this.style.height=this.scrollHeight+'px'" t-on-change="(e) => this.onKPIFieldChange(kpi,'criteria',e)" t-esc="kpi.data.criteria"/>
+                                                <textarea t-else="" class="form-control" rows="1" readonly="readonly" oninput="this.style.height='';this.style.height=this.scrollHeight+'px'" t-esc="kpi.data.criteria"/>
+                                            </td>
                                             <td class="text-center align-top">
                                                 <button class="btn btn-link text-secondary p-0" title="View Criteria History" t-on-click="() => this.onViewKpiHistory(kpi, 'criteria')">
                                                     <i class="fa fa-history text-dark"/>
                                                 </button>
                                             </td>
-                                            <td style="white-space:pre-wrap;word-break:break-word;"><textarea class="form-control" rows="1" placeholder="Enter target" t-att-readonly="props.readonly" oninput="this.style.height='';this.style.height=this.scrollHeight+'px'" t-on-change="(e) => this.onKPIFieldChange(kpi,'target',e)" t-esc="kpi.data.target"/></td>
+                                            <td style="white-space:pre-wrap;word-break:break-word;">
+                                                <textarea t-if="canEmployeeEdit" class="form-control" rows="1" placeholder="Enter target" oninput="this.style.height='';this.style.height=this.scrollHeight+'px'" t-on-change="(e) => this.onKPIFieldChange(kpi,'target',e)" t-esc="kpi.data.target"/>
+                                                <textarea t-else="" class="form-control" rows="1" readonly="readonly" oninput="this.style.height='';this.style.height=this.scrollHeight+'px'" t-esc="kpi.data.target"/>
+                                            </td>
                                             <td class="text-center align-top">
                                                 <button class="btn btn-link text-secondary p-0" title="View Target History" t-on-click="() => this.onViewKpiHistory(kpi, 'target')">
                                                     <i class="fa fa-history text-dark"/>
                                                 </button>
                                             </td>
-                                            <td><textarea class="form-control" rows="1" placeholder="Your remarks" t-att-readonly="props.readonly" oninput="this.style.height='';this.style.height=this.scrollHeight+'px'" t-on-change="(e) => this.onKPIFieldChange(kpi,'planning_remarks',e)" t-esc="kpi.data.planning_remarks"/></td>
-                                            <td t-if="!props.readonly" class="text-center align-top">
+                                            <td>
+                                                <textarea t-if="canEmployeeEdit" class="form-control" rows="1" placeholder="Your remarks" oninput="this.style.height='';this.style.height=this.scrollHeight+'px'" t-on-change="(e) => this.onKPIFieldChange(kpi,'planning_remarks',e)" t-esc="kpi.data.planning_remarks"/>
+                                                <textarea t-else="" class="form-control" rows="1" readonly="readonly" oninput="this.style.height='';this.style.height=this.scrollHeight+'px'" t-esc="kpi.data.planning_remarks"/>
+                                            </td>
+                                            <td t-if="canEmployeeEdit" class="text-center align-top">
                                                 <button class="btn btn-link text-primary p-0" title="Duplicate KPI" t-on-click="() => this.onDuplicateKPI(kpi)"><i class="fa fa-copy"/></button>
                                             </td>
-                                            <td t-if="!props.readonly" class="text-center align-top">
+                                            <td t-if="canEmployeeEdit" class="text-center align-top">
                                                 <button class="btn btn-link text-danger p-0" title="Remove KPI" t-on-click="() => this.onDeleteKPI(kpi)"><i class="fa fa-trash"/></button>
                                             </td>
                                         </tr>
@@ -196,20 +246,18 @@
                             </table>
                         </div>
 
-                        <!-- ═══════════════════════════════════════════════════
-                             SUPERVISOR PLANNING MODE TABLE
-                        ════════════════════════════════════════════════════ -->
+                        <!-- SUPERVISOR PLANNING MODE TABLE -->
                         <div class="table-responsive" t-if="isSupervisorMode">
                             <table class="table" style="min-width:900px;">
                                 <thead>
                                     <tr>
                                         <th style="min-width:140px;white-space:nowrap;">KPI Name</th>
-                                        <th style="min-width:160px;white-space:nowrap;">Description</th>
-                                        <th style="min-width:80px;white-space:nowrap;">Score</th>
+                                        <th style="min-width:220px;white-space:nowrap;">Description</th>
+                                        <th style="min-width:80px;max-width:100px;white-space:nowrap;">Score</th>
                                         <th style="min-width:150px;white-space:nowrap;">Criteria</th>
-                                        <th style="min-width:30px;width:30px;"/>
+                                        <th style="min-width:30px;width:30px;"></th>
                                         <th style="min-width:150px;white-space:nowrap;">Target</th>
-                                        <th style="min-width:30px;width:30px;"/>
+                                        <th style="min-width:30px;width:30px;"></th>
                                         <th style="min-width:150px;white-space:nowrap;">Employee Remarks</th>
                                     </tr>
                                 </thead>
@@ -222,33 +270,45 @@
                                             <td><textarea class="form-control" rows="1" readonly="readonly" oninput="this.style.height='';this.style.height=this.scrollHeight+'px'" t-esc="kpi.data.name"/></td>
                                             <td><textarea class="form-control" rows="1" readonly="readonly" oninput="this.style.height='';this.style.height=this.scrollHeight+'px'" t-esc="kpi.data.description"/></td>
                                             <td><input type="number" class="form-control text-end" t-att-value="kpi.data.weightage" readonly="readonly"/></td>
-                                            <td style="white-space:pre-wrap;word-break:break-word;"><textarea class="form-control" rows="1" t-att-readonly="props.readonly" oninput="this.style.height='';this.style.height=this.scrollHeight+'px'" t-on-change="(e) => this.onKPIFieldChange(kpi,'criteria',e)" t-esc="kpi.data.criteria"/></td>
-                                            <td class="text-center align-top"><button class="btn btn-link text-secondary p-0" title="View Criteria History" t-on-click="() => this.onViewKpiHistory(kpi, 'criteria')"><i class="fa fa-history text-dark"/></button></td>
-                                            <td style="white-space:pre-wrap;word-break:break-word;"><textarea class="form-control" rows="1" t-att-readonly="props.readonly" oninput="this.style.height='';this.style.height=this.scrollHeight+'px'" t-on-change="(e) => this.onKPIFieldChange(kpi,'target',e)" t-esc="kpi.data.target"/></td>
-                                            <td class="text-center align-top"><button class="btn btn-link text-secondary p-0" title="View Target History" t-on-click="() => this.onViewKpiHistory(kpi, 'target')"><i class="fa fa-history text-dark"/></button></td>
-                                            <td><textarea class="form-control" rows="1" readonly="readonly" oninput="this.style.height='';this.style.height=this.scrollHeight+'px'" t-esc="kpi.data.planning_remarks"/></td>
+                                            <td style="white-space:pre-wrap;word-break:break-word;">
+                                                <textarea t-if="canSupervisorLevelEdit" class="form-control" rows="1" placeholder="Enter criteria" oninput="this.style.height='';this.style.height=this.scrollHeight+'px'" t-on-change="(e) => this.onKPIFieldChange(kpi,'criteria',e)" t-esc="kpi.data.criteria"/>
+                                                <textarea t-else="" class="form-control" rows="1" readonly="readonly" oninput="this.style.height='';this.style.height=this.scrollHeight+'px'" t-esc="kpi.data.criteria"/>
+                                            </td>
+                                            <td class="text-center align-top">
+                                                <button class="btn btn-link text-secondary p-0" title="View Criteria History" t-on-click="() => this.onViewKpiHistory(kpi, 'criteria')">
+                                                    <i class="fa fa-history text-dark"/>
+                                                </button>
+                                            </td>
+                                            <td style="white-space:pre-wrap;word-break:break-word;">
+                                                <textarea t-if="canSupervisorLevelEdit" class="form-control" rows="1" placeholder="Enter target" oninput="this.style.height='';this.style.height=this.scrollHeight+'px'" t-on-change="(e) => this.onKPIFieldChange(kpi,'target',e)" t-esc="kpi.data.target"/>
+                                                <textarea t-else="" class="form-control" rows="1" readonly="readonly" oninput="this.style.height='';this.style.height=this.scrollHeight+'px'" t-esc="kpi.data.target"/>
+                                            </td>
+                                            <td class="text-center align-top">
+                                                <button class="btn btn-link text-secondary p-0" title="View Target History" t-on-click="() => this.onViewKpiHistory(kpi, 'target')">
+                                                    <i class="fa fa-history text-dark"/>
+                                                </button>
+                                            </td>
+                                            <td>
+                                                <textarea t-if="canSupervisorLevelEdit" class="form-control" rows="1" placeholder="Employee remarks" oninput="this.style.height='';this.style.height=this.scrollHeight+'px'" t-on-change="(e) => this.onKPIFieldChange(kpi,'planning_remarks',e)" t-esc="kpi.data.planning_remarks"/>
+                                                <textarea t-else="" class="form-control" rows="1" readonly="readonly" oninput="this.style.height='';this.style.height=this.scrollHeight+'px'" t-esc="kpi.data.planning_remarks"/>
+                                            </td>
                                         </tr>
                                     </t>
                                 </tbody>
                             </table>
                         </div>
 
-                        <!-- ═══════════════════════════════════════════════════
-                             APPRAISAL EMPLOYEE MODE TABLE
-                             All th use min-width + white-space:nowrap so headers
-                             never wrap and score columns are always readable.
-                        ════════════════════════════════════════════════════ -->
+                        <!-- APPRAISAL EMPLOYEE MODE TABLE -->
                         <div class="appraisal-wrapper" t-if="isAppraisalEmployeeMode">
                             <table class="table appraisal-flex-table">
                                 <thead>
                                     <tr>
                                         <th style="min-width:140px;white-space:nowrap;">KPI Name</th>
-                                        <th style="min-width:80px;white-space:nowrap;">Score</th>
+                                        <th style="min-width:80px;max-width:100px;white-space:nowrap;">Score</th>
                                         <th style="min-width:150px;white-space:nowrap;">Criteria</th>
                                         <th style="min-width:150px;white-space:nowrap;">Target</th>
                                         <th style="min-width:90px;white-space:nowrap;">Emp Score</th>
                                         <th style="min-width:130px;white-space:nowrap;">Emp Remarks</th>
-
                                         <t t-if="props.record.data.state != 'appraisal_draft'">
                                             <th style="min-width:90px;white-space:nowrap;">Sup Score</th>
                                             <th style="min-width:130px;white-space:nowrap;">Sup Remarks</th>
@@ -274,26 +334,23 @@
                                             <td style="min-width:150px;white-space:pre-wrap;word-break:break-word;"><textarea class="form-control" rows="1" readonly="1" oninput="this.style.height='';this.style.height=this.scrollHeight+'px'" t-esc="kpi.data.criteria"/></td>
                                             <td style="min-width:150px;white-space:pre-wrap;word-break:break-word;"><textarea class="form-control" rows="1" readonly="1" oninput="this.style.height='';this.style.height=this.scrollHeight+'px'" t-esc="kpi.data.target"/></td>
                                             <td style="min-width:90px;">
-                                                <input t-if="!props.readonly and props.record.data.can_employee_self_rate" type="number" min="0" t-att-max="kpi.data.weightage" class="form-control text-end" t-att-value="kpi.data.self_score" t-on-change="(ev) => this.onKPIFieldChange(kpi,'self_score',ev)"/>
-                                                <input t-else="" type="number" class="form-control text-end" t-att-value="kpi.data.self_score" readonly="1"/>
+                                                <input t-if="!props.readonly and props.record.data.can_employee_self_rate" type="number" min="0" t-att-max="kpi.data.weightage" class="form-control text-end" t-att-value="kpi.data.self_score !== false ? kpi.data.self_score : 0" t-on-focus="onNumberInputFocus" t-on-change="(ev) => this.onKPIFieldChange(kpi,'self_score',ev)"/>
+                                                <input t-else="" type="number" class="form-control text-end" t-att-value="kpi.data.self_score !== false ? kpi.data.self_score : 0" readonly="1"/>
                                             </td>
                                             <td style="min-width:130px;">
                                                 <textarea t-if="!props.readonly and props.record.data.can_employee_self_rate" class="form-control" rows="1" oninput="this.style.height='';this.style.height=this.scrollHeight+'px'" t-att-value="kpi.data.self_remarks" t-on-change="(ev) => this.onKPIFieldChange(kpi,'self_remarks',ev)"/>
                                                 <textarea t-else="" class="form-control" rows="1" readonly="1" oninput="this.style.height='';this.style.height=this.scrollHeight+'px'" t-esc="kpi.data.self_remarks"/>
                                             </td>
-
                                             <t t-if="props.record.data.state != 'appraisal_draft'">
-                                                <td style="min-width:90px;"><input type="number" class="form-control text-end" t-att-value="kpi.data.supervisor_score" readonly="1"/></td>
+                                                <td style="min-width:90px;"><input type="number" class="form-control text-end" t-att-value="kpi.data.supervisor_score !== false ? kpi.data.supervisor_score : 0" readonly="1"/></td>
                                                 <td style="min-width:130px;"><textarea class="form-control" rows="1" readonly="1" oninput="this.style.height='';this.style.height=this.scrollHeight+'px'" t-esc="kpi.data.supervisor_remarks"/></td>
                                             </t>
-
                                             <t t-if="props.record.data.secondary_supervisor_id and props.record.data.state != 'appraisal_draft' and props.record.data.state != 'appraisal_pending_supervisor'">
-                                                <td style="min-width:100px;"><input type="number" class="form-control text-end" t-att-value="kpi.data.secondary_supervisor_score" readonly="1"/></td>
+                                                <td style="min-width:100px;"><input type="number" class="form-control text-end" t-att-value="kpi.data.secondary_supervisor_score !== false ? kpi.data.secondary_supervisor_score : 0" readonly="1"/></td>
                                                 <td style="min-width:130px;"><textarea class="form-control" rows="1" readonly="1" oninput="this.style.height='';this.style.height=this.scrollHeight+'px'" t-esc="kpi.data.secondary_supervisor_score_remarks"/></td>
                                             </t>
-
                                             <t t-if="props.record.data.reviewer_id and (props.record.data.state == 'appraisal_pending_reviewer' or props.record.data.state == 'appraisal_approved')">
-                                                <td style="min-width:90px;"><input type="number" class="form-control text-end" t-att-value="kpi.data.reviewer_score" readonly="1"/></td>
+                                                <td style="min-width:90px;"><input type="number" class="form-control text-end" t-att-value="kpi.data.reviewer_score !== false ? kpi.data.reviewer_score : 0" readonly="1"/></td>
                                                 <td style="min-width:130px;"><textarea class="form-control" rows="1" readonly="1" oninput="this.style.height='';this.style.height=this.scrollHeight+'px'" t-esc="kpi.data.reviewer_remarks"/></td>
                                             </t>
                                         </tr>
@@ -302,10 +359,7 @@
                             </table>
                         </div>
 
-                        <!-- ═══════════════════════════════════════════════════
-                             APPRAISAL SUPERVISOR MODE TABLE
-                             Same min-width / nowrap treatment as employee table.
-                        ════════════════════════════════════════════════════ -->
+                        <!-- APPRAISAL SUPERVISOR MODE TABLE -->
                         <div class="appraisal-wrapper" t-if="isAppraisalSupervisorMode">
                             <table class="table appraisal-flex-table">
                                 <thead>
@@ -316,7 +370,6 @@
                                         <th style="min-width:150px;white-space:nowrap;">Target</th>
                                         <th style="min-width:90px;white-space:nowrap;">Emp Score</th>
                                         <th style="min-width:130px;white-space:nowrap;">Emp Remarks</th>
-
                                         <t t-if="props.record.data.state != 'appraisal_draft'">
                                             <th style="min-width:90px;white-space:nowrap;">Sup Score</th>
                                             <th style="min-width:130px;white-space:nowrap;">Sup Remarks</th>
@@ -333,7 +386,7 @@
                                 </thead>
                                 <tbody>
                                     <t t-if="activeKPIs.length === 0">
-                                        <tr><td colspan="15" class="text-center text-muted py-5 w-100"><em>No KPIs in this KRA.</em></td></tr>
+                                        <tr><td colspan="15" class="text-center text-muted py-5 w-100"><em>No KPIs in this KRA.</em>NonNull</td></tr>
                                     </t>
                                     <t t-foreach="activeKPIs" t-as="kpi" t-key="kpi.id">
                                         <tr t-if="kpi.data.is_selected">
@@ -341,35 +394,32 @@
                                             <td style="min-width:80px;"><input type="number" class="form-control text-end" t-att-value="kpi.data.weightage" readonly="1"/></td>
                                             <td style="min-width:150px;white-space:pre-wrap;word-break:break-word;"><textarea class="form-control" rows="1" readonly="1" oninput="this.style.height='';this.style.height=this.scrollHeight+'px'" t-esc="kpi.data.criteria"/></td>
                                             <td style="min-width:150px;white-space:pre-wrap;word-break:break-word;"><textarea class="form-control" rows="1" readonly="1" oninput="this.style.height='';this.style.height=this.scrollHeight+'px'" t-esc="kpi.data.target"/></td>
-                                            <td style="min-width:90px;"><input type="number" class="form-control text-end" t-att-value="kpi.data.self_score" readonly="1"/></td>
+                                            <td style="min-width:90px;"><input type="number" class="form-control text-end" t-att-value="kpi.data.self_score !== false ? kpi.data.self_score : 0" readonly="1"/></td>
                                             <td style="min-width:130px;"><textarea class="form-control" rows="1" readonly="1" oninput="this.style.height='';this.style.height=this.scrollHeight+'px'" t-esc="kpi.data.self_remarks"/></td>
-
                                             <t t-if="props.record.data.state != 'appraisal_draft'">
                                                 <td style="min-width:90px;">
-                                                    <input t-if="!props.readonly and props.record.data.can_supervisor_rate" type="number" min="0" t-att-max="kpi.data.weightage" class="form-control text-end" t-att-value="kpi.data.supervisor_score" t-on-change="(ev) => this.onKPIFieldChange(kpi,'supervisor_score',ev)"/>
-                                                    <input t-else="" type="number" class="form-control text-end" t-att-value="kpi.data.supervisor_score" readonly="1"/>
+                                                    <input t-if="!props.readonly and props.record.data.can_supervisor_rate" type="number" min="0" t-att-max="kpi.data.weightage" class="form-control text-end" t-att-value="kpi.data.supervisor_score !== false ? kpi.data.supervisor_score : 0" t-on-focus="onNumberInputFocus" t-on-change="(ev) => this.onKPIFieldChange(kpi,'supervisor_score',ev)"/>
+                                                    <input t-else="" type="number" class="form-control text-end" t-att-value="kpi.data.supervisor_score !== false ? kpi.data.supervisor_score : 0" readonly="1"/>
                                                 </td>
                                                 <td style="min-width:130px;">
                                                     <textarea t-if="!props.readonly and props.record.data.can_supervisor_rate" class="form-control" rows="1" oninput="this.style.height='';this.style.height=this.scrollHeight+'px'" t-att-value="kpi.data.supervisor_remarks" t-on-change="(ev) => this.onKPIFieldChange(kpi,'supervisor_remarks',ev)"/>
                                                     <textarea t-else="" class="form-control" rows="1" readonly="1" oninput="this.style.height='';this.style.height=this.scrollHeight+'px'" t-esc="kpi.data.supervisor_remarks"/>
                                                 </td>
                                             </t>
-
                                             <t t-if="props.record.data.secondary_supervisor_id and props.record.data.state != 'appraisal_draft' and props.record.data.state != 'appraisal_pending_supervisor'">
                                                 <td style="min-width:100px;">
-                                                    <input t-if="!props.readonly and props.record.data.can_secondary_supervisor_rate" type="number" min="0" t-att-max="kpi.data.weightage" class="form-control text-end" t-att-value="kpi.data.secondary_supervisor_score" t-on-change="(ev) => this.onKPIFieldChange(kpi,'secondary_supervisor_score',ev)"/>
-                                                    <input t-else="" type="number" class="form-control text-end" t-att-value="kpi.data.secondary_supervisor_score" readonly="1"/>
+                                                    <input t-if="!props.readonly and props.record.data.can_secondary_supervisor_rate" type="number" min="0" t-att-max="kpi.data.weightage" class="form-control text-end" t-att-value="kpi.data.secondary_supervisor_score !== false ? kpi.data.secondary_supervisor_score : 0" t-on-focus="onNumberInputFocus" t-on-change="(ev) => this.onKPIFieldChange(kpi,'secondary_supervisor_score',ev)"/>
+                                                    <input t-else="" type="number" class="form-control text-end" t-att-value="kpi.data.secondary_supervisor_score !== false ? kpi.data.secondary_supervisor_score : 0" readonly="1"/>
                                                 </td>
                                                 <td style="min-width:130px;">
                                                     <textarea t-if="!props.readonly and props.record.data.can_secondary_supervisor_rate" class="form-control" rows="1" oninput="this.style.height='';this.style.height=this.scrollHeight+'px'" t-att-value="kpi.data.secondary_supervisor_score_remarks" t-on-change="(ev) => this.onKPIFieldChange(kpi,'secondary_supervisor_score_remarks',ev)"/>
                                                     <textarea t-else="" class="form-control" rows="1" readonly="1" oninput="this.style.height='';this.style.height=this.scrollHeight+'px'" t-esc="kpi.data.secondary_supervisor_score_remarks"/>
                                                 </td>
                                             </t>
-
                                             <t t-if="props.record.data.reviewer_id and (props.record.data.state == 'appraisal_pending_reviewer' or props.record.data.state == 'appraisal_approved')">
                                                 <td style="min-width:90px;">
-                                                    <input t-if="!props.readonly and props.record.data.can_reviewer_rate" type="number" min="0" t-att-max="kpi.data.weightage" class="form-control text-end" t-att-value="kpi.data.reviewer_score" t-on-change="(ev) => this.onKPIFieldChange(kpi,'reviewer_score',ev)"/>
-                                                    <input t-else="" type="number" class="form-control text-end" t-att-value="kpi.data.reviewer_score" readonly="1"/>
+                                                    <input t-if="!props.readonly and props.record.data.can_reviewer_rate" type="number" min="0" t-att-max="kpi.data.weightage" class="form-control text-end" t-att-value="kpi.data.reviewer_score !== false ? kpi.data.reviewer_score : 0" t-on-focus="onNumberInputFocus" t-on-change="(ev) => this.onKPIFieldChange(kpi,'reviewer_score',ev)"/>
+                                                    <input t-else="" type="number" class="form-control text-end" t-att-value="kpi.data.reviewer_score !== false ? kpi.data.reviewer_score : 0" readonly="1"/>
                                                 </td>
                                                 <td style="min-width:130px;">
                                                     <textarea t-if="!props.readonly and props.record.data.can_reviewer_rate" class="form-control" rows="1" oninput="this.style.height='';this.style.height=this.scrollHeight+'px'" t-att-value="kpi.data.reviewer_remarks" t-on-change="(ev) => this.onKPIFieldChange(kpi,'reviewer_remarks',ev)"/>
@@ -385,10 +435,7 @@
                     </div>
                 </div>
 
-                <!-- ═══════════════════════════════════════════════════════════
-                     COMPETENCY FRAMEWORK TAB
-                     Same min-width / nowrap treatment on all score headers.
-                ══════════════════════════════════════════════════════════════ -->
+                <!-- COMPETENCY FRAMEWORK TAB -->
                 <div class="o_kra_content" t-if="isCompetencyTabActive and hasCompetencyData">
                     <div class="o_kra_kpi_section">
 
@@ -441,7 +488,6 @@
                                         <th style="min-width:80px;white-space:nowrap;">Max Pts</th>
                                         <th style="min-width:90px;white-space:nowrap;">Emp Score</th>
                                         <th style="min-width:130px;white-space:nowrap;">Emp Remarks</th>
-
                                         <t t-if="props.record.data.state != 'appraisal_draft'">
                                             <th style="min-width:90px;white-space:nowrap;">Sup Score</th>
                                             <th style="min-width:130px;white-space:nowrap;">Sup Remarks</th>
@@ -458,52 +504,46 @@
                                 </thead>
                                 <tbody>
                                     <t t-if="activeCompetencyRows.length === 0">
-                                        <tr><td colspan="15" class="text-center text-muted py-5"><em>No competency lines in this group.</em></td></tr>
+                                        <tr><td colspan="15" class="text-center text-muted py-5"><em>No competency lines in this group.</em>NonNull</td></tr>
                                     </t>
                                     <t t-foreach="activeCompetencyRows" t-as="row" t-key="row.id">
                                         <tr>
                                             <td style="min-width:70px;"><span class="o_comp_line_code" t-esc="row.data.line_full_code || ''"/></td>
                                             <td style="min-width:150px;"><div class="appraisal-readonly-text" t-esc="row.data.line_name || ''"/></td>
-                                            <td style="min-width:180px;white-space:pre-wrap;word-break:break-word;">
-                                                <div class="appraisal-readonly-text text-muted" t-esc="row.data.line_description || ''"/>
-                                            </td>
+                                            <td style="min-width:180px;white-space:pre-wrap;word-break:break-word;"><div class="appraisal-readonly-text text-muted" t-esc="row.data.line_description || ''"/></td>
                                             <td style="min-width:80px;"><div class="appraisal-readonly-text text-end" t-esc="(row.data.line_points || 0).toFixed(2)"/></td>
-
                                             <td style="min-width:90px;">
-                                                <input t-if="!props.readonly and props.record.data.can_employee_self_rate" type="number" min="0" t-att-max="row.data.line_points" class="form-control text-end" t-att-value="row.data.self_score" t-on-change="(ev) => this.onCompetencyScoreChange(row,'self_score',ev)"/>
-                                                <div t-else="" class="appraisal-readonly-text text-end" t-esc="row.data.self_score"/>
+                                                <input t-if="!props.readonly and props.record.data.can_employee_self_rate" type="number" min="0" t-att-max="row.data.line_points" class="form-control text-end" t-att-value="row.data.self_score !== undefined ? row.data.self_score : 0" t-on-focus="onNumberInputFocus" t-on-change="(ev) => this.onCompetencyScoreChange(row,'self_score',ev)"/>
+                                                <div t-else="" class="appraisal-readonly-text text-end" t-esc="row.data.self_score !== undefined ? row.data.self_score : 0"/>
                                             </td>
                                             <td style="min-width:130px;">
                                                 <textarea t-if="!props.readonly and props.record.data.can_employee_self_rate" class="form-control" rows="1" oninput="this.style.height='';this.style.height=this.scrollHeight+'px'" t-att-value="row.data.self_remarks" t-on-change="(ev) => this.onCompetencyScoreChange(row,'self_remarks',ev)"/>
                                                 <div t-else="" class="appraisal-readonly-text" t-esc="row.data.self_remarks"/>
                                             </td>
-
                                             <t t-if="props.record.data.state != 'appraisal_draft'">
                                                 <td style="min-width:90px;">
-                                                    <input t-if="!props.readonly and props.record.data.can_supervisor_rate" type="number" min="0" t-att-max="row.data.line_points" class="form-control text-end" t-att-value="row.data.supervisor_score" t-on-change="(ev) => this.onCompetencyScoreChange(row,'supervisor_score',ev)"/>
-                                                    <div t-else="" class="appraisal-readonly-text text-end" t-esc="row.data.supervisor_score"/>
+                                                    <input t-if="!props.readonly and props.record.data.can_supervisor_rate" type="number" min="0" t-att-max="row.data.line_points" class="form-control text-end" t-att-value="row.data.supervisor_score !== undefined ? row.data.supervisor_score : 0" t-on-focus="onNumberInputFocus" t-on-change="(ev) => this.onCompetencyScoreChange(row,'supervisor_score',ev)"/>
+                                                    <div t-else="" class="appraisal-readonly-text text-end" t-esc="row.data.supervisor_score !== undefined ? row.data.supervisor_score : 0"/>
                                                 </td>
                                                 <td style="min-width:130px;">
                                                     <textarea t-if="!props.readonly and props.record.data.can_supervisor_rate" class="form-control" rows="1" oninput="this.style.height='';this.style.height=this.scrollHeight+'px'" t-att-value="row.data.supervisor_remarks" t-on-change="(ev) => this.onCompetencyScoreChange(row,'supervisor_remarks',ev)"/>
                                                     <div t-else="" class="appraisal-readonly-text" t-esc="row.data.supervisor_remarks"/>
                                                 </td>
                                             </t>
-
                                             <t t-if="props.record.data.secondary_supervisor_id and props.record.data.state != 'appraisal_draft' and props.record.data.state != 'appraisal_pending_supervisor'">
                                                 <td style="min-width:100px;">
-                                                    <input t-if="!props.readonly and props.record.data.can_secondary_supervisor_rate" type="number" min="0" t-att-max="row.data.line_points" class="form-control text-end" t-att-value="row.data.secondary_supervisor_score" t-on-change="(ev) => this.onCompetencyScoreChange(row,'secondary_supervisor_score',ev)"/>
-                                                    <div t-else="" class="appraisal-readonly-text text-end" t-esc="row.data.secondary_supervisor_score"/>
+                                                    <input t-if="!props.readonly and props.record.data.can_secondary_supervisor_rate" type="number" min="0" t-att-max="row.data.line_points" class="form-control text-end" t-att-value="row.data.secondary_supervisor_score !== undefined ? row.data.secondary_supervisor_score : 0" t-on-focus="onNumberInputFocus" t-on-change="(ev) => this.onCompetencyScoreChange(row,'secondary_supervisor_score',ev)"/>
+                                                    <div t-else="" class="appraisal-readonly-text text-end" t-esc="row.data.secondary_supervisor_score !== undefined ? row.data.secondary_supervisor_score : 0"/>
                                                 </td>
                                                 <td style="min-width:130px;">
                                                     <textarea t-if="!props.readonly and props.record.data.can_secondary_supervisor_rate" class="form-control" rows="1" oninput="this.style.height='';this.style.height=this.scrollHeight+'px'" t-att-value="row.data.secondary_supervisor_remarks" t-on-change="(ev) => this.onCompetencyScoreChange(row,'secondary_supervisor_remarks',ev)"/>
                                                     <div t-else="" class="appraisal-readonly-text" t-esc="row.data.secondary_supervisor_remarks"/>
                                                 </td>
                                             </t>
-
                                             <t t-if="props.record.data.reviewer_id and (props.record.data.state == 'appraisal_pending_reviewer' or props.record.data.state == 'appraisal_approved')">
                                                 <td style="min-width:90px;">
-                                                    <input t-if="!props.readonly and props.record.data.can_reviewer_rate" type="number" min="0" t-att-max="row.data.line_points" class="form-control text-end" t-att-value="row.data.reviewer_score" t-on-change="(ev) => this.onCompetencyScoreChange(row,'reviewer_score',ev)"/>
-                                                    <div t-else="" class="appraisal-readonly-text text-end" t-esc="row.data.reviewer_score"/>
+                                                    <input t-if="!props.readonly and props.record.data.can_reviewer_rate" type="number" min="0" t-att-max="row.data.line_points" class="form-control text-end" t-att-value="row.data.reviewer_score !== undefined ? row.data.reviewer_score : 0" t-on-focus="onNumberInputFocus" t-on-change="(ev) => this.onCompetencyScoreChange(row,'reviewer_score',ev)"/>
+                                                    <div t-else="" class="appraisal-readonly-text text-end" t-esc="row.data.reviewer_score !== undefined ? row.data.reviewer_score : 0"/>
                                                 </td>
                                                 <td style="min-width:130px;">
                                                     <textarea t-if="!props.readonly and props.record.data.can_reviewer_rate" class="form-control" rows="1" oninput="this.style.height='';this.style.height=this.scrollHeight+'px'" t-att-value="row.data.reviewer_remarks" t-on-change="(ev) => this.onCompetencyScoreChange(row,'reviewer_remarks',ev)"/>
@@ -523,9 +563,7 @@
         </div>
     </t>
 
-    <!-- ═══════════════════════════════════════════════════════════════════════
-         KPI HISTORY DIALOG
-    ════════════════════════════════════════════════════════════════════════ -->
+    <!-- KPI HISTORY DIALOG -->
     <t t-name="hr_employee_evaluation.KpiHistoryDialog">
         <Dialog title="dialogTitle" size="'lg'">
             <t t-set="emp_val" t-value="props.historyType === 'criteria' ? props.kpiData.snapshot_employee_criteria : props.kpiData.snapshot_employee_target"/>
@@ -563,9 +601,7 @@
                         </thead>
                         <tbody>
                             <tr>
-                                <td class="p-3 align-top">
-                                    <p class="mb-0" style="white-space:pre-wrap;" t-esc="emp_val || '—'"/>
-                                </td>
+                                <td class="p-3 align-top"><p class="mb-0" style="white-space:pre-wrap;" t-esc="emp_val || '—'"/></td>
                                 <td class="p-3 align-top">
                                     <p class="mb-0 text-muted fst-italic" t-if="!sup_val">Not yet reviewed</p>
                                     <p class="mb-0" style="white-space:pre-wrap;" t-if="sup_val" t-esc="sup_val"/>
@@ -582,14 +618,13 @@
         </Dialog>
     </t>
 
-    <!-- ═══════════════════════════════════════════════════════════════════════
-         ADD KRA DIALOG
-    ════════════════════════════════════════════════════════════════════════ -->
+    <!-- ADD KRA DIALOG -->
     <t t-name="hr_employee_evaluation.AddKraDialog">
         <Dialog title="'Add Key Result Area'">
             <div class="mb-3">
                 <label class="form-label fw-bold text-secondary">KRA Name</label>
-                <input type="text" class="form-control" t-att-value="state.kraName" t-on-input="onNameChange" placeholder="e.g., Financial Growth" t-on-keydown="onKeydown" autofocus="autofocus"/>
+                <input type="text" class="form-control" t-att-value="state.kraName" t-on-input="onNameChange"
+                       placeholder="e.g., Financial Growth" t-on-keydown="onKeydown" autofocus="autofocus"/>
                 <div t-if="state.error" class="text-danger mt-2 small">
                     <i class="fa fa-exclamation-circle"/> <t t-esc="state.error"/>
                 </div>
@@ -601,10 +636,7 @@
         </Dialog>
     </t>
 
-    <!-- ═══════════════════════════════════════════════════════════════════════
-         APPRAISAL EXPAND DIALOG
-         min-width on every th/td so columns never squash when scrolled.
-    ════════════════════════════════════════════════════════════════════════ -->
+    <!-- APPRAISAL EXPAND DIALOG -->
     <t t-name="hr_employee_evaluation.AppraisalExpandDialog">
         <Dialog title="props.kraName" size="'xl'">
             <div class="appraisal-expand-wrapper">
@@ -617,7 +649,6 @@
                             <th style="min-width:180px;white-space:nowrap;">Target</th>
                             <th style="min-width:90px;white-space:nowrap;">Emp Score</th>
                             <th style="min-width:130px;white-space:nowrap;">Emp Remarks</th>
-
                             <t t-if="props.record.data.state != 'appraisal_draft'">
                                 <th style="min-width:90px;white-space:nowrap;">Sup Score</th>
                                 <th style="min-width:130px;white-space:nowrap;">Sup Remarks</th>
@@ -634,7 +665,7 @@
                     </thead>
                     <tbody>
                         <t t-if="props.kpis.length === 0">
-                            <tr><td colspan="15" class="text-center text-muted py-5"><em>No KPIs in this KRA.</em></td></tr>
+                            <tr><td colspan="15" class="text-center text-muted py-5"><em>No KPIs in this KRA.</em>NonNull</td></tr>
                         </t>
                         <t t-foreach="props.kpis" t-as="kpi" t-key="kpi.id">
                             <tr t-if="kpi.data.is_selected">
@@ -643,40 +674,37 @@
                                 <td style="min-width:180px;white-space:pre-wrap;word-break:break-word;"><div class="appraisal-readonly-text" t-esc="kpi.data.criteria"/></td>
                                 <td style="min-width:180px;white-space:pre-wrap;word-break:break-word;"><div class="appraisal-readonly-text" t-esc="kpi.data.target"/></td>
                                 <td style="min-width:90px;">
-                                    <input t-if="props.record.data.can_employee_self_rate" type="number" min="0" t-att-max="kpi.data.weightage" class="form-control text-end" t-att-value="kpi.data.self_score" t-on-change="(ev) => props.onFieldChange(kpi,'self_score',ev)"/>
-                                    <div t-else="" class="appraisal-readonly-text text-end" t-esc="kpi.data.self_score"/>
+                                    <input t-if="props.record.data.can_employee_self_rate" type="number" min="0" t-att-max="kpi.data.weightage" class="form-control text-end" t-att-value="kpi.data.self_score !== false ? kpi.data.self_score : 0" t-on-focus="onNumberInputFocus" t-on-change="(ev) => props.onFieldChange(kpi,'self_score',ev)"/>
+                                    <div t-else="" class="appraisal-readonly-text text-end" t-esc="kpi.data.self_score !== false ? kpi.data.self_score : 0"/>
                                 </td>
                                 <td style="min-width:130px;">
                                     <textarea t-if="props.record.data.can_employee_self_rate" class="form-control" rows="1" oninput="this.style.height='';this.style.height=this.scrollHeight+'px'" t-att-value="kpi.data.self_remarks" t-on-change="(ev) => props.onFieldChange(kpi,'self_remarks',ev)"/>
                                     <div t-else="" class="appraisal-readonly-text" t-esc="kpi.data.self_remarks"/>
                                 </td>
-
                                 <t t-if="props.record.data.state != 'appraisal_draft'">
                                     <td style="min-width:90px;">
-                                        <input t-if="props.record.data.can_supervisor_rate" type="number" min="0" t-att-max="kpi.data.weightage" class="form-control text-end" t-att-value="kpi.data.supervisor_score" t-on-change="(ev) => props.onFieldChange(kpi,'supervisor_score',ev)"/>
-                                        <div t-else="" class="appraisal-readonly-text text-end" t-esc="kpi.data.supervisor_score"/>
+                                        <input t-if="props.record.data.can_supervisor_rate" type="number" min="0" t-att-max="kpi.data.weightage" class="form-control text-end" t-att-value="kpi.data.supervisor_score !== false ? kpi.data.supervisor_score : 0" t-on-focus="onNumberInputFocus" t-on-change="(ev) => props.onFieldChange(kpi,'supervisor_score',ev)"/>
+                                        <div t-else="" class="appraisal-readonly-text text-end" t-esc="kpi.data.supervisor_score !== false ? kpi.data.supervisor_score : 0"/>
                                     </td>
                                     <td style="min-width:130px;">
                                         <textarea t-if="props.record.data.can_supervisor_rate" class="form-control" rows="1" oninput="this.style.height='';this.style.height=this.scrollHeight+'px'" t-att-value="kpi.data.supervisor_remarks" t-on-change="(ev) => props.onFieldChange(kpi,'supervisor_remarks',ev)"/>
                                         <div t-else="" class="appraisal-readonly-text" t-esc="kpi.data.supervisor_remarks"/>
                                     </td>
                                 </t>
-
                                 <t t-if="props.record.data.secondary_supervisor_id and props.record.data.state != 'appraisal_draft' and props.record.data.state != 'appraisal_pending_supervisor'">
                                     <td style="min-width:100px;">
-                                        <input t-if="props.record.data.can_secondary_supervisor_rate" type="number" min="0" t-att-max="kpi.data.weightage" class="form-control text-end" t-att-value="kpi.data.secondary_supervisor_score" t-on-change="(ev) => props.onFieldChange(kpi,'secondary_supervisor_score',ev)"/>
-                                        <div t-else="" class="appraisal-readonly-text text-end" t-esc="kpi.data.secondary_supervisor_score"/>
+                                        <input t-if="props.record.data.can_secondary_supervisor_rate" type="number" min="0" t-att-max="kpi.data.weightage" class="form-control text-end" t-att-value="kpi.data.secondary_supervisor_score !== false ? kpi.data.secondary_supervisor_score : 0" t-on-focus="onNumberInputFocus" t-on-change="(ev) => props.onFieldChange(kpi,'secondary_supervisor_score',ev)"/>
+                                        <div t-else="" class="appraisal-readonly-text text-end" t-esc="kpi.data.secondary_supervisor_score !== false ? kpi.data.secondary_supervisor_score : 0"/>
                                     </td>
                                     <td style="min-width:130px;">
                                         <textarea t-if="props.record.data.can_secondary_supervisor_rate" class="form-control" rows="1" oninput="this.style.height='';this.style.height=this.scrollHeight+'px'" t-att-value="kpi.data.secondary_supervisor_score_remarks" t-on-change="(ev) => props.onFieldChange(kpi,'secondary_supervisor_score_remarks',ev)"/>
                                         <div t-else="" class="appraisal-readonly-text" t-esc="kpi.data.secondary_supervisor_score_remarks"/>
                                     </td>
                                 </t>
-
                                 <t t-if="props.record.data.reviewer_id and (props.record.data.state == 'appraisal_pending_reviewer' or props.record.data.state == 'appraisal_approved')">
                                     <td style="min-width:90px;">
-                                        <input t-if="props.record.data.can_reviewer_rate" type="number" min="0" t-att-max="kpi.data.weightage" class="form-control text-end" t-att-value="kpi.data.reviewer_score" t-on-change="(ev) => props.onFieldChange(kpi,'reviewer_score',ev)"/>
-                                        <div t-else="" class="appraisal-readonly-text text-end" t-esc="kpi.data.reviewer_score"/>
+                                        <input t-if="props.record.data.can_reviewer_rate" type="number" min="0" t-att-max="kpi.data.weightage" class="form-control text-end" t-att-value="kpi.data.reviewer_score !== false ? kpi.data.reviewer_score : 0" t-on-focus="onNumberInputFocus" t-on-change="(ev) => props.onFieldChange(kpi,'reviewer_score',ev)"/>
+                                        <div t-else="" class="appraisal-readonly-text text-end" t-esc="kpi.data.reviewer_score !== false ? kpi.data.reviewer_score : 0"/>
                                     </td>
                                     <td style="min-width:130px;">
                                         <textarea t-if="props.record.data.can_reviewer_rate" class="form-control" rows="1" oninput="this.style.height='';this.style.height=this.scrollHeight+'px'" t-att-value="kpi.data.reviewer_remarks" t-on-change="(ev) => props.onFieldChange(kpi,'reviewer_remarks',ev)"/>
@@ -691,10 +719,7 @@
         </Dialog>
     </t>
 
-    <!-- ═══════════════════════════════════════════════════════════════════════
-         COMPETENCY EXPAND DIALOG
-         Same min-width treatment as the inline competency table.
-    ════════════════════════════════════════════════════════════════════════ -->
+    <!-- COMPETENCY EXPAND DIALOG -->
     <t t-name="hr_employee_evaluation.CompetencyExpandDialog">
         <Dialog t-att-title="props.groupName" size="'xl'">
             <div class="appraisal-expand-wrapper">
@@ -707,7 +732,6 @@
                             <th style="min-width:80px;white-space:nowrap;">Max Pts</th>
                             <th style="min-width:90px;white-space:nowrap;">Emp Score</th>
                             <th style="min-width:130px;white-space:nowrap;">Emp Remarks</th>
-
                             <t t-if="props.record.data.state != 'appraisal_draft'">
                                 <th style="min-width:90px;white-space:nowrap;">Sup Score</th>
                                 <th style="min-width:130px;white-space:nowrap;">Sup Remarks</th>
@@ -724,7 +748,7 @@
                     </thead>
                     <tbody>
                         <t t-if="props.scoreRows.length === 0">
-                            <tr><td colspan="15" class="text-center text-muted py-5"><em>No competency lines in this group.</em></td></tr>
+                            <tr><td colspan="15" class="text-center text-muted py-5"><em>No competency lines in this group.</em>NonNull</td></tr>
                         </t>
                         <t t-foreach="props.scoreRows" t-as="scoreRow" t-key="scoreRow.id">
                             <tr>
@@ -733,40 +757,37 @@
                                 <td style="min-width:180px;white-space:pre-wrap;word-break:break-word;"><div class="appraisal-readonly-text text-muted" t-esc="scoreRow.data.line_description || ''"/></td>
                                 <td style="min-width:80px;"><div class="appraisal-readonly-text text-end" t-esc="(scoreRow.data.line_points || 0).toFixed(2)"/></td>
                                 <td style="min-width:90px;">
-                                    <input t-if="props.record.data.can_employee_self_rate" type="number" min="0" t-att-max="scoreRow.data.line_points" class="form-control text-end" t-att-value="scoreRow.data.self_score" t-on-change="(ev) => props.onScoreChange(scoreRow,'self_score',ev)"/>
-                                    <div t-else="" class="appraisal-readonly-text text-end" t-esc="scoreRow.data.self_score"/>
+                                    <input t-if="props.record.data.can_employee_self_rate" type="number" min="0" t-att-max="scoreRow.data.line_points" class="form-control text-end" t-att-value="scoreRow.data.self_score !== undefined ? scoreRow.data.self_score : 0" t-on-focus="onNumberInputFocus" t-on-change="(ev) => props.onScoreChange(scoreRow,'self_score',ev)"/>
+                                    <div t-else="" class="appraisal-readonly-text text-end" t-esc="scoreRow.data.self_score !== undefined ? scoreRow.data.self_score : 0"/>
                                 </td>
                                 <td style="min-width:130px;">
                                     <textarea t-if="props.record.data.can_employee_self_rate" class="form-control" rows="1" oninput="this.style.height='';this.style.height=this.scrollHeight+'px'" t-att-value="scoreRow.data.self_remarks" t-on-change="(ev) => props.onScoreChange(scoreRow,'self_remarks',ev)"/>
                                     <div t-else="" class="appraisal-readonly-text" t-esc="scoreRow.data.self_remarks"/>
                                 </td>
-
                                 <t t-if="props.record.data.state != 'appraisal_draft'">
                                     <td style="min-width:90px;">
-                                        <input t-if="props.record.data.can_supervisor_rate" type="number" min="0" t-att-max="scoreRow.data.line_points" class="form-control text-end" t-att-value="scoreRow.data.supervisor_score" t-on-change="(ev) => props.onScoreChange(scoreRow,'supervisor_score',ev)"/>
-                                        <div t-else="" class="appraisal-readonly-text text-end" t-esc="scoreRow.data.supervisor_score"/>
+                                        <input t-if="props.record.data.can_supervisor_rate" type="number" min="0" t-att-max="scoreRow.data.line_points" class="form-control text-end" t-att-value="scoreRow.data.supervisor_score !== undefined ? scoreRow.data.supervisor_score : 0" t-on-focus="onNumberInputFocus" t-on-change="(ev) => props.onScoreChange(scoreRow,'supervisor_score',ev)"/>
+                                        <div t-else="" class="appraisal-readonly-text text-end" t-esc="scoreRow.data.supervisor_score !== undefined ? scoreRow.data.supervisor_score : 0"/>
                                     </td>
                                     <td style="min-width:130px;">
                                         <textarea t-if="props.record.data.can_supervisor_rate" class="form-control" rows="1" oninput="this.style.height='';this.style.height=this.scrollHeight+'px'" t-att-value="scoreRow.data.supervisor_remarks" t-on-change="(ev) => props.onScoreChange(scoreRow,'supervisor_remarks',ev)"/>
                                         <div t-else="" class="appraisal-readonly-text" t-esc="scoreRow.data.supervisor_remarks"/>
                                     </td>
                                 </t>
-
                                 <t t-if="props.record.data.secondary_supervisor_id and props.record.data.state != 'appraisal_draft' and props.record.data.state != 'appraisal_pending_supervisor'">
                                     <td style="min-width:100px;">
-                                        <input t-if="props.record.data.can_secondary_supervisor_rate" type="number" min="0" t-att-max="scoreRow.data.line_points" class="form-control text-end" t-att-value="scoreRow.data.secondary_supervisor_score" t-on-change="(ev) => props.onScoreChange(scoreRow,'secondary_supervisor_score',ev)"/>
-                                        <div t-else="" class="appraisal-readonly-text text-end" t-esc="scoreRow.data.secondary_supervisor_score"/>
+                                        <input t-if="props.record.data.can_secondary_supervisor_rate" type="number" min="0" t-att-max="scoreRow.data.line_points" class="form-control text-end" t-att-value="scoreRow.data.secondary_supervisor_score !== undefined ? scoreRow.data.secondary_supervisor_score : 0" t-on-focus="onNumberInputFocus" t-on-change="(ev) => props.onScoreChange(scoreRow,'secondary_supervisor_score',ev)"/>
+                                        <div t-else="" class="appraisal-readonly-text text-end" t-esc="scoreRow.data.secondary_supervisor_score !== undefined ? scoreRow.data.secondary_supervisor_score : 0"/>
                                     </td>
                                     <td style="min-width:130px;">
                                         <textarea t-if="props.record.data.can_secondary_supervisor_rate" class="form-control" rows="1" oninput="this.style.height='';this.style.height=this.scrollHeight+'px'" t-att-value="scoreRow.data.secondary_supervisor_remarks" t-on-change="(ev) => props.onScoreChange(scoreRow,'secondary_supervisor_remarks',ev)"/>
                                         <div t-else="" class="appraisal-readonly-text" t-esc="scoreRow.data.secondary_supervisor_remarks"/>
                                     </td>
                                 </t>
-
                                 <t t-if="props.record.data.reviewer_id and (props.record.data.state == 'appraisal_pending_reviewer' or props.record.data.state == 'appraisal_approved')">
                                     <td style="min-width:90px;">
-                                        <input t-if="props.record.data.can_reviewer_rate" type="number" min="0" t-att-max="scoreRow.data.line_points" class="form-control text-end" t-att-value="scoreRow.data.reviewer_score" t-on-change="(ev) => props.onScoreChange(scoreRow,'reviewer_score',ev)"/>
-                                        <div t-else="" class="appraisal-readonly-text text-end" t-esc="scoreRow.data.reviewer_score"/>
+                                        <input t-if="props.record.data.can_reviewer_rate" type="number" min="0" t-att-max="scoreRow.data.line_points" class="form-control text-end" t-att-value="scoreRow.data.reviewer_score !== undefined ? scoreRow.data.reviewer_score : 0" t-on-focus="onNumberInputFocus" t-on-change="(ev) => props.onScoreChange(scoreRow,'reviewer_score',ev)"/>
+                                        <div t-else="" class="appraisal-readonly-text text-end" t-esc="scoreRow.data.reviewer_score !== undefined ? scoreRow.data.reviewer_score : 0"/>
                                     </td>
                                     <td style="min-width:130px;">
                                         <textarea t-if="props.record.data.can_reviewer_rate" class="form-control" rows="1" oninput="this.style.height='';this.style.height=this.scrollHeight+'px'" t-att-value="scoreRow.data.reviewer_remarks" t-on-change="(ev) => props.onScoreChange(scoreRow,'reviewer_remarks',ev)"/>

@@ -8,11 +8,7 @@ GRAND_TOTAL = 100.0
 
 
 class PmsScoreAllocation(models.Model):
-    """
-    Master allocation record that HR creates ONCE per evaluation cycle.
-    It answers:  "KPI carries X points, Competency carries Y points,
-                  and X + Y must equal 100."
-    """
+
     _name        = 'pms.score.allocation'
     _description = 'Score Allocation (KPI vs Competency)'
     _inherit     = ['mail.thread', 'mail.activity.mixin']
@@ -61,7 +57,6 @@ class PmsScoreAllocation(models.Model):
         store=True,
     )
 
-    # ── Back-reference: how many templates use this allocation ─
     template_count = fields.Integer(
         string='Templates',
         compute='_compute_template_count',
@@ -88,35 +83,32 @@ class PmsScoreAllocation(models.Model):
             ])
 
     # ══════════════════════════════════════════════════════════
-    # write() — Auto-sync competency ceilings when weights change
+    # ORM overrides
     # ══════════════════════════════════════════════════════════
-    
-   
+
     def write(self, vals):
-        """
-        When competency_weight changes, sync all linked competency templates.
-        
-        This ensures that if you update an allocation from 70/30 to 60/40,
-        all competency frameworks linked via appraisal templates will
-        automatically update their ceiling from 30 → 40 pts.
-        """
         result = super().write(vals)
-        
-        # If competency_weight changed, update all linked competency templates
+
+        # If competency_weight changed, cascade the new ceiling to every linked
+        # competency template so their points_progress denominator updates live.
         if 'competency_weight' in vals:
-            # Find all appraisal templates using this allocation
             appraisal_tmpls = self.env['appraisal.template'].search([
                 ('score_allocation_id', 'in', self.ids)
             ])
-            # Trigger sync on each linked competency template
-            for tmpl in appraisal_tmpls:
-                if tmpl.competency_template_id:
-                    tmpl.competency_template_id._sync_ceiling()
-        
+            comp_tmpls = appraisal_tmpls.mapped('competency_template_id').filtered(bool)
+            if comp_tmpls:
+                comp_tmpls._sync_ceiling()
+                comp_tmpls.invalidate_recordset([
+                    'competency_ceiling',
+                    'points_status',
+                    'total_hr_points',
+                    'points_progress',
+                ])
+
         return result
 
     # ══════════════════════════════════════════════════════════
-    # Onchange — live feedback while HR is typing
+    # Onchange — live updates
     # ══════════════════════════════════════════════════════════
 
     @api.onchange('kpi_weight', 'competency_weight')
@@ -199,7 +191,7 @@ class PmsScoreAllocation(models.Model):
                 )
 
     # ══════════════════════════════════════════════════════════
-    # Action — linked templates
+    # Actions
     # ══════════════════════════════════════════════════════════
 
     def action_view_templates(self):
@@ -211,3 +203,6 @@ class PmsScoreAllocation(models.Model):
             'view_mode': 'list,form',
             'domain':    [('score_allocation_id', '=', self.id)],
         }
+
+    def action_unlink_selected(self):
+        self.unlink()

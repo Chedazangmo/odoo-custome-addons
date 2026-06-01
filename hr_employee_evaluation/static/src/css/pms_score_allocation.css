@@ -1,12 +1,3 @@
-/* ===========================================================================
-   SCORE ALLOCATION VIEWS - Full Width Form & List Views
-   =========================================================================== */
-
-/* ──────────────────────────────────────────────────────────────────────────
-   FORM VIEW - FULL WIDTH LAYOUT
-   ────────────────────────────────────────────────────────────────────────── */
-
-/* Target score allocation form and make it full width */
 .o_form_view:has([name="kpi_weight"]) {
     max-width: 100% !important;
     width: 100% !important;
@@ -22,294 +13,335 @@
     border-radius: 0 !important;
 }
 
-/* Remove any background constraints */
 .o_form_view:has([name="kpi_weight"]) .o_form_sheet_bg {
     max-width: 100% !important;
     width: 100% !important;
 }
 
-/* ──────────────────────────────────────────────────────────────────────────
-   FORM VIEW - TEMPLATE INFO SECTION (First Group)
-   ────────────────────────────────────────────────────────────────────────── */
-
-/* Make groups full width with better spacing */
-.o_form_view:has([name="kpi_weight"]) .o_group {
-    width: 100% !important;
-    margin-bottom: 30px !important;
-    background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%) !important;
-    border-radius: 16px !important;
-    padding: 24px !important;
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04) !important;
+.appraisal-cards-container {
+    display: flex;
+    gap: 24px;
+    margin-bottom: 24px;
+    width: 100%;
+    flex-wrap: wrap;
 }
 
-/* Template Info specific styling */
-.o_form_view:has([name="kpi_weight"]) .o_group:first-child {
-    background: linear-gradient(135deg, #667eea08 0%, #764ba208 100%) !important;
-    border: 1px solid rgba(102, 126, 234, 0.1) !important;
+.appraisal-card {
+    flex: 1;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    transition: all 0.3s ease;
+    min-width: 220px;
 }
 
-/* Group titles */
-.o_form_view:has([name="kpi_weight"]) .o_group .o_group_name {
-    font-size: 20px !important;
-    font-weight: 700 !important;
-    color: #1a1a2e !important;
-    border-left: 5px solid #667eea !important;
-    padding-left: 16px !important;
-    margin-bottom: 24px !important;
-    letter-spacing: -0.3px;
+.appraisal-card:hover {
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
 }
 
-/* Template Name and Evaluation Group fields */
-.o_form_view:has([name="kpi_weight"]) .o_field_widget[name="name"],
-.o_form_view:has([name="kpi_weight"]) .o_field_widget[name="evaluation_group"] {
-    margin-bottom: 16px;
+.appraisal-card-content {
+    padding: 24px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
 }
 
-.o_form_view:has([name="kpi_weight"]) .o_field_widget[name="name"] input,
-.o_form_view:has([name="kpi_weight"]) .o_field_widget[name="evaluation_group"] input {
-    font-size: 16px !important;
-    padding: 12px !important;
-    border: 2px solid #e1e8ed !important;
-    border-radius: 10px !important;
-    background: white !important;
+.card-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 24px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid #f0f2f5;
 }
 
-/* Field labels */
-.o_form_view:has([name="kpi_weight"]) .o_field_label {
-    font-weight: 600 !important;
-    color: #34495e !important;
-    margin-bottom: 8px !important;
-    font-size: 13px !important;
-    text-transform: uppercase !important;
+.card-header i {
+    font-size: 22px;
+}
+
+.card-header strong {
+    font-size: 16px;
+    color: #2c3e50;
+    font-weight: 700;
+}
+
+.card-icon-blue {
+    color: #3498db;
+}
+
+.card-icon-purple {
+    color: #9b59b6;
+}
+
+.card-icon-green {
+    color: #27ae60;
+}
+
+.field-group {
+    margin-bottom: 20px;
+}
+
+.field-group:last-child {
+    margin-bottom: 0;
+}
+
+.appraisal-card .o_form_label {
+    font-weight: 600;
+    margin-bottom: 8px;
+    display: block;
+    font-size: 12px;
+    color: #5a6c7e;
+    text-transform: uppercase;
     letter-spacing: 0.3px;
 }
 
-/* ──────────────────────────────────────────────────────────────────────────
-   SCORE ALLOCATION SECTION (Second Group)
-   ────────────────────────────────────────────────────────────────────────── */
-
-/* Score Allocation group */
-.o_form_view:has([name="kpi_weight"]) .o_group:has(.o_group_name:contains("SCORE ALLOCATION")) {
-    background: white !important;
-    border: 2px solid #eef2f7 !important;
-}
-
-/* Score Allocation field */
-.o_form_view:has([name="kpi_weight"]) .o_field_widget[name="score_allocation_id"] {
-    margin-bottom: 30px;
-}
-
-.o_form_view:has([name="kpi_weight"]) .o_field_widget[name="score_allocation_id"] .o_input {
-    border: 2px solid #667eea !important;
-    border-radius: 10px !important;
-    padding: 10px !important;
-    background: #f8f9ff !important;
-}
-
-/* ──────────────────────────────────────────────────────────────────────────
-   KPI & COMPETENCY DISTRIBUTION CARDS
-   ────────────────────────────────────────────────────────────────────────── */
-
-/* Distribution containers - make them side by side */
-.o_form_view:has([name="kpi_weight"]) .o_group .o_group:has(.o_group_name:contains("KPI Distribution")),
-.o_form_view:has([name="kpi_weight"]) .o_group .o_group:has(.o_group_name:contains("Competency Distribution")) {
-    display: inline-block !important;
-    width: 48% !important;
-    vertical-align: top !important;
-    margin: 0 1% !important;
-    background: white !important;
-    border-radius: 16px !important;
-    padding: 20px !important;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08) !important;
-    transition: all 0.3s ease !important;
-}
-
-.o_form_view:has([name="kpi_weight"]) .o_group .o_group:has(.o_group_name:contains("KPI Distribution")):hover,
-.o_form_view:has([name="kpi_weight"]) .o_group .o_group:has(.o_group_name:contains("Competency Distribution")):hover {
-    transform: translateY(-4px) !important;
-    box-shadow: 0 8px 28px rgba(102, 126, 234, 0.15) !important;
-}
-
-/* KPI Distribution card */
-.o_form_view:has([name="kpi_weight"]) .o_group .o_group:has(.o_group_name:contains("KPI Distribution")) {
-    border-left: 4px solid #667eea !important;
-}
-
-/* Competency Distribution card */
-.o_form_view:has([name="kpi_weight"]) .o_group .o_group:has(.o_group_name:contains("Competency Distribution")) {
-    border-left: 4px solid #764ba2 !important;
-}
-
-/* Distribution card titles */
-.o_form_view:has([name="kpi_weight"]) .o_group .o_group .o_group_name {
-    font-size: 18px !important;
-    font-weight: 700 !important;
-    border-left: none !important;
-    padding-left: 0 !important;
-    margin-bottom: 20px !important;
-    color: #2c3e50 !important;
-    border-bottom: 2px solid #eef2f7 !important;
-    padding-bottom: 10px !important;
-}
-
-/* Allocated and Remaining points styling */
-.o_form_view:has([name="kpi_weight"]) .o_field_widget[name="allocated_points"],
-.o_form_view:has([name="kpi_weight"]) .o_field_widget[name="remaining_points"] {
-    font-size: 36px !important;
-    font-weight: 800 !important;
-    display: block !important;
-    text-align: center !important;
-    margin: 20px 0 !important;
-}
-
-.o_form_view:has([name="kpi_weight"]) .o_field_widget[name="allocated_points"] {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
-    -webkit-background-clip: text !important;
-    -webkit-text-fill-color: transparent !important;
-    background-clip: text !important;
-}
-
-.o_form_view:has([name="kpi_weight"]) .o_field_widget[name="remaining_points"] {
-    color: #27ae60 !important;
-}
-
-/* Add labels for allocated/remaining */
-.o_form_view:has([name="kpi_weight"]) .o_group .o_group:has(.o_group_name:contains("KPI Distribution")) .o_field_widget[name="allocated_points"]::before {
-    content: "📈 ALLOCATED";
-    display: block;
-    font-size: 12px;
-    font-weight: 600;
-    color: #7f8c8d;
-    letter-spacing: 1px;
-    margin-bottom: 8px;
-    -webkit-text-fill-color: #7f8c8d;
-}
-
-.o_form_view:has([name="kpi_weight"]) .o_group .o_group:has(.o_group_name:contains("KPI Distribution")) .o_field_widget[name="remaining_points"]::before {
-    content: "✓ REMAINING";
-    display: block;
-    font-size: 12px;
-    font-weight: 600;
-    color: #7f8c8d;
-    letter-spacing: 1px;
-    margin-bottom: 8px;
-}
-
-/* Competency items styling */
-.o_form_view:has([name="kpi_weight"]) .o_field_widget[name="competency_items"] {
-    margin-top: 20px;
-}
-
-/* Technical Functional item */
-.o_form_view:has([name="kpi_weight"]) .o_field_widget[name="technical_functional"] {
+.field-box {
     background: #f8f9fa;
-    padding: 16px;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 2px;
+    transition: all 0.2s ease;
+}
+
+.field-box:hover {
+    border-color: #cbd5e1;
+    background: #ffffff;
+}
+
+.field-box:focus-within {
+    border-color: #3498db;
+    background: #ffffff;
+    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+}
+
+.field-input {
+    width: 100% !important;
+    border: none !important;
+    background: transparent !important;
+    padding: 10px 12px !important;
+    font-size: 14px !important;
+    border-radius: 8px !important;
+}
+
+.field-input:focus {
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+.appraisal-card select.field-input {
+    cursor: pointer;
+}
+
+.points-display {
+    text-align: center;
+    margin: 24px 0 20px 0;
+    padding: 20px;
+    background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
     border-radius: 12px;
-    margin-bottom: 16px;
-    border-left: 3px solid #764ba2;
+    border: 1px solid #eef2f7;
 }
 
-.o_form_view:has([name="kpi_weight"]) .o_field_widget[name="technical_functional"] .o_field_label {
-    font-weight: 700 !important;
-    color: #2c3e50 !important;
-    margin-bottom: 8px !important;
+.points-value {
+    font-size: 42px;
+    font-weight: 800;
+    color: #2c3e50;
+    letter-spacing: -0.5px;
 }
 
-/* Points total styling */
-.o_form_view:has([name="kpi_weight"]) .o_field_widget[name="points_total"] {
-    background: linear-gradient(135deg, #667eea10 0%, #764ba210 100%) !important;
-    padding: 16px !important;
-    border-radius: 12px !important;
+.points-value .kpi {
+    color: #3498db;
+}
+
+.points-value .competency {
+    color: #27ae60;
+}
+
+.points-value .total {
+    color: #95a5a6;
+    font-weight: 600;
+}
+
+.points-field {
+    background: transparent !important;
+    border: none !important;
     text-align: center !important;
-    font-weight: 700 !important;
-    font-size: 18px !important;
-    margin-top: 20px !important;
-    border: 2px solid rgba(102, 126, 234, 0.2) !important;
+    font-size: 42px !important;
+    font-weight: 800 !important;
+    padding: 0 !important;
+    width: auto !important;
+    display: inline-block !important;
 }
 
-/* ──────────────────────────────────────────────────────────────────────────
-   RESPONSIVE FORM - Stack cards on mobile
-   ────────────────────────────────────────────────────────────────────────── */
-
-@media (max-width: 768px) {
-    .o_form_view:has([name="kpi_weight"]) .o_form_sheet {
-        padding: 16px !important;
-    }
-    
-    .o_form_view:has([name="kpi_weight"]) .o_group .o_group:has(.o_group_name:contains("KPI Distribution")),
-    .o_form_view:has([name="kpi_weight"]) .o_group .o_group:has(.o_group_name:contains("Competency Distribution")) {
-        width: 100% !important;
-        margin: 10px 0 !important;
-    }
-    
-    .o_form_view:has([name="kpi_weight"]) .o_field_widget[name="allocated_points"],
-    .o_form_view:has([name="kpi_weight"]) .o_field_widget[name="remaining_points"] {
-        font-size: 28px !important;
-    }
+.points-allocated {
+    font-size: 11px;
+    color: #95a5a6;
+    margin-top: 10px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
-/* ──────────────────────────────────────────────────────────────────────────
-   LIST VIEW - FULL WIDTH & MODERN STYLING
-   ────────────────────────────────────────────────────────────────────────── */
+.progress-bar-container {
+    background: #ecf0f1;
+    border-radius: 8px;
+    height: 8px;
+    overflow: hidden;
+    margin-top: 8px;
+}
 
-/* Make list view full width */
+.progress-bar-fill {
+    width: 0%;
+    background: linear-gradient(90deg, #3498db 0%, #2980b9 100%);
+    height: 100%;
+    transition: width 0.3s ease;
+    border-radius: 8px;
+}
+
+.btn-compact {
+    flex: 1;
+    font-size: 11px;
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    transition: all 0.2s ease;
+}
+
+.btn-compact.btn-primary {
+    background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+    border: none;
+}
+
+.btn-compact.btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
+}
+
+.btn-compact.btn-default {
+    background: #ecf0f1;
+    border: 1px solid #dcdde1;
+    color: #2c3e50;
+}
+
+.btn-compact.btn-default:hover {
+    background: #e0e4e8;
+    transform: translateY(-1px);
+}
+
+.btn-group {
+    display: flex;
+    gap: 10px;
+    margin-top: 12px;
+}
+
+.alert-warning-card {
+    border-radius: 10px;
+    padding: 10px 14px;
+    margin-top: 16px;
+    background: linear-gradient(135deg, #fff3cd 0%, #ffeeba 100%);
+    border: 1px solid #ffeaa7;
+    color: #856404;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.alert-danger-card {
+    border-radius: 10px;
+    padding: 12px 16px;
+    margin: 16px 0;
+    background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+    border: 1px solid #f5c6cb;
+    color: #721c24;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.alert-danger-card i,
+.alert-warning-card i {
+    margin-right: 8px;
+    font-size: 14px;
+}
+
+.kra-tabs-section {
+    margin-top: 24px;
+    border-top: 2px solid #eef2f7;
+    padding-top: 24px;
+}
+
+.o_action:has(.o_list_view [field="kpi_weight"]),
+.o_action:has(.o_list_view [field="competency_weight"]) {
+    max-width: 100% !important;
+    width: 100% !important;
+    padding: 0 !important;
+}
+
+.o_action:has(.o_list_view [field="kpi_weight"]) .o_content,
+.o_action:has(.o_list_view [field="competency_weight"]) .o_content {
+    max-width: 100% !important;
+    width: 100% !important;
+    padding: 0 !important;
+}
+
 .o_list_view:has([field="kpi_weight"]),
 .o_list_view:has([field="competency_weight"]) {
     width: 100% !important;
     max-width: 100% !important;
     margin: 0 !important;
-    padding: 0 !important;
+    padding: 0 24px !important;
+    box-sizing: border-box !important;
 }
 
 .o_list_view:has([field="kpi_weight"]) .table-responsive,
 .o_list_view:has([field="competency_weight"]) .table-responsive {
     overflow-x: auto !important;
+    width: 100% !important;
 }
 
 .o_list_view:has([field="kpi_weight"]) table,
 .o_list_view:has([field="competency_weight"]) table {
     width: 100% !important;
     min-width: 800px !important;
+    table-layout: auto !important;
 }
 
-/* Section header for list view */
 .o_list_view:has([field="kpi_weight"])::before {
-    content: "📋 Score Allocations List";
+    content: "📋 Score Allocations";
     display: block;
-    font-size: 28px;
+    font-size: 26px;
     font-weight: 700;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
-    padding: 24px 24px 8px 24px;
-    margin-bottom: 8px;
+    padding: 24px 0 6px 0;
 }
 
 .o_list_view:has([field="kpi_weight"])::after {
-    content: "Manage and configure score distribution templates for performance evaluations";
+    content: "Manage score distribution between KPI and Competency sections";
     display: block;
-    font-size: 14px;
+    font-size: 13px;
     color: #5a6c7e;
-    padding: 0 24px 20px 24px;
-    margin-bottom: 16px;
+    padding: 0 0 18px 0;
+    margin-bottom: 12px;
     border-bottom: 2px solid #eef2f7;
 }
 
-/* Table header styling */
 .o_list_view:has([field="kpi_weight"]) .table thead th,
 .o_list_view:has([field="competency_weight"]) .table thead th {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
     color: white !important;
     font-weight: 600 !important;
-    font-size: 14px !important;
+    font-size: 13px !important;
     text-transform: uppercase !important;
     letter-spacing: 0.5px !important;
-    padding: 16px 12px !important;
+    padding: 14px 12px !important;
     border: none !important;
+    white-space: nowrap !important;
 }
 
-/* Table rows */
 .o_list_view:has([field="kpi_weight"]) .table tbody tr,
 .o_list_view:has([field="competency_weight"]) .table tbody tr {
     transition: all 0.2s ease !important;
@@ -322,7 +354,6 @@
     transform: translateX(2px);
 }
 
-/* Table cells */
 .o_list_view:has([field="kpi_weight"]) .table tbody td,
 .o_list_view:has([field="competency_weight"]) .table tbody td {
     padding: 14px 12px !important;
@@ -330,7 +361,6 @@
     font-size: 14px !important;
 }
 
-/* Grand Total column highlight */
 .o_list_view:has([field="kpi_weight"]) td[field="grand_total"],
 .o_list_view:has([field="competency_weight"]) td[field="grand_total"] {
     font-weight: 800 !important;
@@ -338,70 +368,175 @@
     font-size: 15px !important;
 }
 
-/* Templates count badge */
-.o_list_view:has([field="kpi_weight"]) td[field="template_count"],
-.o_list_view:has([field="competency_weight"]) td[field="template_count"] {
-    text-align: center !important;
+@media (min-width: 1200px) {
+    .appraisal-cards-container {
+        gap: 24px;
+    }
+    
+    .points-value {
+        font-size: 42px;
+    }
 }
 
-.o_list_view:has([field="kpi_weight"]) td[field="template_count"] span,
-.o_list_view:has([field="competency_weight"]) td[field="template_count"] span {
-    background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%) !important;
-    color: #667eea !important;
-    padding: 4px 12px !important;
-    border-radius: 20px !important;
-    font-weight: 700 !important;
-    display: inline-block !important;
+@media (min-width: 992px) and (max-width: 1199px) {
+    .appraisal-cards-container {
+        gap: 20px;
+    }
+    
+    .appraisal-card-content {
+        padding: 20px;
+    }
+    
+    .points-value {
+        font-size: 36px;
+    }
+    
+    .points-field {
+        font-size: 36px !important;
+    }
+    
+    .card-header strong {
+        font-size: 15px;
+    }
 }
 
-/* Status decorations */
-.o_list_view:has([field="kpi_weight"]) tr.text-success,
-.o_list_view:has([field="competency_weight"]) tr.text-success {
-    border-left: 4px solid #27ae60 !important;
+@media (min-width: 768px) and (max-width: 991px) {
+    .appraisal-cards-container {
+        gap: 16px;
+    }
+    
+    .appraisal-card {
+        flex: 0 0 calc(50% - 8px);
+    }
+    
+    .appraisal-card-content {
+        padding: 20px;
+    }
+    
+    .points-value {
+        font-size: 36px;
+    }
+    
+    .points-field {
+        font-size: 36px !important;
+    }
 }
 
-.o_list_view:has([field="kpi_weight"]) tr.text-warning,
-.o_list_view:has([field="competency_weight"]) tr.text-warning {
-    border-left: 4px solid #f39c12 !important;
+@media (min-width: 576px) and (max-width: 767px) {
+    .appraisal-cards-container {
+        gap: 16px;
+    }
+    
+    .appraisal-card {
+        flex: 0 0 100%;
+    }
+    
+    .appraisal-card-content {
+        padding: 20px;
+    }
+    
+    .points-value {
+        font-size: 36px;
+    }
+    
+    .points-field {
+        font-size: 36px !important;
+    }
 }
 
-.o_list_view:has([field="kpi_weight"]) tr.text-danger,
-.o_list_view:has([field="competency_weight"]) tr.text-danger {
-    border-left: 4px solid #e74c3c !important;
+@media (max-width: 575px) {
+    .appraisal-cards-container {
+        gap: 12px;
+        margin-bottom: 16px;
+    }
+    
+    .appraisal-card {
+        flex: 0 0 100%;
+    }
+    
+    .appraisal-card-content {
+        padding: 16px;
+    }
+    
+    .card-header {
+        margin-bottom: 16px;
+    }
+    
+    .card-header strong {
+        font-size: 14px;
+    }
+    
+    .card-header i {
+        font-size: 18px;
+    }
+    
+    .points-value {
+        font-size: 32px;
+    }
+    
+    .points-field {
+        font-size: 32px !important;
+    }
+    
+    .points-display {
+        padding: 16px;
+        margin: 16px 0;
+    }
+    
+    .btn-compact {
+        font-size: 10px;
+        padding: 5px 10px;
+    }
+    
+    .field-group {
+        margin-bottom: 16px;
+    }
 }
-
-/* ──────────────────────────────────────────────────────────────────────────
-   SEARCH VIEW - Full width
-   ────────────────────────────────────────────────────────────────────────── */
-
-.o_search_view:has(+ .o_list_view:has([field="kpi_weight"])) {
-    padding: 20px 24px !important;
-    background: white !important;
-    border-bottom: 1px solid #eef2f7 !important;
-}
-
-/* ──────────────────────────────────────────────────────────────────────────
-   RESPONSIVE LIST VIEW
-   ────────────────────────────────────────────────────────────────────────── */
 
 @media (max-width: 768px) {
+    .o_list_view:has([field="kpi_weight"]) {
+        padding: 0 12px !important;
+    }
+
     .o_list_view:has([field="kpi_weight"])::before {
-        font-size: 22px !important;
-        padding: 16px 16px 4px 16px !important;
+        font-size: 20px !important;
+        padding-top: 16px !important;
     }
-    
+
     .o_list_view:has([field="kpi_weight"])::after {
-        padding: 0 16px 16px 16px !important;
+        padding: 0 0 12px 0 !important;
         font-size: 12px !important;
     }
-    
+
     .o_list_view:has([field="kpi_weight"]) .table thead th {
-        font-size: 12px !important;
-        padding: 12px 8px !important;
+        font-size: 11px !important;
+        padding: 10px 8px !important;
     }
-    
+
     .o_list_view:has([field="kpi_weight"]) .table tbody td {
         padding: 10px 8px !important;
         font-size: 13px !important;
+    }
+}
+
+@media print {
+    .appraisal-card {
+        break-inside: avoid;
+        box-shadow: none;
+        border: 1px solid #ddd;
+    }
+    
+    .appraisal-card:hover {
+        transform: none;
+        box-shadow: none;
+    }
+    
+    .btn-group,
+    .alert-warning-card {
+        display: none;
+    }
+    
+    .points-value {
+        font-size: 28px;
     }
 }

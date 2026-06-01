@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ============================================================ -->
+    <!-- ACTIONS                                                       -->
+    <!-- ============================================================ -->
+
+    <record id="action_pms_hr_dashboard" model="ir.actions.client">
+        <field name="name">HR Admin Dashboard</field>
+        <field name="tag">pms_dashboard</field>
+        <field name="params">{'role': 'hr_manager'}</field>
+    </record>
+
+    <record id="action_pms_employee_dashboard" model="ir.actions.client">
+        <field name="name">My Performance</field>
+        <field name="tag">pms_dashboard</field>
+        <field name="params">{'role': 'employee'}</field>
+    </record>
+
+    <record id="action_pms_supervisor_dashboard" model="ir.actions.client">
+        <field name="name">My Team</field>
+        <field name="tag">pms_dashboard</field>
+        <field name="params">{'role': 'supervisor'}</field>
+    </record>
+
+    <record id="action_pms_reviewer_dashboard" model="ir.actions.client">
+        <field name="name">My Reviews</field>
+        <field name="tag">pms_dashboard</field>
+        <field name="params">{'role': 'reviewer'}</field>
+    </record>
+
+    <!-- ============================================================ -->
+    <!-- DASHBOARD MENU - Under Employee Evaluation root               -->
+    <!-- ============================================================ -->
+
+    <!-- Dashboard parent menu (sequence 1 = first item) -->
+    <menuitem id="menu_pms_dashboard_parent"
+              name="Dashboard"
+              parent="hr_employee_evaluation.menu_appraisal_root"
+              sequence="1"/>
+
+    <!-- HR Admin Dashboard - Only for HR Managers -->
+    <menuitem id="menu_pms_hr_dashboard"
+              name="HR Admin Dashboard"
+              parent="menu_pms_dashboard_parent"
+              action="action_pms_hr_dashboard"
+              sequence="10"
+              groups="hr_employee_evaluation.group_pms_hr_manager"/>
+
+    <!-- My Team - For Supervisors (appears FIRST for them) -->
+    <menuitem id="menu_pms_my_team"
+              name="My Team"
+              parent="menu_pms_dashboard_parent"
+              action="action_pms_supervisor_dashboard"
+              sequence="15"
+              groups="hr_employee_evaluation.group_pms_supervisor"/>
+
+    <!-- My Reviews - For Reviewers (appears FIRST for them) -->
+    <menuitem id="menu_pms_my_reviews"
+              name="My Reviews"
+              parent="menu_pms_dashboard_parent"
+              action="action_pms_reviewer_dashboard"
+              sequence="15"
+              groups="hr_employee_evaluation.group_pms_reviewer"/>
+
+    <!-- My Performance - For regular Employees (and fallback) -->
+    <menuitem id="menu_pms_my_performance"
+              name="My Performance"
+              parent="menu_pms_dashboard_parent"
+              action="action_pms_employee_dashboard"
+              sequence="20"
+              groups="hr_employee_evaluation.group_pms_employee"/>
+
+</odoo>

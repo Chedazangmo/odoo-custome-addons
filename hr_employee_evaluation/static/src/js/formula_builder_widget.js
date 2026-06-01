@@ -34,11 +34,6 @@ const RATE_PRESETS = [
     { label: "50%", val: "0.50" }, { label: "75%", val: "0.75" }, { label: "100%", val: "1.00" },
 ];
 
-const CONSTANT_PRESETS = [
-    { label: "0", val: "0" }, { label: "1", val: "1" }, { label: "2", val: "2" }, 
-    { label: "5", val: "5" }, { label: "10", val: "10" }, { label: "100", val: "100" },
-];
-
 const SAFE_BUILTINS = {
     abs: Math.abs, 
     round: Math.round, 
@@ -71,7 +66,6 @@ export class FormulaBuilderWidget extends Component {
         this.parenthesisOps = OPERATORS.filter(op => op.group === "parentheses");
         this.mathOps = OPERATORS.filter(op => op.group === "math");
         this.ratePresets = RATE_PRESETS;
-        this.constantPresets = CONSTANT_PRESETS;
 
         onMounted(() => {
             const currentVal = this.props.record?.data[this.props.name];
@@ -166,10 +160,6 @@ export class FormulaBuilderWidget extends Component {
         this._pushToken({ val: p.val, label: p.val, kind: "num" });
     }
 
-    onConstantClick = (c) => {
-        this._pushToken({ val: c.val, label: c.val, kind: "num" });
-    }
-
     onAddNum = () => {
         const raw = this.state.customNum.trim();
         if (!raw || isNaN(Number(raw))) {
@@ -234,7 +224,6 @@ export class FormulaBuilderWidget extends Component {
                 throw new Error("Formula must evaluate to a finite number.");
             }
 
-            // Simplified success message - removed the result details
             this.state.validationStatus = "ok";
             this.state.validationMsg = "Ready to use in bonus calculations.";
             this.notification.add("Formula is valid!", { type: "success" });

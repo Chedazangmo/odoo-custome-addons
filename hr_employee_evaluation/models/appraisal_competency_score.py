@@ -1,23 +1,4 @@
-# ============================================================
 # models/appraisal_competency_score.py
-#
-# Junction model: one row per (pms.appraisal × competency.framework.line).
-# Stores emp / supervisor / secondary-supervisor / reviewer
-# scores and remarks entered during the appraisal phase.
-#
-# Rows are auto-created (idempotent) by _sync_competency_scores()
-# in pms_appraisal_competency_inherit.py whenever:
-#   • A pms.appraisal is created with a template that has a linked
-#     competency_template_id.
-#   • The appraisal's template_id changes.
-#   • HR calls action_sync_competency_scores() manually.
-#
-# LINK PATH:
-#   pms.appraisal.template_id (Many2one → appraisal.template)
-#   appraisal.template.competency_template_id (Many2one → competency.framework.template)
-#   competency.framework.template.group_ids → competency.framework.group
-#   competency.framework.group.line_ids → competency.framework.line
-# ============================================================
 
 from odoo import models, fields, api, _
 from odoo.exceptions import ValidationError, UserError
@@ -28,8 +9,6 @@ class AppraisalCompetencyScore(models.Model):
     _name        = 'appraisal.competency.score'
     _description = 'Appraisal Competency Score'
     _order       = 'group_sequence, group_id, line_sequence, id'
-
-    # ── Core FKs ──────────────────────────────────────────────
 
     appraisal_id = fields.Many2one(
         'pms.appraisal',
@@ -46,7 +25,6 @@ class AppraisalCompetencyScore(models.Model):
         ondelete='restrict',
     )
 
-    # ── Denormalized display fields (stored for history) ──────
 
     group_id = fields.Many2one(
         'competency.framework.group',
@@ -103,48 +81,27 @@ class AppraisalCompetencyScore(models.Model):
         store=True,
         readonly=True,
     )
-
-    # ── Score fields ──────────────────────────────────────────
-
+    
+    # score fields
     self_score = fields.Float(string='Employee Score', default=0.0)
     self_remarks = fields.Text(string='Employee Remarks')
 
     supervisor_score = fields.Float(string='Supervisor Score', default=0.0)
     supervisor_remarks = fields.Text(string='Supervisor Remarks')
 
-    # NOTE: field is named secondary_supervisor_remarks (NOT
-    # secondary_supervisor_score_remarks) to be consistent with the
-    # field set names used in pms_appraisal.py write() filtering.
     secondary_supervisor_score = fields.Float(string='2nd Supervisor Score', default=0.0)
     secondary_supervisor_remarks = fields.Text(string='2nd Supervisor Remarks')
 
     reviewer_score = fields.Float(string='Reviewer Score', default=0.0)
     reviewer_remarks = fields.Text(string='Reviewer Remarks')
 
-    # ── DB-level uniqueness constraint ────────────────────────
-    # NOTE: Using models.Constraint (Odoo 19 style) instead of
-    # _sql_constraints (deprecated in Odoo 19, causes WARNING log).
 
     _unique_appraisal_line = models.Constraint(
         'UNIQUE(appraisal_id, competency_line_id)',
         'Duplicate competency score entry for the same appraisal and line.',
     )
 
-    # ══════════════════════════════════════════════════════════
-    # Onchange validators — immediate UI feedback
-    # These fire as soon as the user leaves the score field,
-    # before any save attempt, giving instant inline errors.
-    # The @api.constrains below provide the definitive DB-level
-    # safety net in case data arrives via RPC without going
-    # through the UI (e.g. imports, direct ORM calls).
-    # ══════════════════════════════════════════════════════════
-
     def _raise_score_error(self, score, label):
-        """
-        Shared helper: raises UserError if *score* is out of the
-        valid [0, line_points] range.  Used by every onchange so
-        error messages stay consistent.
-        """
         competency = self.line_name or _('this competency')
         max_pts    = self.line_points or 0.0
 
@@ -180,7 +137,7 @@ class AppraisalCompetencyScore(models.Model):
     def _onchange_reviewer_score(self):
         self._raise_score_error(self.reviewer_score or 0.0, _('Reviewer'))
 
-    # ── Score validation constraints (DB-level safety net) ────
+    # Score validation constraints 
 
     @api.constrains('self_score', 'line_points')
     def _check_self_score(self):

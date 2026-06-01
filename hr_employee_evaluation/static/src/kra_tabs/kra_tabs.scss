@@ -75,6 +75,32 @@
             flex-shrink: 0;
             white-space: nowrap;
 
+            &.o_drag_over {
+                border-left: 3px solid #714B67; 
+                padding-left: calc(1rem - 3px); 
+                background-color: #f8f9fa;
+            }
+
+            .cursor-grab {
+                cursor: grab;
+                opacity: 0.5;
+                transition: opacity 0.2s;
+                
+                &:hover { opacity: 1; }
+                &:active { cursor: grabbing; opacity: 1; }
+            }
+
+            .cursor-pointer { cursor: pointer; }
+            
+            .hover-primary {
+                opacity: 0.5;
+                transition: all 0.2s;
+                &:hover { 
+                    opacity: 1;
+                    color: #714B67 !important; /* Change this hex to match your primary theme color */
+                }
+            }
+
             &:hover        { color: #9989C9; }
             &.o_active_tab { color: #9989C9; font-weight: 700; border-bottom-color: #9989C9; }
         }
@@ -474,4 +500,48 @@
 .appraisal-expand-table textarea.form-control:focus {
     background-color: #f8f9fa;
     outline: none;
+}
+
+
+.o_kra_tabs_container .o_kra_tabs_header .o_kra_tabs_nav .o_kra_tab.o_active_tab {
+    background-color: #75a7ca !important;
+    border-radius: 6px 6px 0 0;
+    margin-bottom: -1px;
+    border-bottom: 2px solid #9989C9 !important;
+}
+
+.o_kra_tabs_container .o_kra_tabs_header .o_kra_tabs_nav .o_kra_tab.o_active_tab {
+    background: linear-gradient(to bottom, #f8f5ff, #f0f0ff) !important;
+}
+
+.o_kra_tabs_container .o_kra_tabs_header .o_kra_tabs_nav .o_kra_tab.o_active_tab span {
+    color: #4a2c6d !important;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.o_kra_tabs_container .o_kra_tabs_header .o_kra_tabs_nav .o_kra_tab.o_active_tab:hover {
+    background: linear-gradient(to bottom, #f5f0ff, #e8e6ff) !important;
+}
+
+.o_kra_tabs_container .o_kra_tabs_header .o_kra_tabs_nav .o_kra_tab.o_competency_tab.o_active_tab {
+    background-color: #f0f4ff !important;
+    background: linear-gradient(to bottom, #f8f5ff, #f0f0ff) !important;
+}
+
+.o_kra_tabs_container .o_kra_tabs_header .o_kra_tabs_nav .o_kra_tab {
+    padding: 0.6rem 0.4rem !important;
+    font-size: 0.85rem;
+}
+
+.o_kra_tabs_container .o_kra_tabs_header .o_kra_tabs_nav {
+    gap: 1.5rem !important;
+}
+
+.o_kra_tabs_container .o_kra_tabs_header .o_kra_tabs_nav .o_kra_tab .cursor-grab {
+    font-size: 0.75rem;
+}
+
+.o_kra_tabs_container .o_kra_tabs_header .o_kra_tabs_nav .o_kra_tab .fa-pencil {
+    font-size: 0.7rem;
 }

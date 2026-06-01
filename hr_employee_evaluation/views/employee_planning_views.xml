@@ -13,7 +13,7 @@
                 <field name="secondary_supervisor_id" string="Secondary Manager" />
                 <field name="reviewer_id" string="Reviewer" />
                 <field name="planning_start_date" string="Planning Start" />
-                <field name="planning_end_date" string="Planning Deadline" />
+                <field name="self_planning_deadline" string="Planning Deadline" />
                 <field name="state"
                     widget="badge"
                     decoration-info="state == 'draft'"
@@ -55,7 +55,6 @@
                             </div>
                         </button>
 
-
                         <button type="button"
                             class="oe_stat_button pms-chatter-toggle-btn"
                             icon="fa-comments"
@@ -64,8 +63,6 @@
                                 <span class="o_stat_text">Chatter</span>
                             </div>
                         </button>
-
-
                     </div>
 
                     <!-- Hidden fields needed for logic only -->
@@ -77,7 +74,7 @@
                     <field name="employee_evaluation_group_id" string="Evaluation Group"
                         readonly="1" options="{'no_open': True}" invisible="1" />
                     <field name="planning_start_date" string="Start Date" invisible="1" />
-                    <field name="planning_end_date" string="Deadline" invisible="1" />
+                    <field name="self_planning_deadline" string="Deadline" invisible="1" />
                     <field name="template_total_score" string="Required Total Score" widget="float"
                         invisible="1" />
                     <field name="planning_total_score" string="Your Current Total" widget="float"
@@ -161,7 +158,7 @@
                                     <div class="pms_plan_stat_card pms_stat_date_end">
                                         <div class="pms_stat_label">Deadline</div>
                                         <div class="pms_stat_value">
-                                            <field name="planning_end_date" nolabel="1" />
+                                            <field name="self_planning_deadline" nolabel="1" />
                                         </div>
                                     </div>
                                 </div>
@@ -226,85 +223,139 @@
 
                     </div>
 
-                    <div class="alert alert-warning"
-                        invisible="planning_total_score == template_total_score or state != 'draft'">
-                        <i class="fa fa-exclamation-triangle" />
-                        <strong>Warning:</strong> Your total
-                        score must equal the required total before you can submit. </div>
+                    <!-- Notebook / Tabs section -->
+                    <notebook class="mt-4">
 
-                    <!-- Access control flags (helpers) -->
-                    <field name="is_own_appraisal" invisible="1" />
-                    <field name="can_employee_edit" invisible="1" />
-                    <field name="is_editable" invisible="1" />
-                    <field name="cycle_id" invisible="1" />
+                        <!-- TAB 1: KRA Planning -->
+                        <page string="Key Result Areas" name="kra_planning_page">
+                            <div class="alert alert-warning"
+                                invisible="planning_total_score == template_total_score or state != 'draft'">
+                                <i class="fa fa-exclamation-triangle" />
+                                <strong>Warning:</strong>
+                                Your total score must equal the required total before you can
+                                submit. </div>
 
-                    <!--
-                        employee edit during draft
-                        readonly during pending_supervisor
-                    -->
-                    <field name="kra_ids"
-                        widget="kra_tabs_widget"
-                        options="{'mode': 'employee'}"
-                        readonly="not can_employee_edit"
-                        nolabel="1"
-                        invisible="state not in ('draft', 'pending_supervisor', 'pending_secondary_supervisor', 'pending_reviewer') and not (can_employee_edit)">
-                        <list>
-                            <field name="name" />
-                            <field name="kpi_ids">
+                            <!-- Access control flags (helpers) -->
+                            <field name="is_own_appraisal" invisible="1" />
+                            <field name="can_employee_edit" invisible="1" />
+                            <field name="is_editable" invisible="1" />
+                            <field name="cycle_id" invisible="1" />
+
+                            <!--
+                                Employee edit widget: shown in all planning states.
+                                readonly driven by can_employee_edit so the widget
+                                itself becomes non-interactive when not the employee's turn.
+                                Both 'target' and 'planning_remarks' are included in
+                                EMPLOYEE_KPI_FIELDS on the Python side so saves go through.
+                            -->
+                            <field name="kra_ids"
+                                widget="kra_tabs_widget"
+                                options="{'mode': 'employee'}"
+                                readonly="not can_employee_edit"
+                                nolabel="1"
+                                invisible="state not in ('draft', 'pending_supervisor', 'pending_secondary_supervisor', 'pending_reviewer') and not (can_employee_edit)">
                                 <list>
                                     <field name="name" />
-                                    <field name="description" />
-                                    <field name="criteria" />
-                                    <field name="weightage" />
-                                    <field name="is_selected" />
-                                    <field name="target" />
-                                    <field name="planning_remarks" />
-                                    <field name="is_clone" invisible="1" />
+                                    <field name="kpi_ids">
+                                        <list>
+                                            <field name="name" />
+                                            <field name="description" />
+                                            <field name="criteria" />
+                                            <field name="weightage" />
+                                            <field name="is_selected" />
+                                            <!-- target and planning_remarks are editable
+                                                 when can_employee_edit is True (no readonly here) -->
+                                            <field name="target" />
+                                            <field name="planning_remarks" />
+                                            <field name="is_clone" invisible="1" />
 
-                                    <field name="snapshot_employee_target" invisible="1" />
-                                    <field name="snapshot_employee_criteria" invisible="1" />
+                                            <field name="snapshot_employee_target" invisible="1" />
+                                            <field name="snapshot_employee_criteria" invisible="1" />
 
-                                    <field name="snapshot_supervisor_target" invisible="1" />
-                                    <field name="snapshot_supervisor_criteria" invisible="1" />
+                                            <field name="snapshot_supervisor_target" invisible="1" />
+                                            <field name="snapshot_supervisor_criteria" invisible="1" />
 
-                                    <field name="snapshot_secondary_target" invisible="1" />
-                                    <field name="snapshot_secondary_criteria" invisible="1" />
+                                            <field name="snapshot_secondary_target" invisible="1" />
+                                            <field name="snapshot_secondary_criteria" invisible="1" />
+                                        </list>
+                                    </field>
                                 </list>
                             </field>
-                        </list>
-                    </field>
 
-                    <field name="kra_ids"
-                        widget="kra_tabs_widget"
-                        options="{'mode': 'supervisor'}"
-                        readonly="1"
-                        nolabel="1"
-                        invisible="state not in ('approved', 'appraisal_draft', 'appraisal_pending_supervisor', 'appraisal_pending_secondary_supervisor', 'appraisal_pending_reviewer', 'appraisal_approved') or can_employee_edit">
-                        <list>
-                            <field name="name" />
-                            <field name="kpi_ids">
+                            <!--
+                                Read-only view shown once the plan moves to approved / appraisal states.
+                            -->
+                            <field name="kra_ids"
+                                widget="kra_tabs_widget"
+                                options="{'mode': 'supervisor'}"
+                                readonly="1"
+                                nolabel="1"
+                                invisible="state not in ('approved', 'appraisal_draft', 'appraisal_pending_supervisor', 'appraisal_pending_secondary_supervisor', 'appraisal_pending_reviewer', 'appraisal_approved') or can_employee_edit">
                                 <list>
                                     <field name="name" />
-                                    <field name="description" />
-                                    <field name="criteria" />
-                                    <field name="weightage" />
-                                    <field name="is_selected" />
-                                    <field name="target" />
-                                    <field name="planning_remarks" />
+                                    <field name="kpi_ids">
+                                        <list>
+                                            <field name="name" />
+                                            <field name="description" />
+                                            <field name="criteria" />
+                                            <field name="weightage" />
+                                            <field name="is_selected" />
+                                            <field name="target" />
+                                            <field name="planning_remarks" />
 
-                                    <field name="snapshot_employee_target" invisible="1" />
-                                    <field name="snapshot_employee_criteria" invisible="1" />
+                                            <field name="snapshot_employee_target" invisible="1" />
+                                            <field name="snapshot_employee_criteria" invisible="1" />
 
-                                    <field name="snapshot_supervisor_target" invisible="1" />
-                                    <field name="snapshot_supervisor_criteria" invisible="1" />
+                                            <field name="snapshot_supervisor_target" invisible="1" />
+                                            <field name="snapshot_supervisor_criteria" invisible="1" />
 
-                                    <field name="snapshot_secondary_target" invisible="1" />
-                                    <field name="snapshot_secondary_criteria" invisible="1" />
+                                            <field name="snapshot_secondary_target" invisible="1" />
+                                            <field name="snapshot_secondary_criteria" invisible="1" />
 
+                                        </list>
+                                    </field>
                                 </list>
                             </field>
-                        </list>
-                    </field>
+                        </page>
+
+                        <!-- TAB 2: Competency Template (Planning Phase) -->
+                        <page string="Competency Framework" name="competency_planning_page"
+                            invisible="not template_id.competency_template_id">
+
+                            <!-- Competency score rows (hidden - used for data) -->
+                            <field name="competency_score_ids" invisible="1">
+                                <list>
+                                    <field name="competency_line_id" />
+                                    <field name="group_id" />
+                                    <field name="group_name" />
+                                    <field name="group_hr_code" />
+                                    <field name="group_sequence" />
+                                    <field name="line_name" />
+                                    <field name="line_description" />
+                                    <field name="line_full_code" />
+                                    <field name="line_points" />
+                                    <field name="line_sequence" />
+                                    <field name="self_score" />
+                                    <field name="self_remarks" />
+                                    <field name="supervisor_score" />
+                                    <field name="supervisor_remarks" />
+                                    <field name="secondary_supervisor_score" />
+                                    <field name="secondary_supervisor_remarks" />
+                                    <field name="reviewer_score" />
+                                    <field name="reviewer_remarks" />
+                                </list>
+                            </field>
+
+                            <!-- Competency framework display widget -->
+                            <field name="competency_framework_html"
+                                widget="html"
+                                readonly="1"
+                                nolabel="1"
+                                class="competency-framework-table" />
+                        </page>
+
+                    </notebook>
+
                 </sheet>
 
                 <chatter />

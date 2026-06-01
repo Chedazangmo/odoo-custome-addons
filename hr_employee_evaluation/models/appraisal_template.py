@@ -1,8 +1,3 @@
-# models/appraisal_template.py
-# ============================================================
-# COMPLETE ENHANCED VERSION with Create Template button methods
-# ============================================================
-
 from odoo import models, fields, api, _
 from odoo.exceptions import ValidationError
 from odoo.tools.float_utils import float_compare
@@ -158,9 +153,18 @@ class AppraisalTemplate(models.Model):
 
     @api.onchange('score_allocation_id')
     def _onchange_score_allocation(self):
-        """Warn if the chosen allocation doesn't exactly sum to 100."""
+        """
+        When the score allocation changes, immediately update the competency
+        ceiling on the linked competency template so the "Total Assigned"
+        progress fraction reflects the new denominator right away.
+        """
         if not self.score_allocation_id:
             return
+
+        origin_id = self._origin.id if self._origin else None
+        if origin_id and self.competency_template_id:
+            self.competency_template_id._sync_ceiling()
+
         status = self.score_allocation_id.allocation_status
         if status == 'over':
             return {'warning': {
@@ -179,41 +183,40 @@ class AppraisalTemplate(models.Model):
                 ) % self.score_allocation_id.name,
             }}
 
+    @api.onchange('competency_template_id')
+    def _onchange_competency_template(self):
+        """
+        When the linked competency template changes, sync the ceiling so the
+        template's ceiling immediately reflects the current allocation weight.
+        """
+        if self.competency_template_id and self.score_allocation_id:
+            origin_id = self._origin.id if self._origin else None
+            if origin_id:
+                self.competency_template_id._sync_ceiling()
+
     # ══════════════════════════════════════════════════════════
-    # write() — Sync competency template ceiling
-    # ══════════════════════════════════════════════════════════
-    # KEY FIX: When score_allocation_id or competency_template_id changes,
-    # immediately sync the ceiling and invalidate the competency template
-    # to force a refresh of all computed fields.
+    # ORM overrides — keep ceiling in sync on every save
     # ══════════════════════════════════════════════════════════
 
+    @api.model
+    def create(self, vals):
+        record = super().create(vals)
+        if record.competency_template_id:
+            record.competency_template_id._sync_ceiling()
+        return record
+
     def write(self, vals):
-        """
-        When score_allocation_id or competency_template_id changes,
-        sync the competency framework template's ceiling to match the
-        allocation's competency_weight.
-        
-        This fixes the issue where competency templates show a 100-pt
-        ceiling instead of respecting the allocation-based weight.
-        """
         result = super().write(vals)
-        
-        # Check if either the allocation or competency template changed
         if any(k in vals for k in ['score_allocation_id', 'competency_template_id']):
             for rec in self:
-                # If there's a competency template linked, sync its ceiling
                 if rec.competency_template_id:
-                    # Sync the ceiling
                     rec.competency_template_id._sync_ceiling()
-                    
-                    # Force invalidation of all dependent fields to refresh UI
                     rec.competency_template_id.invalidate_recordset([
                         'competency_ceiling',
                         'points_status',
-                        'remaining_hr_points',
                         'total_hr_points',
+                        'points_progress',
                     ])
-        
         return result
 
     # ══════════════════════════════════════════════════════════
@@ -221,91 +224,77 @@ class AppraisalTemplate(models.Model):
     # ══════════════════════════════════════════════════════════
 
     def action_create_competency_template(self):
-        """
-        Create a new competency framework template linked to this appraisal template.
-        The new template will automatically inherit the competency weight from the
-        score allocation as its ceiling.
-        """
         self.ensure_one()
-        
-        # Check if score allocation is selected
+
         if not self.score_allocation_id:
             raise ValidationError(_(
                 'Please select a Score Allocation first before creating a '
                 'Competency Template.\n\n'
                 'The competency weight will be taken from the Score Allocation.'
             ))
-        
-        # Check if competency weight is valid
+
         comp_weight = self.score_allocation_id.competency_weight
         if float_compare(comp_weight, 0.0, precision_digits=2) <= 0:
             raise ValidationError(_(
-                'Competency weight in the selected Score Allocation is zero or negative.\n\n'
-                'Please fix the Score Allocation first (Current weight: %.2f pts)'
+                'Competency weight in the selected Score Allocation is zero or '
+                'negative.\n\nPlease fix the Score Allocation first '
+                '(Current weight: %.2f pts)'
             ) % comp_weight)
-        
-        # Create a new competency template
+
+        # is_skeleton=True tells the allocation constraint to stand down while
+        # the template is empty. It is cleared automatically once the user fills
+        # the template to exactly the ceiling.
         new_template = self.env['competency.framework.template'].create({
             'name': _('Competencies for %s') % self.name,
             'description': _(
-                'Auto-created from appraisal template: %(template)s\n'
-                'Competency weight: %(weight).2f pts (from Score Allocation: %(allocation)s)\n\n'
-                'This template must total exactly %(weight).2f points to match the allocation.'
+                'Linked to "%(template)s" · Ceiling: %(weight).2f pts (%(allocation)s)'
             ) % {
-                'template': self.name,
-                'weight': comp_weight,
+                'template':   self.name,
+                'weight':     comp_weight,
                 'allocation': self.score_allocation_id.name,
             },
-            'competency_ceiling': comp_weight,  # Set ceiling directly from allocation
+            'competency_ceiling': comp_weight,
+            'is_skeleton': True,
         })
-        
-        # Link it to this appraisal template
-        self.competency_template_id = new_template.id
-        
-        # Sync the ceiling (ensures all computed fields update properly)
+
+        # Link and persist so _sync_ceiling can walk back via appraisal.template
+        self.write({'competency_template_id': new_template.id})
         new_template._sync_ceiling()
-        
-        # Show success message and open the new template
+
         return {
-            'type': 'ir.actions.act_window',
-            'name': _('New Competency Template Created'),
+            'type':      'ir.actions.act_window',
+            'name':      _('New Competency Template'),
             'res_model': 'competency.framework.template',
-            'res_id': new_template.id,
+            'res_id':    new_template.id,
             'view_mode': 'form',
-            'target': 'current',
-            'context': {
-                'form_view_initial_mode': 'edit',
-            },
+            'target':    'current',
+            'context':   {'form_view_initial_mode': 'edit'},
         }
 
     def action_open_competency_template(self):
-        """Open the linked competency template"""
         self.ensure_one()
         if not self.competency_template_id:
             return
-        
         return {
-            'type': 'ir.actions.act_window',
-            'name': _('Competency Template'),
+            'type':      'ir.actions.act_window',
+            'name':      _('Competency Template'),
             'res_model': 'competency.framework.template',
-            'res_id': self.competency_template_id.id,
+            'res_id':    self.competency_template_id.id,
             'view_mode': 'form',
-            'target': 'current',
+            'target':    'current',
         }
 
     def action_open_score_allocation(self):
-        """Open the linked score allocation"""
         self.ensure_one()
         if not self.score_allocation_id:
             return
-        
         return {
-            'type': 'ir.actions.act_window',
-            'name': _('Score Allocation'),
+            'type':      'ir.actions.act_window',
+            'name':      _('Score Allocation'),
             'res_model': 'pms.score.allocation',
-            'res_id': self.score_allocation_id.id,
+            'res_id':    self.score_allocation_id.id,
             'view_mode': 'form',
-            'target': 'current',
+            'target':    'current',
         }
 
     # ══════════════════════════════════════════════════════════
@@ -342,10 +331,6 @@ class AppraisalTemplate(models.Model):
 
     @api.constrains('score_allocation_id')
     def _check_allocation_is_exact(self):
-        """
-        The linked score allocation must sum to exactly 100 before
-        this template can be saved.
-        """
         for rec in self:
             if not rec.score_allocation_id:
                 continue
@@ -362,14 +347,6 @@ class AppraisalTemplate(models.Model):
 
     @api.constrains('total_kpi_score', 'score_allocation_id')
     def _check_kpi_score_matches_weight(self):
-        """
-        The sum of all KPI scores must equal the KPI weight defined
-        in the linked score allocation before the template can be saved.
-
-        NOTE: Only enforced when the template is in 'locked' state,
-        so HR can build the template incrementally while in 'draft'.
-        Switch this to check all states if your workflow requires it.
-        """
         for rec in self:
             if rec.state != 'locked':
                 continue
@@ -402,13 +379,6 @@ class AppraisalTemplate(models.Model):
 
     @api.constrains('competency_template_id', 'score_allocation_id')
     def _check_competency_score_matches_weight(self):
-        """
-        The linked competency framework's total_hr_points must equal
-        the competency weight from the score allocation.
-
-        Like the KPI check, this is only enforced in 'locked' state
-        so HR can build incrementally in draft.
-        """
         for rec in self:
             if rec.state != 'locked':
                 continue
@@ -437,3 +407,32 @@ class AppraisalTemplate(models.Model):
                     'cw':   c_weight,
                     'r':    c_weight - c_total,
                 })
+
+
+class AppraisalKRA(models.Model):
+    _name = 'appraisal.kra'
+    _description = 'Key Result Area'
+    _order = 'sequence, id'
+
+    name        = fields.Char(string='KRA Name', required=True)
+    template_id = fields.Many2one(
+        'appraisal.template', string='Appraisal Template',
+        required=True, ondelete='cascade',
+    )
+    sequence    = fields.Integer(string='Sequence', default=10)
+    kpi_ids     = fields.One2many('appraisal.kpi', 'kra_id', string='KPIs')
+
+
+class AppraisalKPI(models.Model):
+    _name = 'appraisal.kpi'
+    _description = 'Key Performance Indicator'
+    _order = 'kra_id, id'
+
+    name        = fields.Char(string='KPI Name', required=True)
+    description = fields.Text(string='Description')
+    criteria    = fields.Text(string='Criteria')
+    score       = fields.Float(string='Points', required=True, default=0.0)
+    kra_id      = fields.Many2one(
+        'appraisal.kra', string='KRA',
+        required=True, ondelete='cascade',
+    )

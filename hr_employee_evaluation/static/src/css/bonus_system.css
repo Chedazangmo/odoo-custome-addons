@@ -40,11 +40,7 @@
 }
 
 /* ================================================================
-   FULL WIDTH — My Bonus form
-   Uses compound selector (no space) so it only matches the exact
-   element that has BOTH classes — the o_form_view wrapper that
-   Odoo sets when the <form class="pms-my-bonus-form"> renders.
-   This prevents leaking into any other Odoo form view.
+   FULL WIDTH 
    ================================================================ */
 
 .o_form_view.pms-my-bonus-form .o_form_sheet_bg {
@@ -720,11 +716,11 @@
 .pms-calculation-list td[name="eligible_employee_count"] {
     text-align: center;
     font-weight: 600;
-    background: var(--pms-primary-light);
-    padding: 4px 12px;
+    background: transparent !important;
+    padding: 4px 0;
     display: inline-block;
-    min-width: 40px;
-    border-radius: 20px;
+    min-width: auto;
+    border-radius: 0 !important;
 }
 
 .pms-calculation-list .o_list_footer {
@@ -861,7 +857,7 @@
     color: var(--pms-success);
 }
 
-/* Remove circular shape from employee column */
+/* Remove circular shape from employees field in bonus calculation results table */
 .pms-calculation-form .pms-bonus-results-table td[name="employee_id"] {
     background: transparent !important;
     border-radius: 0 !important;
@@ -882,6 +878,8 @@
     background: transparent !important;
     border: none !important;
     padding: 0 !important;
+    margin: 0 !important;
+    border-radius: 0 !important;
 }
 
 .pms-calculation-form .pms-bonus-results-table td[name="employee_id"] .o_external_button {
@@ -891,17 +889,18 @@
 .pms-calculation-form .pms-bonus-results-table td[name="employee_id"] .o_avatar,
 .pms-calculation-form .pms-bonus-results-table td[name="employee_id"] .o_avatar img,
 .pms-calculation-form .pms-bonus-results-table td[name="employee_id"] .o_image,
-.pms-calculation-form .pms-bonus-results-table td[name="employee_id"] img {
+.pms-calculation-form .pms-bonus-results-table td[name="employee_id"] img,
+.pms-calculation-form .pms-bonus-results-table td[name="employee_id"] .o_image_64,
+.pms-calculation-form .pms-bonus-results-table td[name="employee_id"] .o_image_128,
+.pms-calculation-form .pms-bonus-results-table td[name="employee_id"] .o_image_avatar,
+.pms-calculation-form .pms-bonus-results-table td[name="employee_id"] .o_employee_avatar,
+.pms-calculation-form .pms-bonus-results-table td[name="employee_id"] .o_avatar_image,
+.pms-calculation-form .pms-bonus-results-table td[name="employee_id"] [class*="avatar"] {
     display: none !important;
     width: 0 !important;
     height: 0 !important;
     opacity: 0 !important;
-}
-
-.pms-calculation-form .pms-bonus-results-table td[name="employee_id"] .o_image_64,
-.pms-calculation-form .pms-bonus-results-table td[name="employee_id"] .o_image_128,
-.pms-calculation-form .pms-bonus-results-table td[name="employee_id"] .o_image_avatar {
-    display: none !important;
+    visibility: hidden !important;
 }
 
 .pms-calculation-form .pms-bonus-results-table td[name="employee_id"] .o_field_many2one .o_name {
@@ -913,8 +912,24 @@
     color: var(--pms-text-dark);
 }
 
-.pms-calculation-form .pms-bonus-results-table td[name="employee_id"] .o_field_many2one {
-    padding-left: 0 !important;
+.pms-calculation-form .pms-bonus-results-table td[name="employee_id"] > div,
+.pms-calculation-form .pms-bonus-results-table td[name="employee_id"] > span {
+    background: transparent !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+}
+
+/* Remove container divs with avatar classes */
+.pms-calculation-form .pms-bonus-results-table .o_avatar,
+.pms-calculation-form .pms-bonus-results-table .o_employee_avatar,
+.pms-calculation-form .pms-bonus-results-table .o_avatar_img,
+.pms-calculation-form .pms-bonus-results-table img[class*="avatar"] {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+    min-width: 0 !important;
+    max-width: 0 !important;
+    border-radius: 0 !important;
 }
 
 .pms-calculation-form .pms-bonus-results-table td[name="rating_id"] .o_avatar,
@@ -970,6 +985,30 @@
 
 .pms-my-bonus-list .o_list_table tbody tr:hover td {
     background: linear-gradient(90deg, var(--pms-primary-light) 0%, transparent 100%);
+}
+
+/* Remove round shape from employees field in My Bonus list view */
+.pms-my-bonus-list td[name="employee_id"] .o_avatar,
+.pms-my-bonus-list td[name="employee_id"] .o_avatar img,
+.pms-my-bonus-list td[name="employee_id"] .o_image,
+.pms-my-bonus-list td[name="employee_id"] img,
+.pms-my-bonus-list td[name="employee_id"] .o_employee_avatar,
+.pms-my-bonus-list td[name="employee_id"] .o_avatar_image,
+.pms-my-bonus-list td[name="employee_id"] [class*="avatar"] {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+}
+
+.pms-my-bonus-list td[name="employee_id"] .o_field_widget,
+.pms-my-bonus-list td[name="employee_id"] .o_field_many2one {
+    background: transparent !important;
+    border: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border-radius: 0 !important;
 }
 
 /* ================================================================

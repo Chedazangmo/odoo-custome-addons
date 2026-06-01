@@ -20,7 +20,6 @@
         'views/supervisor_appraisal_views.xml',
         'views/appraisal_template_views.xml',
         'views/pms_cycle_views.xml',
-        'views/scoring_engine_view.xml',
         'views/appraisal_competency_views.xml',
         'wizard/pms_enrollment_wizard_views.xml',
         'report/report_plan_summary.xml',
