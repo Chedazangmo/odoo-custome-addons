@@ -33,12 +33,12 @@
                         Submit button only visible to the employee, only in draft
                     -->
                     <button name="action_submit_for_review"
-                        string="Submit for Review"
-                        type="object"
-                        class="btn-primary"
-                        invisible="state not in ['draft'] or not is_own_appraisal"
-                        confirm="Are you sure you want to submit your performance plan? Make sure your total score matches the template." />
-
+    string="Submit for Review"
+    type="object"
+    class="btn-primary"
+    invisible="state not in ['draft'] or (not is_own_appraisal and not is_hr_manager)"
+    groups="hr_employee_evaluation.group_pms_hr_manager,hr_employee_evaluation.group_pms_employee"
+    confirm="Are you sure you want to submit your performance plan? Make sure your total score matches the template." />
                     <!-- state statusbar moved inline to profile header -->
                 </header>
 
@@ -237,6 +237,7 @@
 
                             <!-- Access control flags (helpers) -->
                             <field name="is_own_appraisal" invisible="1" />
+                            <field name="is_hr_manager" invisible="1" />
                             <field name="can_employee_edit" invisible="1" />
                             <field name="is_editable" invisible="1" />
                             <field name="cycle_id" invisible="1" />

@@ -382,6 +382,10 @@ class PMSAppraisal(models.Model):
         sanitize=False,
     )
 
+    is_hr_manager = fields.Boolean(
+        string='Is HR Manager',
+        compute='_compute_access_flags',
+    )
     # ─────────────────────────────────────────────────────────────
     # Compute methods
     # ─────────────────────────────────────────────────────────────
@@ -646,6 +650,28 @@ class PMSAppraisal(models.Model):
             record.can_reviewer_rate = bool(
                 is_rev and record.state == 'appraisal_pending_reviewer' and cycle_in_appraisal
             )
+
+            # ── HR Manager override ───────────────────────────────────────
+            record.is_hr_manager = is_hr
+            if is_hr and record.state != 'appraisal_approved':
+                record.can_employee_self_rate = (
+                        record.state == 'appraisal_draft' and cycle_in_appraisal
+                )
+                record.can_supervisor_rate = (
+                        record.state == 'appraisal_pending_supervisor' and cycle_in_appraisal
+                )
+                record.can_secondary_supervisor_rate = (
+                        record.state == 'appraisal_pending_secondary_supervisor' and cycle_in_appraisal
+                )
+                record.can_reviewer_rate = (
+                        record.state == 'appraisal_pending_reviewer' and cycle_in_appraisal
+                )
+            elif is_hr and record.state == 'appraisal_approved':
+                # Completed — HR read only, no submit buttons
+                record.can_employee_self_rate = False
+                record.can_supervisor_rate = False
+                record.can_secondary_supervisor_rate = False
+                record.can_reviewer_rate = False
 
     @api.depends('planning_end_date')
     def _compute_is_past_planning_deadline(self):
@@ -1604,8 +1630,9 @@ class PMSAppraisal(models.Model):
         if self.state != 'pending_supervisor':
             raise UserError('Only plans pending supervisor review can be approved here.')
 
-        if not self.is_supervisor_of_appraisal:
-            raise UserError('Only the assigned supervisor can approve this plan.')
+        is_hr = self.env.user.has_group('hr_employee_evaluation.group_pms_hr_manager')
+        if not self.is_supervisor_of_appraisal and not is_hr:
+            raise UserError('Only the assigned supervisor (or HR) can approve this plan.')
 
         next_state = self._next_state_after_supervisor()
 
@@ -1631,8 +1658,9 @@ class PMSAppraisal(models.Model):
         if self.state != 'pending_secondary_supervisor':
             raise UserError('Only plans pending secondary supervisor review can be approved here.')
 
-        if not self.is_secondary_supervisor_of_appraisal:
-            raise UserError('Only the assigned secondary supervisor can approve this plan.')
+        is_hr = self.env.user.has_group('hr_employee_evaluation.group_pms_hr_manager')
+        if not self.is_secondary_supervisor_of_appraisal and not is_hr:
+            raise UserError('Only the assigned secondary supervisor (or HR) can approve this plan.')
 
         next_state = self._next_state_after_secondary()
 
@@ -1658,8 +1686,9 @@ class PMSAppraisal(models.Model):
         if self.state != 'pending_reviewer':
             raise UserError('Only plans pending reviewer approval can be approved here.')
 
-        if not self.is_reviewer_of_appraisal:
-            raise UserError('Only the assigned reviewer can give final approval.')
+        is_hr = self.env.user.has_group('hr_employee_evaluation.group_pms_hr_manager')
+        if not self.is_reviewer_of_appraisal and not is_hr:
+            raise UserError('Only the assigned reviewer (or HR) can give final approval.')
 
         self.with_context(skip_edit_check=True).write({
             'state': 'approved',
@@ -1908,17 +1937,20 @@ class PMSAppraisal(models.Model):
     # Appraisal phase actions with validation
     # ─────────────────────────────────────────────────────────────
 
+
     def action_submit_self_rating(self):
         self.ensure_one()
         if self.state != 'appraisal_draft':
             raise UserError('Only appraisal plans in draft can be self-rated.')
-        if not self.can_employee_self_rate:
+        is_hr = self.env.user.has_group('hr_employee_evaluation.group_pms_hr_manager')
+        if not self.can_employee_self_rate and not is_hr:
             raise UserError(
                 'Cannot submit: you do not own this plan or the cycle is not in appraisal.'
             )
 
         selected_kpis = self.kra_ids.mapped('kpi_ids').filtered(lambda k: k.is_selected)
 
+        # Validate KPI scores
         for kpi in selected_kpis:
             if kpi.self_score < 0:
                 raise UserError(f'Self score for "{kpi.name}" cannot be negative.')
@@ -1928,6 +1960,7 @@ class PMSAppraisal(models.Model):
                     f'cannot exceed the allocated score ({kpi.weightage}).'
                 )
 
+        # Validate Competency scores
         for competency in self.competency_score_ids:
             if competency.self_score < 0:
                 raise UserError(f'Self score for competency "{competency.line_name}" cannot be negative.')
@@ -1936,6 +1969,9 @@ class PMSAppraisal(models.Model):
                     f'Self score ({competency.self_score}) for competency "{competency.line_name}" '
                     f'cannot exceed the maximum points ({competency.line_points}).'
                 )
+
+        # Validate all scores are filled
+        # self._validate_all_scores_filled()
 
         self.with_context(skip_edit_check=True).write({'state': 'appraisal_pending_supervisor'})
 
@@ -1957,8 +1993,9 @@ class PMSAppraisal(models.Model):
         self.ensure_one()
         if self.state != 'appraisal_pending_supervisor':
             raise UserError('Only plans pending supervisor rating can be rated here.')
-        if not self.is_supervisor_of_appraisal:
-            raise UserError('Only the assigned supervisor can submit a rating.')
+        is_hr = self.env.user.has_group('hr_employee_evaluation.group_pms_hr_manager')
+        if not self.is_supervisor_of_appraisal and not is_hr:
+            raise UserError('Only the assigned supervisor (or HR) can submit a rating.')
 
         selected_kpis = self.kra_ids.mapped('kpi_ids').filtered(lambda k: k.is_selected)
 
@@ -1971,6 +2008,7 @@ class PMSAppraisal(models.Model):
                     f'cannot exceed the allocated score ({kpi.weightage}).'
                 )
 
+        # Validate competency scores
         for competency in self.competency_score_ids:
             if competency.supervisor_score < 0:
                 raise UserError(f'Supervisor score for competency "{competency.line_name}" cannot be negative.')
@@ -1979,6 +2017,9 @@ class PMSAppraisal(models.Model):
                     f'Supervisor score ({competency.supervisor_score}) for competency "{competency.line_name}" '
                     f'cannot exceed the maximum points ({competency.line_points}).'
                 )
+
+        # Validate all scores are filled
+        # self._validate_all_scores_filled()
 
         next_state = self._next_appraisal_state_after_supervisor()
         self.with_context(skip_edit_check=True).write({
@@ -1999,8 +2040,9 @@ class PMSAppraisal(models.Model):
         self.ensure_one()
         if self.state != 'appraisal_pending_secondary_supervisor':
             raise UserError('Only plans pending secondary supervisor rating can be rated here.')
-        if not self.is_secondary_supervisor_of_appraisal:
-            raise UserError('Only the assigned secondary supervisor can submit a rating.')
+        is_hr = self.env.user.has_group('hr_employee_evaluation.group_pms_hr_manager')
+        if not self.is_secondary_supervisor_of_appraisal and not is_hr:
+            raise UserError('Only the assigned secondary supervisor (or HR) can submit a rating.')
 
         selected_kpis = self.kra_ids.mapped('kpi_ids').filtered(lambda k: k.is_selected)
 
@@ -2013,6 +2055,7 @@ class PMSAppraisal(models.Model):
                     f'cannot exceed the allocated score ({kpi.weightage}).'
                 )
 
+        # Validate competency scores
         for competency in self.competency_score_ids:
             if competency.secondary_supervisor_score < 0:
                 raise UserError(f'Secondary supervisor score for competency "{competency.line_name}" cannot be negative.')
@@ -2021,6 +2064,9 @@ class PMSAppraisal(models.Model):
                     f'Secondary supervisor score ({competency.secondary_supervisor_score}) for competency "{competency.line_name}" '
                     f'cannot exceed the maximum points ({competency.line_points}).'
                 )
+
+        # Validate all scores are filled
+        # self._validate_all_scores_filled()
 
         next_state = self._next_appraisal_state_after_secondary()
         self.with_context(skip_edit_check=True).write({
@@ -2041,8 +2087,9 @@ class PMSAppraisal(models.Model):
         self.ensure_one()
         if self.state != 'appraisal_pending_reviewer':
             raise UserError('Only plans pending reviewer rating can be rated here.')
-        if not self.is_reviewer_of_appraisal:
-            raise UserError('Only the assigned reviewer can submit the final rating.')
+        is_hr = self.env.user.has_group('hr_employee_evaluation.group_pms_hr_manager')
+        if not self.is_reviewer_of_appraisal and not is_hr:
+            raise UserError('Only the assigned reviewer (or HR) can submit the final rating.')
 
         selected_kpis = self.kra_ids.mapped('kpi_ids').filtered(lambda k: k.is_selected)
 
@@ -2055,6 +2102,7 @@ class PMSAppraisal(models.Model):
                     f'cannot exceed the allocated score ({kpi.weightage}).'
                 )
 
+        # Validate competency scores
         for competency in self.competency_score_ids:
             if competency.reviewer_score < 0:
                 raise UserError(f'Reviewer score for competency "{competency.line_name}" cannot be negative.')
@@ -2066,19 +2114,13 @@ class PMSAppraisal(models.Model):
 
         self.with_context(skip_edit_check=True).write({
             'state': 'appraisal_approved',
-            'reviewer_approval_date': fields.Datetime.now(),
         })
-
-        if self.employee_id.user_id:
-            self.activity_schedule(
-                activity_type_id=self.env.ref('mail.mail_activity_data_todo').id,
-                user_id=self.employee_id.user_id.id,
-                summary='Your appraisal is complete',
-                note='Your performance appraisal has been fully rated.',
-            )
-
+        self._notify_next_appraisal_rater('appraisal_approved')
         self.message_post(
-            body=f'Appraisal complete. Final rating submitted by {self.reviewer_id.name}.',
+            body=(
+                f'Reviewer rating submitted by {self.reviewer_id.name}. '
+                f'Status → {self._state_label("appraisal_approved")}.'
+            ),
             message_type='notification',
         )
         return True

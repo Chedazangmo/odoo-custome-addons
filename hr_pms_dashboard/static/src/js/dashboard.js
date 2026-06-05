@@ -257,33 +257,24 @@ _destroyPlanningCharts = () => {
     // ============================================================
     // LOAD CYCLE DATA
     // ============================================================
+loadCycleData = async (cycleId) => {
+    try {
+        const data = await rpc("/hr_pms_dashboard/cycle_data", { cycle_id: cycleId });
 
-    loadCycleData = async (cycleId) => {
-        try {
-            const data = await rpc("/hr_pms_dashboard/cycle_data", { cycle_id: cycleId });
+        await this.loadPerformanceData();
 
-            await this.loadPerformanceData();
-
-            this.state.cycle_planning_data = data.planning_data || [];
-
-            this.state.filtered_cycle_planning_data = [...(data.planning_data || [])];
-
-            if (this.state.selected_cycle) {
+        if (this.state.selected_cycle) {
             if (data.cycle_info) {
                 this.state.selected_cycle = {
                     ...this.state.selected_cycle,
-
-                    // Planning dates
                     planning_start_date: data.cycle_info.planning_start_date || this.state.selected_cycle.start_date || '-',
                     planning_end_date: data.cycle_info.planning_end_date || '-',
                     planning_duration: data.cycle_info.planning_duration || '-',
                     planning_days_left: data.cycle_info.planning_days_left,
-                    // Appraisal dates
                     appraisal_start_date: data.cycle_info.appraisal_start_date || '-',
                     appraisal_end_date: data.cycle_info.appraisal_end_date || '-',
                     appraisal_duration_days: data.cycle_info.appraisal_duration_days,
                     appraisal_days_left: data.cycle_info.appraisal_days_left,
-                    // Keep existing cycle data
                     start_date: this.state.selected_cycle.start_date,
                     end_date: this.state.selected_cycle.end_date,
                     state: this.state.selected_cycle.state,
@@ -291,176 +282,177 @@ _destroyPlanningCharts = () => {
                 };
             }
 
-                const currentRole = this.state.role;
-                const currentEmployeeId = this.state.employee_id;
+            const currentRole = this.state.role;
+            const currentEmployeeId = this.state.employee_id;
 
-                const teamPlans = (data.planning_data || []).map(plan => ({
-                    id: plan.plan_id || plan.id,
-                    plan_id: plan.plan_id || plan.id,
-                    employee_id: plan.employee_id,
-                    name: plan.name,
-                    department: plan.department,
-                    selected_kpi: plan.selected_kpi || 0,
-                    total_kpi: plan.total_kpi || 0,
-                    state: plan.state,
-                    state_key: plan.state_key,
-                    progress: plan.progress || 0,
-                    submitted_date: plan.submitted_date,
-                    supervisor_name: plan.supervisor_name,
-                    secondary_name: plan.secondary_name,
-                    reviewer_name: plan.reviewer_name,
-                    supervisor_id: plan.supervisor_id,
-                    secondary_id: plan.secondary_id,
-                    reviewer_id: plan.reviewer_id,
-                    user_role: plan.user_role,
-                }));
+            const teamPlans = (data.planning_data || []).map(plan => ({
+                id: plan.plan_id || plan.id,
+                plan_id: plan.plan_id || plan.id,
+                employee_id: plan.employee_id,
+                name: plan.name,
+                department: plan.department,
+                selected_kpi: plan.selected_kpi || 0,
+                total_kpi: plan.total_kpi || 0,
+                state: plan.state,
+                state_key: plan.state_key,
+                progress: plan.progress || 0,
+                submitted_date: plan.submitted_date,
+                supervisor_name: plan.supervisor_name,
+                secondary_name: plan.secondary_name,
+                reviewer_name: plan.reviewer_name,
+                supervisor_id: plan.supervisor_id,
+                secondary_id: plan.secondary_id,
+                reviewer_id: plan.reviewer_id,
+                user_role: plan.user_role,
+            }));
 
-              const teamAppraisals = (data.appraisal_data || []).map(appraisal => ({
-    id: appraisal.plan_id || appraisal.id,
-    appraisal_id: appraisal.plan_id || appraisal.id,
-    employee_id: appraisal.employee_id,
-    name: appraisal.name,
-    department: appraisal.department,
-     evaluation_group: appraisal.evaluation_group,
-     total_weightage: appraisal.total_weightage || null,
-    self_score: appraisal.self_score !== null && appraisal.self_score !== undefined ? appraisal.self_score : null,
-    supervisor_score: appraisal.supervisor_score !== null && appraisal.supervisor_score !== undefined ? appraisal.supervisor_score : null,
-    secondary_score: appraisal.secondary_score !== null && appraisal.secondary_score !== undefined ? appraisal.secondary_score : null,  // ← no || 0
-    reviewer_score: appraisal.reviewer_score !== null && appraisal.reviewer_score !== undefined ? appraisal.reviewer_score : null,
-    final_score: appraisal.final_score !== null && appraisal.final_score !== undefined ? appraisal.final_score : null,
-    state: appraisal.state,
-    state_key: appraisal.state_key,
-    progress: appraisal.progress || 0,
-    rating: appraisal.rating,
-    supervisor_name: appraisal.supervisor_name || '',
-    secondary_name: appraisal.secondary_name || '',
-    reviewer_name: appraisal.reviewer_name || '',
-    supervisor_id: appraisal.supervisor_id,
-    secondary_id: appraisal.secondary_id,
-    reviewer_id: appraisal.reviewer_id,
-    user_role: appraisal.user_role,
+            const teamAppraisals = (data.appraisal_data || []).map(appraisal => ({
+                id: appraisal.plan_id || appraisal.id,
+                appraisal_id: appraisal.plan_id || appraisal.id,
+                employee_id: appraisal.employee_id,
+                name: appraisal.name,
+                department: appraisal.department,
+                evaluation_group: appraisal.evaluation_group,
+                total_weightage: appraisal.total_weightage || null,
+                self_score: appraisal.self_score !== null && appraisal.self_score !== undefined ? appraisal.self_score : null,
+                supervisor_score: appraisal.supervisor_score !== null && appraisal.supervisor_score !== undefined ? appraisal.supervisor_score : null,
+                secondary_score: appraisal.secondary_score !== null && appraisal.secondary_score !== undefined ? appraisal.secondary_score : null,
+                reviewer_score: appraisal.reviewer_score !== null && appraisal.reviewer_score !== undefined ? appraisal.reviewer_score : null,
+                final_score: appraisal.final_score !== null && appraisal.final_score !== undefined ? appraisal.final_score : null,
+                state: appraisal.state,
+                state_key: appraisal.state_key,
+                progress: appraisal.progress || 0,
+                rating: appraisal.rating,
+                supervisor_name: appraisal.supervisor_name || '',
+                secondary_name: appraisal.secondary_name || '',
+                reviewer_name: appraisal.reviewer_name || '',
+                supervisor_id: appraisal.supervisor_id,
+                secondary_id: appraisal.secondary_id,
+                reviewer_id: appraisal.reviewer_id,
+                user_role: appraisal.user_role,
+            }));
 
-}));
-this.state.cycle_appraisal_data = teamAppraisals;
-this.state.filtered_cycle_appraisal_data = [...teamAppraisals];
+            const appraisalStartedCount = teamAppraisals.filter(a => a.state_key !== 'appraisal_draft').length;
+            const appraisalApprovedCount = teamAppraisals.filter(a => a.state_key === 'appraisal_approved').length;
 
-                const appraisalStartedCount = teamAppraisals.filter(a => a.state_key !== 'appraisal_draft').length;
-                const appraisalApprovedCount = teamAppraisals.filter(a => a.state_key === 'appraisal_approved').length;
-
-                this.state.appraisal_started = appraisalStartedCount;
-                this.state.appraisal_approved = appraisalApprovedCount;
-
-                // Pending plans by role
-                let pendingPlanList = [];
-                if (data.pending_plan_list && data.pending_plan_list.length > 0) {
-                    let filteredList = data.pending_plan_list;
-                    if (currentRole === 'supervisor') {
-                        filteredList = data.pending_plan_list.filter(p =>
-                            p.state_key === 'pending_supervisor' || p.state_key === 'pending_secondary_supervisor'
-                        );
-                    } else if (currentRole === 'reviewer') {
-                        filteredList = data.pending_plan_list.filter(p => p.state_key === 'pending_reviewer');
-                    }
-                    pendingPlanList = filteredList;
-                } else {
-                    if (currentRole === 'supervisor') {
-                        pendingPlanList = teamPlans.filter(p =>
-                            (p.state_key === 'pending_supervisor' && p.user_role === 'primary') ||
-                            (p.state_key === 'pending_secondary_supervisor' && p.user_role === 'secondary')
-                        ).map(p => ({ ...p, id: p.id, plan_id: p.id }));
-                    } else if (currentRole === 'reviewer') {
-                        pendingPlanList = teamPlans.filter(p =>
-                            p.state_key === 'pending_reviewer' && p.reviewer_id === currentEmployeeId
-                        ).map(p => ({ ...p, id: p.id, plan_id: p.id }));
-                    }
-                }
-
-                const approvedPlans = teamPlans.filter(p => p.state_key === 'approved').length;
-                const totalTeamMembers = teamPlans.length;
-
-                // Pending appraisals by role
-                let pendingAppraisalList = [];
+            // Pending plans by role
+            let pendingPlanList = [];
+            if (data.pending_plan_list && data.pending_plan_list.length > 0) {
+                let filteredList = data.pending_plan_list;
                 if (currentRole === 'supervisor') {
-                    pendingAppraisalList = teamAppraisals.filter(a =>
-                        (a.state_key === 'appraisal_pending_supervisor' && a.user_role === 'primary') ||
-                        (a.state_key === 'appraisal_pending_secondary_supervisor' && a.user_role === 'secondary')
-                    ).map(a => ({
-                        id: a.id, appraisal_id: a.id,
-                        employee_id: a.employee_id, name: a.name,
-                        department: a.department, self_score: a.self_score,
-                        supervisor_score: a.supervisor_score, state_key: a.state_key,
-                    }));
+                    filteredList = data.pending_plan_list.filter(p =>
+                        p.state_key === 'pending_supervisor' || p.state_key === 'pending_secondary_supervisor'
+                    );
                 } else if (currentRole === 'reviewer') {
-                    pendingAppraisalList = teamAppraisals.filter(a =>
-                        a.state_key === 'appraisal_pending_reviewer'
-                    ).map(a => ({
-                        id: a.id, appraisal_id: a.id,
-                        employee_id: a.employee_id, name: a.name,
-                        department: a.department, self_score: a.self_score,
-                        supervisor_score: a.supervisor_score, state_key: a.state_key,
-                    }));
+                    filteredList = data.pending_plan_list.filter(p => p.state_key === 'pending_reviewer');
                 }
-
-                const completedAppraisals = teamAppraisals.filter(a => a.state_key === 'appraisal_approved').length;
-                const employeesWithoutPlan = teamPlans.filter(p => p.state_key === 'draft').map(p => ({
-                    id: p.employee_id, name: p.name, department: p.department,
-                }));
-                const employeesWithoutAppraisal = teamAppraisals.filter(a => a.state_key === 'appraisal_draft').map(a => ({
-                    id: a.employee_id, name: a.name, department: a.department,
-                }));
-
-                this.state.selected_cycle = {
-                    ...this.state.selected_cycle,
-                    total_team_members: totalTeamMembers,
-                    pending_plan_count: pendingPlanList.length,
-                    approved_plan_count: approvedPlans,
-                    employees_without_plan: employeesWithoutPlan,
-                    employees_without_plan_count: employeesWithoutPlan.length,
-                    pending_plan_list: pendingPlanList,
-                    all_plans: teamPlans,
-                    pending_appraisal_count: pendingAppraisalList.length,
-                    completed_appraisal_count: completedAppraisals,
-                    employees_without_appraisal: employeesWithoutAppraisal,
-                    employees_without_appraisal_count: employeesWithoutAppraisal.length,
-                    pending_appraisal_list: pendingAppraisalList,
-                    all_appraisals: teamAppraisals,
-                    appraisal_started: appraisalStartedCount,
-                    appraisal_approved: appraisalApprovedCount,
-                     total_pending_plans: teamPlans.filter(p =>
-        ['draft', 'pending_supervisor', 'pending_secondary_supervisor', 'pending_reviewer'].includes(p.state_key)
-    ).length,
-    total_pending_appraisals: teamAppraisals.filter(a =>
-        a.state_key.includes('appraisal') && a.state_key !== 'appraisal_approved'
-    ).length,
-
-                    team_plans: (currentRole === 'supervisor' || currentRole === 'reviewer')
-                        ? teamPlans.filter(p =>
-                            p.supervisor_id === currentEmployeeId ||
-                            p.secondary_id === currentEmployeeId ||
-                            p.reviewer_id === currentEmployeeId)
-                        : teamPlans,
-                    team_appraisals: (currentRole === 'supervisor' || currentRole === 'reviewer')
-                        ? teamAppraisals.filter(a =>
-                            a.supervisor_id === currentEmployeeId ||
-                            a.secondary_id === currentEmployeeId ||
-                            a.reviewer_id === currentEmployeeId)
-                        : teamAppraisals,
-                    pending_appraisal_supervisor_list: currentRole === 'supervisor'
-                        ? pendingAppraisalList.filter(a => a.state_key === 'appraisal_pending_supervisor')
-                        : [],
-                    pending_appraisal_secondary_list: currentRole === 'supervisor'
-                        ? pendingAppraisalList.filter(a => a.state_key === 'appraisal_pending_secondary_supervisor')
-                        : [],
-                };
+                pendingPlanList = filteredList;
+            } else {
+                if (currentRole === 'supervisor') {
+                    pendingPlanList = teamPlans.filter(p =>
+                        (p.state_key === 'pending_supervisor' && p.user_role === 'primary') ||
+                        (p.state_key === 'pending_secondary_supervisor' && p.user_role === 'secondary')
+                    ).map(p => ({ ...p, id: p.id, plan_id: p.id }));
+                } else if (currentRole === 'reviewer') {
+                    pendingPlanList = teamPlans.filter(p =>
+                        p.state_key === 'pending_reviewer' && p.reviewer_id === currentEmployeeId
+                    ).map(p => ({ ...p, id: p.id, plan_id: p.id }));
+                }
             }
-        } catch (error) {
-            console.error("Error loading cycle data:", error);
-            this.state.cycle_planning_data = [];
-            this.state.cycle_appraisal_data = [];
-            this.state.filtered_cycle_planning_data = [];
-            this.state.filtered_cycle_appraisal_data = [];
+
+            const approvedPlans = teamPlans.filter(p => p.state_key === 'approved').length;
+            const totalTeamMembers = teamPlans.length;
+
+            // Pending appraisals by role
+            let pendingAppraisalList = [];
+            if (currentRole === 'supervisor') {
+                pendingAppraisalList = teamAppraisals.filter(a =>
+                    (a.state_key === 'appraisal_pending_supervisor' && a.user_role === 'primary') ||
+                    (a.state_key === 'appraisal_pending_secondary_supervisor' && a.user_role === 'secondary')
+                ).map(a => ({
+                    id: a.id, appraisal_id: a.id,
+                    employee_id: a.employee_id, name: a.name,
+                    department: a.department, self_score: a.self_score,
+                    supervisor_score: a.supervisor_score, state_key: a.state_key,
+                }));
+            } else if (currentRole === 'reviewer') {
+                pendingAppraisalList = teamAppraisals.filter(a =>
+                    a.state_key === 'appraisal_pending_reviewer'
+                ).map(a => ({
+                    id: a.id, appraisal_id: a.id,
+                    employee_id: a.employee_id, name: a.name,
+                    department: a.department, self_score: a.self_score,
+                    supervisor_score: a.supervisor_score, state_key: a.state_key,
+                }));
+            }
+
+            const completedAppraisals = teamAppraisals.filter(a => a.state_key === 'appraisal_approved').length;
+            const employeesWithoutPlan = teamPlans.filter(p => p.state_key === 'draft').map(p => ({
+                id: p.employee_id, name: p.name, department: p.department,
+            }));
+            const employeesWithoutAppraisal = teamAppraisals.filter(a => a.state_key === 'appraisal_draft').map(a => ({
+                id: a.employee_id, name: a.name, department: a.department,
+            }));
+
+            // ← ALL state updates together at the end
+            this.state.cycle_planning_data = data.planning_data || [];
+            this.state.filtered_cycle_planning_data = [...(data.planning_data || [])];
+            this.state.cycle_appraisal_data = teamAppraisals;
+            this.state.filtered_cycle_appraisal_data = [...teamAppraisals];
+            this.state.appraisal_started = appraisalStartedCount;
+            this.state.appraisal_approved = appraisalApprovedCount;
+
+            this.state.selected_cycle = {
+                ...this.state.selected_cycle,
+                total_team_members: totalTeamMembers,
+                pending_plan_count: pendingPlanList.length,
+                approved_plan_count: approvedPlans,
+                employees_without_plan: employeesWithoutPlan,
+                employees_without_plan_count: employeesWithoutPlan.length,
+                pending_plan_list: pendingPlanList,
+                all_plans: teamPlans,
+                pending_appraisal_count: pendingAppraisalList.length,
+                completed_appraisal_count: completedAppraisals,
+                employees_without_appraisal: employeesWithoutAppraisal,
+                employees_without_appraisal_count: employeesWithoutAppraisal.length,
+                pending_appraisal_list: pendingAppraisalList,
+                all_appraisals: teamAppraisals,
+                appraisal_started: appraisalStartedCount,
+                appraisal_approved: appraisalApprovedCount,
+                total_pending_plans: teamPlans.filter(p =>
+                    ['draft', 'pending_supervisor', 'pending_secondary_supervisor', 'pending_reviewer'].includes(p.state_key)
+                ).length,
+                total_pending_appraisals: teamAppraisals.filter(a =>
+                    a.state_key.includes('appraisal') && a.state_key !== 'appraisal_approved'
+                ).length,
+                team_plans: (currentRole === 'supervisor' || currentRole === 'reviewer')
+                    ? teamPlans.filter(p =>
+                        p.supervisor_id === currentEmployeeId ||
+                        p.secondary_id === currentEmployeeId ||
+                        p.reviewer_id === currentEmployeeId)
+                    : teamPlans,
+                team_appraisals: (currentRole === 'supervisor' || currentRole === 'reviewer')
+                    ? teamAppraisals.filter(a =>
+                        a.supervisor_id === currentEmployeeId ||
+                        a.secondary_id === currentEmployeeId ||
+                        a.reviewer_id === currentEmployeeId)
+                    : teamAppraisals,
+                pending_appraisal_supervisor_list: currentRole === 'supervisor'
+                    ? pendingAppraisalList.filter(a => a.state_key === 'appraisal_pending_supervisor')
+                    : [],
+                pending_appraisal_secondary_list: currentRole === 'supervisor'
+                    ? pendingAppraisalList.filter(a => a.state_key === 'appraisal_pending_secondary_supervisor')
+                    : [],
+            };
         }
+    } catch (error) {
+        console.error("Error loading cycle data:", error);
+        this.state.cycle_planning_data = [];
+        this.state.cycle_appraisal_data = [];
+        this.state.filtered_cycle_planning_data = [];
+        this.state.filtered_cycle_appraisal_data = [];
     }
+}
 
     // ============================================================
     // PERFORMANCE DATA
@@ -1193,6 +1185,7 @@ onClickTotalActiveEmployees = () => {
 }
 
     onOpenAppraisalRecord = (appraisal) => {
+     console.log('role:', this.state.role, 'state_key:', appraisal.state_key);
     if (appraisal && appraisal.constructor && appraisal.constructor.name === 'PointerEvent') {
         console.error("Wrong parameter passed to onOpenAppraisalRecord");
         return;
@@ -1445,67 +1438,227 @@ onClickTotalActiveEmployees = () => {
     }
 
     exportAppraisalToPDF = async () => {
-        const appraisal = this.state.selected_full_appraisal;
-        if (!appraisal) return;
-        this.env.services.notification.add("Preparing PDF...", { type: "info" });
-        const bonusSection = (appraisal.bonus_amount || appraisal.eligibility_pct) ? `
-            <div style="margin-top:18px;background:#eaf1fb;border:1px solid #2563a8;border-radius:6px;padding:14px;">
-                <div style="font-weight:bold;color:#1a3557;font-size:12px;margin-bottom:10px;">BONUS SUMMARY</div>
-                <table style="width:100%;border-collapse:collapse;font-size:11px;">
-                    <tr>
-                        <td style="padding:6px 10px;border:1px solid #c5d5ea;font-weight:bold;">Rating Tier</td>
-                        <td style="padding:6px 10px;border:1px solid #c5d5ea;">${appraisal.rating || '-'}</td>
-                        <td style="padding:6px 10px;border:1px solid #c5d5ea;font-weight:bold;">Basic Pay</td>
-                        <td style="padding:6px 10px;border:1px solid #c5d5ea;">${appraisal.basic_pay_display || appraisal.basic_pay || '-'}</td>
-                    </tr>
-                    <tr>
-                        <td style="padding:6px 10px;border:1px solid #c5d5ea;font-weight:bold;">Eligibility %</td>
-                        <td style="padding:6px 10px;border:1px solid #c5d5ea;">${appraisal.eligibility_pct || 0}%</td>
-                        <td style="padding:6px 10px;border:1px solid #c5d5ea;font-weight:bold;color:#198754;">Bonus Amount</td>
-                        <td style="padding:6px 10px;border:1px solid #c5d5ea;font-weight:bold;color:#198754;">${appraisal.bonus_amount_display || appraisal.bonus_amount || '-'}</td>
-                    </tr>
-                </table>
-            </div>` : '';
-        const kpiRows = (appraisal.kpi_lines || []).map(l => `<tr><td style="padding:6px 8px;border:1px solid #c5d5ea;">${l.kpi_name || '-'}</td><td style="padding:6px 8px;border:1px solid #c5d5ea;text-align:center;">${l.weightage || 0}%</td><td style="padding:6px 8px;border:1px solid #c5d5ea;text-align:center;">${l.self_score || 0}</td><td style="padding:6px 8px;border:1px solid #c5d5ea;text-align:center;">${l.supervisor_score || 0}</td><td style="padding:6px 8px;border:1px solid #c5d5ea;text-align:center;">${l.secondary_score || '-'}</td><td style="padding:6px 8px;border:1px solid #c5d5ea;text-align:center;">${l.reviewer_score || 0}</td></tr>`).join('');
-        const compRows = (appraisal.competency_lines || []).map(l => `<tr><td style="padding:6px 8px;border:1px solid #c5d5ea;">${l.competency_name || '-'}</td><td style="padding:6px 8px;border:1px solid #c5d5ea;text-align:center;">${l.self_score || 0}</td><td style="padding:6px 8px;border:1px solid #c5d5ea;text-align:center;">${l.supervisor_score || 0}</td><td style="padding:6px 8px;border:1px solid #c5d5ea;text-align:center;">${l.secondary_score || '-'}</td><td style="padding:6px 8px;border:1px solid #c5d5ea;text-align:center;">${l.reviewer_score || 0}</td></tr>`).join('');
-        const html = `<div style="font-family:Arial,sans-serif;padding:16px;">
-            <div style="background:#1a3557;color:#fff;padding:14px;text-align:center;font-size:16px;font-weight:bold;">Performance Appraisal — ${appraisal.name || ''}</div>
-            <div style="background:#2563a8;color:#fff;display:flex;justify-content:space-around;padding:8px;">
-                <div><span style="font-size:9px;color:#aecde8;">Cycle</span><br/><b>${appraisal.cycle || '-'}</b></div>
-                <div><span style="font-size:9px;color:#aecde8;">Department</span><br/><b>${appraisal.department || '-'}</b></div>
-                <div><span style="font-size:9px;color:#aecde8;">Status</span><br/><b>${appraisal.state || '-'}</b></div>
-                <div><span style="font-size:9px;color:#aecde8;">Final Score</span><br/><b>${appraisal.final_score || 0}</b></div>
-                <div><span style="font-size:9px;color:#aecde8;">Rating</span><br/><b>${appraisal.rating || '-'}</b></div>
+    const appraisal = this.state.selected_full_appraisal;
+    if (!appraisal) return;
+    this.env.services.notification.add("Preparing PDF...", { type: "info" });
+
+    // ── helper: show value or "Not Given" italic grey text ───────────────────
+    const val = (v) =>
+        (v !== null && v !== undefined && v !== '')
+            ? v
+            : '<span style="color:#888;font-style:italic;font-size:10px;">Not Given</span>';
+
+    const td = (v, extra = '') =>
+        `<td style="padding:6px 8px;border:1px solid #dee2e6;text-align:center;${extra}">${val(v)}</td>`;
+
+    const th = (label, align = 'center') =>
+        `<th style="padding:7px 8px;border:1px solid #1a3557;background:#f8f9fa;color:#212529;text-align:${align};">${label}</th>`;
+
+    // ── INFO BLOCK (mirrors left/right columns in modal) ─────────────────────
+    const infoBlock = `
+        <table style="width:100%;border-collapse:collapse;font-size:11px;background:#f8f9fa;border:1px solid #dee2e6;margin-bottom:16px;">
+            <tr>
+                <td style="padding:10px 14px;width:50%;border-right:1px solid #dee2e6;vertical-align:top;">
+                    <div style="margin-bottom:6px;"><strong>Appraisal For:</strong> ${appraisal.name || '-'}</div>
+                    <div style="margin-bottom:6px;"><strong>Primary Manager:</strong> ${appraisal.supervisor_name || '-'}</div>
+                    <div style="margin-bottom:6px;"><strong>Secondary Manager:</strong> ${appraisal.secondary_name || '—'}</div>
+                    <div><strong>Reviewer:</strong> ${appraisal.reviewer_name || '—'}</div>
+                </td>
+                <td style="padding:10px 14px 10px 20px;vertical-align:top;">
+                    <div style="margin-bottom:6px;"><strong>Cycle Name:</strong> ${appraisal.cycle || '-'}</div>
+                    <div style="margin-bottom:6px;"><strong>Cycle Start Date:</strong> ${appraisal.start_date || '-'}</div>
+                    <div style="margin-bottom:6px;"><strong>Cycle End Date:</strong> ${appraisal.appraisal_end_date || '-'}</div>
+                    <div style="margin-bottom:6px;"><strong>Department:</strong> ${appraisal.department || '-'}</div>
+                    <div style="margin-bottom:6px;"><strong>Status:</strong> ${appraisal.state || '-'}</div>
+                    <div><strong>Total Weightage:</strong> ${appraisal.total_weightage || 0}%</div>
+                </td>
+            </tr>
+        </table>`;
+
+    // ── KPI TABLE ─────────────────────────────────────────────────────────────
+    const kpiLines = appraisal.kpi_lines || [];
+    const kpiRows = kpiLines.map(l => `
+        <tr>
+            <td style="padding:6px 8px;border:1px solid #dee2e6;">${l.kpi_name || '-'}</td>
+            <td style="padding:6px 8px;border:1px solid #dee2e6;text-align:center;">${(l.weightage || 0)}%</td>
+            ${td(l.self_score)}
+            ${td(l.supervisor_score)}
+            ${td(l.secondary_score)}
+            ${td(l.reviewer_score)}
+        </tr>`).join('');
+
+    const kpiTotalRow = kpiLines.length > 0 ? `
+        <tr style="background:#e9ecef;font-weight:bold;">
+            <td style="padding:6px 8px;border:1px solid #dee2e6;text-align:right;">TOTAL:</td>
+            <td style="padding:6px 8px;border:1px solid #dee2e6;text-align:center;">${appraisal.kpi_total_weightage || 0}%</td>
+            ${td(appraisal.kpi_self_total)}
+            ${td(appraisal.kpi_supervisor_total)}
+            ${td(appraisal.kpi_secondary_total)}
+            ${td(appraisal.kpi_reviewer_total)}
+        </tr>` : '';
+
+    const kpiSection = `
+        <div style="margin-bottom:20px;">
+            <div style="font-size:13px;font-weight:bold;color:#212529;margin-bottom:8px;">
+                &#9632; KPI Scores
             </div>
-            ${kpiRows ? `<div style="margin-top:14px;"><div style="background:#1a3557;color:#fff;padding:7px;font-size:11px;font-weight:bold;">KPI SCORES</div><table style="width:100%;border-collapse:collapse;font-size:11px;"><thead><tr style="background:#2563a8;color:#fff;"><th style="padding:7px;border:1px solid #1a3557;">KPI</th><th style="padding:7px;border:1px solid #1a3557;width:8%;">Weight</th><th style="padding:7px;border:1px solid #1a3557;width:10%;">Self</th><th style="padding:7px;border:1px solid #1a3557;width:10%;">Supervisor</th><th style="padding:7px;border:1px solid #1a3557;width:10%;">Secondary</th><th style="padding:7px;border:1px solid #1a3557;width:10%;">Reviewer</th></tr></thead><tbody>${kpiRows}</tbody></table></div>` : ''}
-            ${compRows ? `<div style="margin-top:14px;"><div style="background:#1a3557;color:#fff;padding:7px;font-size:11px;font-weight:bold;">COMPETENCY SCORES</div><table style="width:100%;border-collapse:collapse;font-size:11px;"><thead><tr style="background:#2563a8;color:#fff;"><th style="padding:7px;border:1px solid #1a3557;">Competency</th><th style="padding:7px;border:1px solid #1a3557;width:10%;">Self</th><th style="padding:7px;border:1px solid #1a3557;width:10%;">Supervisor</th><th style="padding:7px;border:1px solid #1a3557;width:10%;">Secondary</th><th style="padding:7px;border:1px solid #1a3557;width:10%;">Reviewer</th></tr></thead><tbody>${compRows}</tbody></table></div>` : ''}
-            <div style="margin-top:14px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;text-align:center;background:#f5f8fd;border:1px solid #c5d5ea;padding:10px;">
-                <div><div style="font-size:10px;color:#666;">KPI Total</div><div style="font-size:16px;font-weight:bold;color:#1a3557;">${appraisal.kpi_total || 0}</div></div>
-                <div><div style="font-size:10px;color:#666;">Competency Total</div><div style="font-size:16px;font-weight:bold;color:#1a3557;">${appraisal.competency_total || 0}</div></div>
-                <div><div style="font-size:10px;color:#666;">Final Score</div><div style="font-size:16px;font-weight:bold;color:#198754;">${appraisal.final_score || 0}</div></div>
-            </div>
-            ${bonusSection}
+            <table style="width:100%;border-collapse:collapse;font-size:11px;">
+                <thead>
+                    <tr style="background:#f8f9fa;">
+                        ${th('KPI', 'left')}
+                        ${th('Weightage')}
+                        ${th('Emp Score')}
+                        ${th('Supervisor')}
+                        ${th('Secondary')}
+                        ${th('Reviewer')}
+                    </tr>
+                </thead>
+                <tbody>
+                    ${kpiRows || `<tr><td colspan="6" style="padding:10px;text-align:center;color:#888;border:1px solid #dee2e6;">No KPI data found.</td></tr>`}
+                    ${kpiTotalRow}
+                </tbody>
+            </table>
         </div>`;
-        const element = document.createElement('div');
-        element.innerHTML = html;
-        document.body.appendChild(element);
-        const opt = {
-            margin: [0.4, 0.4, 0.4, 0.4],
-            filename: `${appraisal.cycle || 'appraisal'}_${appraisal.name || 'details'}.pdf`.replace(/\s+/g, '_'),
-            image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: { scale: 2, useCORS: true, scrollX: 0, scrollY: 0 },
-            jsPDF: { unit: 'in', format: 'a4', orientation: 'landscape' },
-            pagebreak: { mode: ['avoid-all', 'css', 'legacy'], avoid: ['tr', 'td'] },
-        };
-        try {
-            await html2pdf().set(opt).from(element).save();
-            this.env.services.notification.add("PDF exported!", { type: "success" });
-        } catch (e) {
-            this.env.services.notification.add("PDF export failed", { type: "danger" });
-        } finally {
-            document.body.removeChild(element);
-        }
+
+    // ── COMPETENCY TABLE ──────────────────────────────────────────────────────
+    const compLines = appraisal.competency_lines || [];
+    const compWeightageTotal = compLines.reduce((s, l) => s + (l.max_points || 0), 0);
+
+    const compRows = compLines.map(l => `
+        <tr>
+            <td style="padding:6px 8px;border:1px solid #dee2e6;">${l.competency_name || '-'}</td>
+            <td style="padding:6px 8px;border:1px solid #dee2e6;text-align:center;">${l.max_points || 0}</td>
+            ${td(l.self_score)}
+            ${td(l.supervisor_score)}
+            ${td(l.secondary_score)}
+            ${td(l.reviewer_score)}
+        </tr>`).join('');
+
+    const compTotalRow = compLines.length > 0 ? `
+        <tr style="background:#e9ecef;font-weight:bold;">
+            <td style="padding:6px 8px;border:1px solid #dee2e6;text-align:right;">TOTAL:</td>
+            <td style="padding:6px 8px;border:1px solid #dee2e6;text-align:center;">${compWeightageTotal}</td>
+            ${td(appraisal.competency_self_total)}
+            ${td(appraisal.competency_supervisor_total)}
+            ${td(appraisal.competency_secondary_total)}
+            ${td(appraisal.competency_reviewer_total)}
+        </tr>` : '';
+
+    const compSection = `
+        <div style="margin-bottom:20px;">
+            <div style="font-size:13px;font-weight:bold;color:#212529;margin-bottom:8px;">
+                &#9632; Competency Scores
+            </div>
+            <table style="width:100%;border-collapse:collapse;font-size:11px;">
+                <thead>
+                    <tr style="background:#f8f9fa;">
+                        ${th('Competency', 'left')}
+                        ${th('Weightage')}
+                        ${th('Self')}
+                        ${th('Supervisor')}
+                        ${th('Secondary')}
+                        ${th('Reviewer')}
+                    </tr>
+                </thead>
+                <tbody>
+                    ${compRows || `<tr><td colspan="6" style="padding:10px;text-align:center;color:#888;border:1px solid #dee2e6;">No competency data found.</td></tr>`}
+                    ${compTotalRow}
+                </tbody>
+            </table>
+        </div>`;
+
+    // ── FINAL SCORE BLOCK (only if final_score > 0, mirrors modal exactly) ───
+    const finalScoreBlock = (appraisal.final_score && appraisal.final_score > 0) ? `
+        <div style="background:#f8f9fa;border:1px solid #dee2e6;padding:14px;font-size:11px;margin-bottom:16px;">
+            <div style="display:flex;gap:40px;flex-wrap:wrap;">
+                <div style="flex:1;">
+                    <div style="margin-bottom:8px;">
+                        <strong>Final Score Calculation Method:</strong>
+                        <span style="background:#0dcaf0;color:#fff;padding:2px 8px;border-radius:4px;margin-left:8px;font-size:10px;">
+                            ${appraisal.calculation_method === 'reviewer' ? 'Reviewer Score'
+                            : appraisal.calculation_method === 'average'  ? 'Average of All Scores' : ''}
+                        </span>
+                    </div>
+                    <div>
+                        <strong>Final Score:</strong>
+                        <span style="margin-left:6px;">
+                            KPI (${appraisal.kpi_total || 0}) +
+                            Competency (${appraisal.competency_total || 0}) =
+                            <strong style="color:#198754;font-size:15px;margin-left:4px;">${appraisal.final_score || 0}</strong>
+                        </span>
+                    </div>
+                </div>
+                <div style="flex:1;">
+                    <div style="margin-bottom:8px;">
+                        <strong>Rating:</strong>
+                        <span style="margin-left:6px;">${appraisal.rating || '—'}</span>
+                    </div>
+                    <div style="color:#666;font-size:10px;">
+                        &#9432;
+                        ${appraisal.calculation_method === 'reviewer'
+                            ? 'Final score uses <strong>Reviewer Score</strong> as the final score.'
+                            : appraisal.calculation_method === 'average'
+                            ? 'Final score is the <strong>average</strong> of Supervisor, Secondary, and Reviewer scores.'
+                            : ''}
+                    </div>
+                </div>
+            </div>
+        </div>` : '';
+
+    // ── FULL HTML (matches modal structure top to bottom) ────────────────────
+    const html = `
+        <div style="font-family:Arial,sans-serif;padding:20px;color:#212529;background:#fff;">
+
+            <!-- HEADER — mirrors modal header -->
+            <div style="display:flex;align-items:center;gap:12px;padding:14px 0 10px 0;border-bottom:2px solid #dee2e6;margin-bottom:16px;">
+                <span style="font-size:24px;color:#0d6efd;">&#9678;</span>
+                <div>
+                    <div style="font-size:16px;font-weight:bold;">${appraisal.cycle || '-'}</div>
+                    <div style="font-size:11px;color:#6c757d;">
+                        Appraisal for <strong>${appraisal.name || '-'}</strong>
+                        &nbsp;&middot;&nbsp;
+                        Status: ${appraisal.state || '-'}
+                    </div>
+                </div>
+            </div>
+
+            <!-- INFO BLOCK -->
+            ${infoBlock}
+
+            <!-- KPI SCORES -->
+            ${kpiSection}
+
+            <!-- COMPETENCY SCORES -->
+            ${compSection}
+
+            <!-- FINAL SCORE -->
+            ${finalScoreBlock}
+
+        </div>`;
+
+    // ── RENDER & EXPORT ───────────────────────────────────────────────────────
+    const element = document.createElement('div');
+    element.innerHTML = html;
+    document.body.appendChild(element);
+
+    const opt = {
+        margin: [0.4, 0.4, 0.4, 0.4],
+        filename: `${appraisal.cycle || 'appraisal'}_${appraisal.name || 'details'}.pdf`.replace(/\s+/g, '_'),
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true, scrollX: 0, scrollY: 0 },
+        jsPDF: { unit: 'in', format: 'a4', orientation: 'landscape' },
+        pagebreak: { mode: ['avoid-all', 'css', 'legacy'], avoid: ['tr', 'td', 'table'] },
+    };
+
+    try {
+        await html2pdf().set(opt).from(element).save();
+        this.env.services.notification.add("PDF exported!", { type: "success" });
+    } catch (e) {
+        this.env.services.notification.add("PDF export failed", { type: "danger" });
+    } finally {
+        document.body.removeChild(element);
     }
+}
 
     // ============================================================
     // EXPORT - COMPLETED CYCLE (EMPLOYEE VIEW)
@@ -1740,6 +1893,133 @@ exportCompletedCycleToPDF() {
 
     }, 300);
 }
+
+exportHRCompletedCycleToPDF() {
+    if (!this.state.selected_completed_cycle) {
+        this.env.services.notification.add("No data to export", { type: "warning" });
+        return;
+    }
+    const cycle = this.state.selected_completed_cycle;
+    const employees = this.state.completed_cycle_employees || [];
+
+    if (employees.length === 0) {
+        this.env.services.notification.add("No employee data to export", { type: "warning" });
+        return;
+    }
+
+    const colWidths = ['5%','14%','11%','10%','6%','5%','6%','6%','6%','7%','8%','4%','6%','6%'];
+    const headers = ['Emp ID','Employee','Department','Evaluation Group','Weightage','Self','Supervisor','Secondary','Reviewer','Final Score','Rating','Bonus %','Basic Pay','Bonus Amount'];
+
+    const rows = employees.map((emp, idx) => `
+        <tr style="background-color:${idx % 2 === 0 ? '#ffffff' : '#f8f9fa'};">
+            <td>${emp.employee_id || '-'}</td>
+            <td>${emp.name || '-'}</td>
+            <td>${emp.department || '-'}</td>
+            <td>${emp.evaluation_group || '-'}</td>
+            <td style="text-align:center;">${emp.weightage || '-'}</td>
+            <td style="text-align:center;">${emp.self_score != null ? emp.self_score : '-'}</td>
+            <td style="text-align:center;">${emp.supervisor_score != null ? emp.supervisor_score : '-'}</td>
+            <td style="text-align:center;">${emp.secondary_score != null ? emp.secondary_score : '—'}</td>
+            <td style="text-align:center;">${emp.reviewer_score != null ? emp.reviewer_score : '-'}</td>
+            <td style="text-align:center;"><strong>${emp.final_score != null ? emp.final_score : '-'}</strong></td>
+            <td>${emp.rating || '-'}</td>
+            <td style="text-align:center;">${emp.eligibility_pct || 0}%</td>
+            <td style="text-align:right;">${emp.basic_pay_display || (emp.basic_pay != null ? emp.basic_pay : '-')}</td>
+            <td style="text-align:right;font-weight:bold;">${emp.bonus_amount_display || (emp.bonus_amount != null ? emp.bonus_amount : '-')}</td>
+        </tr>
+    `).join('');
+
+    const headerCells = headers.map((h, i) =>
+        `<th style="width:${colWidths[i]};">${h}</th>`
+    ).join('');
+
+    const html = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="utf-8"/>
+            <title>${cycle.name || 'Appraisal Report'}</title>
+            <style>
+                * { box-sizing: border-box; margin: 0; padding: 0; }
+                body {
+                    font-family: Arial, sans-serif;
+                    font-size: 9px;
+                    padding: 15px;
+                    background: #fff;
+                }
+                .title {
+                    font-size: 14px;
+                    font-weight: bold;
+                    margin-bottom: 4px;
+                    color: #333;
+                }
+                .subtitle {
+                    font-size: 9px;
+                    color: #666;
+                    margin-bottom: 12px;
+                }
+                table {
+                    width: 100%;
+                    table-layout: fixed;
+                    border-collapse: collapse;
+                    font-size: 9px;
+                }
+                th {
+                    background-color: #e9ecef;
+                    border: 1px solid #adb5bd;
+                    padding: 5px 4px;
+                    font-weight: bold;
+                    text-align: center;
+                    word-wrap: break-word;
+                    white-space: normal;
+                }
+                td {
+                    border: 1px solid #dee2e6;
+                    padding: 5px 4px;
+                    word-wrap: break-word;
+                    white-space: normal;
+                    vertical-align: middle;
+                }
+                tr { page-break-inside: avoid; }
+                @page {
+                    size: A3 landscape;
+                    margin: 10mm 8mm;
+                }
+                @media print {
+                    body { padding: 0; }
+                    tr { page-break-inside: avoid; }
+                }
+            </style>
+        </head>
+        <body>
+            <div class="title">${cycle.name || 'Completed Cycle'} — Appraisal Scores</div>
+            <div class="subtitle">
+                Period: ${cycle.start_date || '-'} to ${cycle.appraisal_end_date || cycle.end_date || '-'}
+                &nbsp;|&nbsp; Total Employees: ${cycle.total_employees || 0}
+                &nbsp;|&nbsp; Type: ${cycle.cycle_type || cycle.type || '-'}
+                &nbsp;|&nbsp; Generated: ${new Date().toLocaleDateString()}
+            </div>
+            <table>
+                <thead><tr>${headerCells}</tr></thead>
+                <tbody>${rows}</tbody>
+            </table>
+        </body>
+        </html>
+    `;
+
+    const printWindow = window.open('', '_blank', 'width=1200,height=800');
+    printWindow.document.write(html);
+    printWindow.document.close();
+
+    printWindow.onload = function () {
+        setTimeout(function () {
+            printWindow.focus();
+            printWindow.print();
+            printWindow.close();
+        }, 500);
+    };
+}
+
     filterCycleAppraisalData = () => {
         const search = (this.state.cycle_appraisal_search || '').toLowerCase();
         if (!search) {

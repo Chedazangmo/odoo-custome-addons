@@ -28,7 +28,7 @@
 <!-- Welcome card and Stat Cards in same row — hide when viewing cycle detail -->
 <t t-if="!state.show_cycle_detail and !state.is_monitoring_cycle">
 <div class="pms_dashboard_header_row">
-    <!-- Welcome card - now same size as stat cards -->
+    <!-- Welcome card -  same size as stat cards -->
     <div class="pms_welcome_card card shadow-sm pms_card">
         <div class="pms_card_top_row">
             <div class="pms_card_icon"><i class="fa fa-tachometer"/></div>
@@ -1235,31 +1235,31 @@
 
                 <!-- Employee Scores Table - Added print-friendly wrapper -->
                 <h5 class="mb-2"><i class="fa fa-bar-chart me-2 text-primary"/>Employee Appraisal Scores</h5>
-                <div class="table-responsive" id="completed_cycle_export_table" style="overflow-x: auto; -webkit-overflow-scrolling: touch;">
-                    <table class="table table-bordered table-striped" style="border-collapse: collapse; width: 100%; min-width: 1200px; font-size: 13px;">
+                <div class="table-responsive" id="hr_completed_cycle_export_table" style="overflow-x: auto; -webkit-overflow-scrolling: touch;">
+                    <table class="table table-bordered table-striped" style="border-collapse: collapse; width: 100%; min-width: unset; font-size: 13px;">
                         <thead>
                             <tr style="background-color: #f8f9fa; border-bottom: 2px solid #dee2e6;">
-                                <th style="padding: 10px 8px; white-space: nowrap;">Emp ID</th>
-                                <th style="padding: 10px 8px; white-space: nowrap;">Employee</th>
-                                <th style="padding: 10px 8px; white-space: nowrap;">Department</th>
-                                <th style="padding: 10px 8px; white-space: nowrap;">Evaluation Group</th>
-                                <th style="padding: 10px 8px; text-align: center; white-space: nowrap;">Weightage</th>
-                                <th style="padding: 10px 8px; text-align: center; white-space: nowrap;">Self</th>
-                                <th style="padding: 10px 8px; text-align: center; white-space: nowrap;">Supervisor</th>
-                                <th style="padding: 10px 8px; text-align: center; white-space: nowrap;">Secondary</th>
-                                <th style="padding: 10px 8px; text-align: center; white-space: nowrap;">Reviewer</th>
-                                <th style="padding: 10px 8px; text-align: center; white-space: nowrap;">Final Score</th>
-                                <th style="padding: 10px 8px; white-space: nowrap;">Rating</th>
-                                <th style="padding: 10px 8px; text-align: center; white-space: nowrap;">Bonus %</th>
-                                <th style="padding: 10px 8px; text-align: center; white-space: nowrap;">Basic Pay</th>
-                                <th style="padding: 10px 8px; text-align: center; white-space: nowrap;">Bonus Amount</th>
+                                <th style="padding: 10px 8px; white-space: normal;">Emp ID</th>
+                                <th style="padding: 10px 8px; white-space: normal;">Employee</th>
+                                <th style="padding: 10px 8px; white-space: normal;">Department</th>
+                                <th style="padding: 10px 8px; white-space: normal;">Evaluation Group</th>
+                                <th style="padding: 10px 8px; text-align: center; white-space: normal;">Weightage</th>
+                                <th style="padding: 10px 8px; text-align: center; white-space: normal;">Self</th>
+                                <th style="padding: 10px 8px; text-align: center; white-space: normal;">Supervisor</th>
+                                <th style="padding: 10px 8px; text-align: center; white-space: normal;">Secondary</th>
+                                <th style="padding: 10px 8px; text-align: center; white-space: normal;">Reviewer</th>
+                                <th style="padding: 10px 8px; text-align: center; white-space: normal;">Final Score</th>
+                                <th style="padding: 10px 8px; white-space: normal;">Rating</th>
+                                <th style="padding: 10px 8px; text-align: center; white-space: normal;">Bonus %</th>
+                                <th style="padding: 10px 8px; text-align: center; white-space: normal;">Basic Pay</th>
+                                <th style="padding: 10px 8px; text-align: center; white-space: normal;">Bonus Amount</th>
                             </tr>
                         </thead>
                         <tbody>
                             <t t-foreach="state.completed_cycle_employees" t-as="emp" t-key="emp.employee_id">
                                 <tr>
-                                    <td style="padding: 8px; white-space: nowrap;"><t t-esc="emp.employee_id or '-'"/></td>
-                                    <td style="padding: 8px; white-space: nowrap;"><t t-esc="emp.name"/></td>
+                                    <td style="padding: 8px; white-space: normal;"><t t-esc="emp.employee_id or '-'"/></td>
+                                    <td style="padding: 8px; white-space: normal;"><t t-esc="emp.name"/></td>
                                     <td style="padding: 8px;"><t t-esc="emp.department or '-'"/></td>
                                     <td style="padding: 8px;"><t t-esc="emp.evaluation_group or '-'"/></td>
                                       <td style="padding: 8px; text-align: center;"><t t-esc="emp.weightage or '-'"/></td>
@@ -1309,7 +1309,7 @@
                             </a>
                         </li>
                         <li>
-                            <a class="dropdown-item" href="#" t-on-click.prevent="exportCompletedCycleToPDF">
+                            <a class="dropdown-item" href="#" t-on-click.prevent="exportHRCompletedCycleToPDF">
                                 <i class="fa fa-file-pdf-o me-2 text-danger"></i>Export as PDF
                             </a>
                         </li>
@@ -1363,7 +1363,7 @@
                              style="width: 38px; height: 38px; border-radius: 50%; object-fit: cover; border: 2px solid rgba(255,255,255,0.5);"/>
                         <div>
                             <div style="font-size: 10px; opacity: 0.85;">Hello!</div>
-                            <div class="fw-bold" style="font-size: 13px; line-height: 1.2;">
+                            <div class="fw-bold" style="font-size: 11px; line-height: 1.2;">
                                 <t t-esc="state.employee_name"/>
                             </div>
                         </div>
@@ -2593,7 +2593,7 @@
     <div t-attf-class="pms_#{state.role}_dashboard">
 <t t-if="!state.show_cycle_detail and !state.is_monitoring_cycle">
 <div class="pms_dashboard_header_row">
-    <!-- Welcome card - now same size as stat cards -->
+    <!-- Welcome card  -->
     <div class="pms_welcome_card card shadow-sm pms_card">
         <div class="pms_card_top_row">
             <div class="pms_card_icon"><i class="fa fa-tachometer"/></div>
