@@ -23,392 +23,532 @@
                         @media print {
                             .screen-only-layout { display: none !important; }
                         }
+
+                        .appraisal-export-btn:hover { opacity: 0.88; }
+
+                        /* ── Shared table styles ── */
+                        .apr-table {
+                            width: 100%;
+                            border-collapse: collapse;
+                            table-layout: fixed;
+                            word-wrap: break-word;
+                            font-size: 11px;
+                            margin-bottom: 0;
+                        }
+                        .apr-table th {
+                            background-color: #1a3557;
+                            color: #ffffff;
+                            padding: 8px 8px;
+                            border: 1px solid #1a3557;
+                            text-align: center;
+                            font-size: 10px;
+                            text-transform: uppercase;
+                            letter-spacing: 0.04em;
+                        }
+                        .apr-table th.text-left { text-align: left; }
+                        .apr-table td {
+                            padding: 7px 8px;
+                            border: 1px solid #c5d5ea;
+                            vertical-align: top;
+                            word-break: break-word;
+                            white-space: normal;
+                        }
+                        .apr-table tr:nth-child(even) td { background-color: #f5f8fd; }
+                        .apr-table tr:nth-child(odd) td  { background-color: #ffffff; }
+                        .apr-table .kra-cell {
+                            font-weight: bold;
+                            background-color: #e8f0fb !important;
+                            color: #1a3557;
+                            vertical-align: middle;
+                        }
+                        .apr-table .score-center {
+                            text-align: center;
+                            vertical-align: middle;
+                        }
+                        .apr-table .subtotal-row td {
+                            background-color: #eaf1fb !important;
+                            color: #1a3557;
+                            font-weight: bold;
+                            border-top: 2px solid #2563a8;
+                        }
+                        .apr-table .total-row td {
+                            background-color: #1a3557 !important;
+                            color: #ffffff !important;
+                            font-weight: bold;
+                            font-size: 12px;
+                            border-top: 2px solid #0d2b47;
+                        }
+
+                        /* ── Keep competency group header + table together ── */
+                        .comp-group-block {
+                            page-break-inside: avoid;
+                            break-inside: avoid;
+                        }
+                        .comp-group-block h5 {
+                            page-break-after: avoid;
+                            break-after: avoid;
+                            margin-bottom: 4px;
+                        }
                     </style>
 
-                    <div class="page px-4">
+                    <div class="page px-4 appraisal-summary-report"
+                        t-att-id="'appraisal-report-' + str(doc.id)">
 
                         <t t-set="excel_attachment"
                             t-value="doc.env['ir.attachment'].search([('res_model', '=', 'pms.appraisal'), ('res_id', '=', doc.id), ('name', 'like', 'Appraisal_Summary_%.xlsx')], limit=1, order='id desc')" />
 
+                        <!-- Action Buttons -->
                         <div class="d-flex justify-content-end mb-4 screen-only-layout">
-                            <a
-                                t-attf-href="/report/pdf/hr_employee_evaluation.report_appraisal_summary_template/#{doc.id}"
-                                style="background-color: #dc3545; color: #ffffff; border: none; padding: 10px 18px; border-radius: 6px; font-weight: 600; text-decoration: none; margin-right: 10px; display: inline-flex; align-items: center;">
-                                <i class="fa fa-file-pdf-o me-2"></i> Export PDF </a>
+                            <a href="#" class="appraisal-export-btn"
+                                t-att-onclick="'exportAppraisalPDF(event, &quot;appraisal-report-' + str(doc.id) + '&quot;, &quot;Appraisal_Summary_' + (doc.employee_id.name or 'Report') + '.pdf&quot;)'"
+                                style="background-color:#dc3545;color:#ffffff;border:none;padding:10px 18px;border-radius:6px;font-weight:600;text-decoration:none;margin-right:10px;display:inline-flex;align-items:center;cursor:pointer;">
+                                <i class="fa fa-file-pdf-o me-2"></i> Export PDF
+                            </a>
                             <a t-if="excel_attachment"
                                 t-attf-href="/web/content/#{excel_attachment.id}?download=true"
-                                style="background-color: #198754; color: #ffffff; border: none; padding: 10px 18px; border-radius: 6px; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center;">
-                                <i class="fa fa-file-excel-o me-2"></i> Export Excel </a>
+                                style="background-color:#198754;color:#ffffff;border:none;padding:10px 18px;border-radius:6px;font-weight:600;text-decoration:none;display:inline-flex;align-items:center;">
+                                <i class="fa fa-file-excel-o me-2"></i> Export Excel
+                            </a>
                         </div>
 
-                        <div class="text-center mb-5">
-                            <h2 class="fw-bold">Performance Appraisal Summary</h2>
-                            <h4 class="text-muted">
+                        <!-- Report Header -->
+                        <div style="background:#1a3557;color:#fff;padding:14px 20px;text-align:center;margin-bottom:4px;">
+                            <div style="font-size:17px;font-weight:bold;">Performance Appraisal Summary</div>
+                            <div style="font-size:13px;color:#aecde8;margin-top:4px;">
                                 <t t-esc="doc.employee_id.name" />
-                            </h4>
+                                <t t-if="doc.employee_department_id">
+                                    — <t t-esc="doc.employee_department_id.name" />
+                                </t>
+                            </div>
                         </div>
+                       <div style="background:#2563a8;color:#fff;display:flex;justify-content:space-around;padding:7px 20px;margin-bottom:16px;">
+    <div style="text-align:center;">
+        <div style="font-size:9px;color:#aecde8;">Cycle</div>
+        <div style="font-size:11px;font-weight:bold;"><t t-esc="doc.cycle_id.name or '-'" /></div>
+    </div>
+    <div style="text-align:center;">
+        <div style="font-size:9px;color:#aecde8;">Start Date</div>
+        <div style="font-size:11px;font-weight:bold;"><t t-esc="str(doc.cycle_id.start_date) if doc.cycle_id.start_date else '-'" /></div>
+    </div>
+    <div style="text-align:center;">
+        <div style="font-size:9px;color:#aecde8;">End Date</div>
+        <div style="font-size:11px;font-weight:bold;"><t t-esc="str(doc.cycle_id.end_date) if doc.cycle_id.end_date else '-'" /></div>
+    </div>
+    <div style="text-align:center;">
+        <div style="font-size:9px;color:#aecde8;">Supervisor</div>
+        <div style="font-size:11px;font-weight:bold;"><t t-esc="doc.supervisor_id.name or '-'" /></div>
+    </div>
+    <div t-if="doc.secondary_supervisor_id" style="text-align:center;">
+        <div style="font-size:9px;color:#aecde8;">Secondary</div>
+        <div style="font-size:11px;font-weight:bold;"><t t-esc="doc.secondary_supervisor_id.name" /></div>
+    </div>
+    <div t-if="doc.reviewer_id" style="text-align:center;">
+        <div style="font-size:9px;color:#aecde8;">Reviewer</div>
+        <div style="font-size:11px;font-weight:bold;"><t t-esc="doc.reviewer_id.name" /></div>
+    </div>
+    <div style="text-align:center;">
+        <div style="font-size:9px;color:#aecde8;">Status</div>
+        <div style="font-size:11px;font-weight:bold;"><t t-esc="dict(doc._fields['state'].selection).get(doc.state, doc.state)" /></div>
+    </div>
+    <div style="text-align:center;">
+        <div style="font-size:9px;color:#aecde8;">Final Score</div>
+        <div style="font-size:13px;font-weight:bold;color:#ffd700;">
+            <t t-esc="'%.2f' % doc.final_appraisal_score" />
+        </div>
+    </div>
+</div>
 
+                        <!-- ══════════════════════════════════════════
+                             SCREEN LAYOUT
+                        ══════════════════════════════════════════ -->
                         <div class="screen-only-layout">
+
+                            <!-- KPI Section header -->
+                            <div style="background:#2563a8;color:#fff;padding:7px 12px;font-size:12px;font-weight:bold;margin-bottom:8px;">
+                                KPI / KRA Scores
+                            </div>
+
                             <t t-foreach="doc.kra_ids" t-as="kra">
-                                <t t-set="active_kpis"
-                                    t-value="kra.kpi_ids.filtered(lambda k: k.is_selected)" />
-
+                                <t t-set="active_kpis" t-value="kra.kpi_ids.filtered(lambda k: k.is_selected)" />
                                 <t t-if="active_kpis">
-                                    <h4 class="mt-4">
-                                        <strong>
-                                            <t t-esc="kra.name" />
-                                        </strong>
-                                    </h4>
-
-                                    <table class="table table-sm table-bordered mt-3"
-                                        style="table-layout:fixed;word-wrap:break-word;">
-                                        <thead class="bg-light text-uppercase"
-                                            style="font-size:12px;">
+                                    <h5 style="margin-top:16px;margin-bottom:6px;color:#1a3557;font-weight:700;border-left:4px solid #2563a8;padding-left:8px;">
+                                        <t t-esc="kra.name" />
+                                    </h5>
+                                    <table class="apr-table">
+                                        <thead>
                                             <tr>
-                                                <th style="width:15%;">KPI Name</th>
-                                                <th style="width:20%;">Criteria</th>
-                                                <th style="width:20%;">Target</th>
-                                                <th class="text-center" style="width:8%;">Score</th>
-                                                <th class="text-center" style="width:9%;">Emp Score</th>
-                                                <th class="text-center" style="width:9%;">Sup Score</th>
-                                                <th class="text-center" style="width:9%;"
-                                                    t-if="doc.secondary_supervisor_id">2nd Sup Score</th>
-                                                <th class="text-center" style="width:10%;"
-                                                    t-if="doc.reviewer_id">Rev Score</th>
+                                                <th class="text-left" style="width:16%;">KPI Name</th>
+                                                <th class="text-left" style="width:20%;">Criteria</th>
+                                                <th class="text-left" style="width:20%;">Target</th>
+                                                <th style="width:8%;">Max</th>
+                                                <th style="width:9%;">Self</th>
+                                                <th style="width:9%;">Supervisor</th>
+                                                <th style="width:9%;" t-if="doc.secondary_supervisor_id">Secondary</th>
+                                                <th style="width:9%;" t-if="doc.reviewer_id">Reviewer</th>
                                             </tr>
                                         </thead>
                                         <tbody>
                                             <t t-foreach="active_kpis" t-as="kpi">
                                                 <tr>
-                                                    <td class="align-middle fw-600">
-                                                        <t t-esc="kpi.name" />
-                                                    </td>
-                                                    <td
-                                                        style="text-align:left !important;vertical-align:top;padding:6px;">
-                                                        <div
-                                                            style="font-size:0.9rem;text-align:left !important;white-space:normal;word-break:break-word;margin:0;padding:0;float:none;">
-                                                            <t t-esc="(kpi.criteria or '').strip()" />
-                                                        </div>
-                                                    </td>
-                                                    <td
-                                                        style="text-align:left !important;vertical-align:top;padding:6px;">
-                                                        <div
-                                                            style="font-size:0.9rem;text-align:left !important;white-space:normal;word-break:break-word;margin:0;padding:0;float:none;">
-                                                            <t t-esc="(kpi.target or '').strip()" />
-                                                        </div>
-                                                    </td>
-                                                    <td class="text-center align-middle">
-                                                        <t t-esc="kpi.weightage" />
-                                                    </td>
-                                                    <td class="text-center align-middle">
-                                                        <t t-esc="kpi.self_score" />
-                                                    </td>
-                                                    <td class="text-center align-middle">
-                                                        <t t-esc="kpi.supervisor_score" />
-                                                    </td>
-                                                    <td class="text-center align-middle"
-                                                        t-if="doc.secondary_supervisor_id">
-                                                        <t t-esc="kpi.secondary_supervisor_score" />
-                                                    </td>
-                                                    <td class="text-center align-middle fw-bold"
-                                                        t-if="doc.reviewer_id">
-                                                        <t t-esc="kpi.reviewer_score" />
-                                                    </td>
+                                                    <td style="font-weight:600;vertical-align:middle;"><t t-esc="kpi.name" /></td>
+                                                    <td><t t-esc="(kpi.criteria or '').strip()" /></td>
+                                                    <td><t t-esc="(kpi.target or '').strip()" /></td>
+                                                    <td class="score-center"><t t-esc="kpi.weightage" /></td>
+                                                    <td class="score-center"><t t-esc="kpi.self_score or 0" /></td>
+                                                    <td class="score-center"><t t-esc="kpi.supervisor_score or 0" /></td>
+                                                    <td class="score-center" t-if="doc.secondary_supervisor_id"><t t-esc="kpi.secondary_supervisor_score or 0" /></td>
+                                                    <td class="score-center fw-bold" t-if="doc.reviewer_id"><t t-esc="kpi.reviewer_score or 0" /></td>
                                                 </tr>
                                             </t>
+                                            <!-- KRA subtotal -->
+                                            <tr class="subtotal-row">
+                                                <td colspan="3" style="text-align:right;">KRA Subtotal</td>
+                                                <td class="score-center"><t t-esc="'%.2f' % sum(active_kpis.mapped('weightage'))" /></td>
+                                                <td class="score-center"><t t-esc="'%.2f' % sum(active_kpis.mapped('self_score'))" /></td>
+                                                <td class="score-center"><t t-esc="'%.2f' % sum(active_kpis.mapped('supervisor_score'))" /></td>
+                                                <td class="score-center" t-if="doc.secondary_supervisor_id"><t t-esc="'%.2f' % sum(active_kpis.mapped('secondary_supervisor_score'))" /></td>
+                                                <td class="score-center" t-if="doc.reviewer_id"><t t-esc="'%.2f' % sum(active_kpis.mapped('reviewer_score'))" /></td>
+                                            </tr>
                                         </tbody>
                                     </table>
                                 </t>
                             </t>
-                        </div>
 
-                        <div class="print-only-layout">
-                            <table class="table table-sm table-bordered mt-3"
-                                style="table-layout:fixed;word-wrap:break-word; page-break-inside: auto;">
-                                <thead class="bg-light text-uppercase" style="font-size:12px;">
-                                    <tr>
-                                        <th style="width:12%;">KRA Name</th>
-                                        <th style="width:14%;">KPI Name</th>
-                                        <th style="width:18%;">Criteria</th>
-                                        <th style="width:18%;">Target</th>
-                                        <th class="text-center" style="width:6%;">Max</th>
-                                        <th class="text-center" style="width:8%;">Emp</th>
-                                        <th class="text-center" style="width:8%;">Sup</th>
-                                        <th class="text-center" style="width:8%;"
-                                            t-if="doc.secondary_supervisor_id">2nd Sup</th>
-                                        <th class="text-center" style="width:8%;"
-                                            t-if="doc.reviewer_id">Rev</th>
-                                    </tr>
-                                </thead>
+                            <!-- KPI Grand Total -->
+                            <table class="apr-table" style="margin-top:4px;margin-bottom:16px;">
                                 <tbody>
-                                    <t t-foreach="doc.kra_ids" t-as="kra">
-                                        <t t-set="active_kpis"
-                                            t-value="kra.kpi_ids.filtered(lambda k: k.is_selected)" />
-                                        <t t-foreach="active_kpis" t-as="kpi">
-                                            <tr>
-                                                <td class="align-middle fw-bold bg-light">
-                                                    <t t-esc="kra.name" />
-                                                </td>
-                                                <td class="align-middle fw-600">
-                                                    <t t-esc="kpi.name" />
-                                                </td>
-                                                <td
-                                                    style="text-align:left !important;vertical-align:top;padding:6px;">
-                                                    <div
-                                                        style="font-size:0.9rem;white-space:pre-wrap;word-break:break-word;margin:0;">
-                                                        <t t-esc="(kpi.criteria or '').strip()" />
-                                                    </div>
-                                                </td>
-                                                <td
-                                                    style="text-align:left !important;vertical-align:top;padding:6px;">
-                                                    <div
-                                                        style="font-size:0.9rem;white-space:pre-wrap;word-break:break-word;margin:0;">
-                                                        <t t-esc="(kpi.target or '').strip()" />
-                                                    </div>
-                                                </td>
-                                                <td class="text-center align-middle">
-                                                    <t t-esc="kpi.weightage" />
-                                                </td>
-                                                <td class="text-center align-middle">
-                                                    <t t-esc="kpi.self_score" />
-                                                </td>
-                                                <td class="text-center align-middle">
-                                                    <t t-esc="kpi.supervisor_score" />
-                                                </td>
-                                                <td class="text-center align-middle"
-                                                    t-if="doc.secondary_supervisor_id">
-                                                    <t t-esc="kpi.secondary_supervisor_score" />
-                                                </td>
-                                                <td class="text-center align-middle fw-bold"
-                                                    t-if="doc.reviewer_id">
-                                                    <t t-esc="kpi.reviewer_score" />
-                                                </td>
-                                            </tr>
-                                        </t>
-                                    </t>
+                                    <tr class="total-row">
+                                        <td colspan="3" style="text-align:right;width:44%;">KPI Total</td>
+                                        <td class="score-center" style="width:8%;"><t t-esc="'%.2f' % doc.planning_total_score" /></td>
+                                        <td class="score-center" style="width:9%;"><t t-esc="'%.2f' % doc.total_self_score" /></td>
+                                        <td class="score-center" style="width:9%;"><t t-esc="'%.2f' % doc.total_supervisor_score" /></td>
+                                        <td class="score-center" style="width:9%;" t-if="doc.secondary_supervisor_id"><t t-esc="'%.2f' % doc.total_secondary_score" /></td>
+                                        <td class="score-center" style="width:9%;" t-if="doc.reviewer_id"><t t-esc="'%.2f' % doc.total_reviewer_score" /></td>
+                                    </tr>
                                 </tbody>
                             </table>
-                        </div>
 
+                            <!-- Competency Section -->
+                            <t t-if="doc.competency_score_ids">
+                                <div style="background:#2563a8;color:#fff;padding:7px 12px;font-size:12px;font-weight:bold;margin-top:16px;margin-bottom:8px;">
+                                    Competency Scores
+                                </div>
 
-                        <t t-if="doc.competency_score_ids">
+                                <t t-set="comp_rows" t-value="doc.competency_score_ids.sorted(key=lambda r: (r.group_sequence or 0, r.line_sequence or 0))" />
+                                <t t-set="seen_groups" t-value="[]" />
 
-                            <div class="mt-5 mb-2"
-                                style="display:flex;align-items:center;gap:8px;padding-bottom:6px;border-bottom:2px solid #e8a020; page-break-inside: avoid;">
-                                <span style="color:#e8a020;font-size:1em;"></span>
-                                <span
-                                    style="font-size:1em;font-weight:700;color:#1a3c5e;letter-spacing:0.02em;">
-                                    Competency Framework
-                                </span>
-                            </div>
-
-                            <t t-set="comp_rows"
-                                t-value="doc.competency_score_ids.sorted(key=lambda r: (r.group_sequence or 0, r.line_sequence or 0))" />
-
-                            <t t-set="seen_groups" t-value="[]" />
-                            <t t-foreach="comp_rows" t-as="row">
-                                <t t-if="row.group_name not in seen_groups">
-                                    <h5 class="mt-3 mb-2 text-secondary"
-                                        style="font-size:0.95em;font-weight:600; page-break-inside: avoid;">
-                                        <t t-esc="row.group_name" />
-                                    </h5>
-
-                                    <table class="table table-sm table-bordered"
-                                        style="table-layout:fixed;word-wrap:break-word; page-break-inside: auto;">
-                                        <thead class="bg-light text-uppercase"
-                                            style="font-size:11px;">
-                                            <tr>
-                                                <th style="width:6%;">Code</th>
-                                                <th style="width:20%;">Competency</th>
-                                                <th style="width:28%;">Targets</th>
-                                                <th class="text-center" style="width:8%;">Max Pts</th>
-                                                <th class="text-center" style="width:9%;">Emp Score</th>
-                                                <th class="text-center" style="width:9%;">Sup Score</th>
-                                                <th class="text-center" style="width:10%;"
-                                                    t-if="doc.secondary_supervisor_id">2nd Sup Score</th>
-                                                <th class="text-center" style="width:10%;"
-                                                    t-if="doc.reviewer_id">Rev Score</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <t t-foreach="comp_rows" t-as="crow">
-                                                <t t-if="crow.group_name == row.group_name">
+                                <t t-foreach="comp_rows" t-as="row">
+                                    <t t-if="row.group_name not in seen_groups">
+                                        <div class="comp-group-block">
+                                            <h5 style="margin-top:14px;margin-bottom:4px;color:#1a3557;font-weight:700;border-left:4px solid #e8a020;padding-left:8px;">
+                                                <t t-esc="row.group_name" />
+                                            </h5>
+                                            <table class="apr-table">
+                                                <thead>
                                                     <tr>
-                                                        <td class="align-middle"
-                                                            style="font-size:0.85rem;">
-                                                            <t t-esc="crow.line_full_code or ''" />
-                                                        </td>
-                                                        <td class="align-middle"
-                                                            style="font-size:0.85rem;">
-                                                            <t t-esc="crow.line_name or ''" />
-                                                        </td>
-                                                        <td
-                                                            style="text-align:left !important;vertical-align:top;padding:6px;">
-                                                            <div
-                                                                style="font-size:0.82rem;color:#555;text-align:left !important;white-space:normal;word-break:break-word;margin:0;padding:0;float:none;">
-                                                                <t
-                                                                    t-esc="(crow.line_description or '').strip()" />
-                                                            </div>
-                                                        </td>
-                                                        <td class="text-center align-middle">
-                                                            <t
-                                                                t-esc="'%.2f' % (crow.line_points or 0)" />
-                                                        </td>
-                                                        <td class="text-center align-middle">
-                                                            <t t-esc="crow.self_score or 0" />
-                                                        </td>
-                                                        <td class="text-center align-middle">
-                                                            <t t-esc="crow.supervisor_score or 0" />
-                                                        </td>
-                                                        <t t-if="doc.secondary_supervisor_id">
-                                                            <td class="text-center align-middle">
-                                                                <t
-                                                                    t-esc="crow.secondary_supervisor_score or 0" />
-                                                            </td>
-                                                        </t>
-                                                        <t t-if="doc.reviewer_id">
-                                                            <td class="text-center align-middle">
-                                                                <t t-esc="crow.reviewer_score or 0" />
-                                                            </td>
-                                                        </t>
+                                                        <th class="text-left" style="width:7%;">Code</th>
+                                                        <th class="text-left" style="width:20%;">Competency</th>
+                                                        <th class="text-left" style="width:28%;">Targets</th>
+                                                        <th style="width:8%;">Max Pts</th>
+                                                        <th style="width:9%;">Self</th>
+                                                        <th style="width:9%;">Supervisor</th>
+                                                        <th style="width:9%;" t-if="doc.secondary_supervisor_id">Secondary</th>
+                                                        <th style="width:10%;" t-if="doc.reviewer_id">Reviewer</th>
                                                     </tr>
-                                                </t>
-                                            </t>
-                                        </tbody>
-                                    </table>
-
-                                    <t t-set="seen_groups" t-value="seen_groups + [row.group_name]" />
+                                                </thead>
+                                                <tbody>
+                                                    <t t-foreach="comp_rows" t-as="crow">
+                                                        <t t-if="crow.group_name == row.group_name">
+                                                            <tr>
+                                                                <td style="font-size:0.85rem;vertical-align:middle;"><t t-esc="crow.line_full_code or ''" /></td>
+                                                                <td style="font-size:0.85rem;vertical-align:middle;"><t t-esc="crow.line_name or ''" /></td>
+                                                                <td style="font-size:0.82rem;color:#555;"><t t-esc="(crow.line_description or '').strip()" /></td>
+                                                                <td class="score-center"><t t-esc="'%.2f' % (crow.line_points or 0)" /></td>
+                                                                <td class="score-center"><t t-esc="crow.self_score or 0" /></td>
+                                                                <td class="score-center"><t t-esc="crow.supervisor_score or 0" /></td>
+                                                                <td class="score-center" t-if="doc.secondary_supervisor_id"><t t-esc="crow.secondary_supervisor_score or 0" /></td>
+                                                                <td class="score-center" t-if="doc.reviewer_id"><t t-esc="crow.reviewer_score or 0" /></td>
+                                                            </tr>
+                                                        </t>
+                                                    </t>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                        <t t-set="seen_groups" t-value="seen_groups + [row.group_name]" />
+                                    </t>
                                 </t>
+
+                                <!-- Competency Total -->
+                                <table class="apr-table" style="margin-top:4px;margin-bottom:16px;">
+                                    <tbody>
+                                        <tr class="total-row">
+                                            <td colspan="3" style="text-align:right;width:55%;">Competency Total</td>
+                                            <td class="score-center" style="width:8%;"><t t-esc="'%.2f' % doc.competency_max_total" /></td>
+                                            <td class="score-center" style="width:9%;"><t t-esc="'%.2f' % doc.competency_self_total" /></td>
+                                            <td class="score-center" style="width:9%;"><t t-esc="'%.2f' % doc.competency_supervisor_total" /></td>
+                                            <td class="score-center" style="width:9%;" t-if="doc.secondary_supervisor_id"><t t-esc="'%.2f' % doc.competency_secondary_total" /></td>
+                                            <td class="score-center" style="width:10%;" t-if="doc.reviewer_id"><t t-esc="'%.2f' % doc.competency_reviewer_total" /></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
                             </t>
 
-                            <div class="mt-2 mb-4 p-2"
-                                style="background:#f0f4ff;border:1px solid #c7d6f5;border-radius:5px;font-size:0.85em; page-break-inside: avoid;">
-                                <strong class="me-3">Competency Totals:</strong>
-                                <span class="me-3">Max: <strong>
-                                        <t t-esc="'%.2f' % doc.competency_max_total" />
-                                    </strong></span>
-                                <span class="me-3">Emp: <strong style="color:#1d4ed8;">
-                                        <t t-esc="'%.2f' % doc.competency_self_total" />
-                                    </strong></span>
-                                <span class="me-3" t-if="doc.supervisor_id"> Sup: <strong
-                                        style="color:#059669;">
-                                        <t t-esc="'%.2f' % doc.competency_supervisor_total" />
-                                    </strong>
-                                </span>
-                                <span class="me-3" t-if="doc.secondary_supervisor_id"> 2nd Sup: <strong
-                                        style="color:#d97706;">
-                                        <t t-esc="'%.2f' % doc.competency_secondary_total" />
-                                    </strong>
-                                </span>
-                                <span t-if="doc.reviewer_id"> Rev: <strong style="color:#7c3aed;">
-                                        <t t-esc="'%.2f' % doc.competency_reviewer_total" />
-                                    </strong>
-                                </span>
-                            </div>
 
-                        </t>
+                            <div style="margin-top:20px;page-break-inside:avoid;">
+                                <div style="background:#1a3557;color:#fff;padding:7px 12px;font-size:12px;font-weight:bold;margin-bottom:0;">
+                                    Grand Total Summary
+                                </div>
+                                <table class="apr-table">
+                                    <thead>
+                                        <tr>
+                                            <th class="text-left" style="width:30%;">Component</th>
+                                            <th style="width:14%;">Max</th>
+                                            <th style="width:14%;">Emp Total</th>
+                                            <th style="width:14%;">Sup Total</th>
+                                            <th style="width:14%;" t-if="doc.secondary_supervisor_id">2nd Sup Total</th>
+                                            <th style="width:14%;" t-if="doc.reviewer_id">Rev Total</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td style="font-weight:600;">KPI / KRA</td>
+                                            <td class="score-center"><t t-esc="'%.2f' % doc.planning_total_score" /></td>
+                                            <td class="score-center"><t t-esc="'%.2f' % doc.total_self_score" /></td>
+                                            <td class="score-center"><t t-esc="'%.2f' % doc.total_supervisor_score" /></td>
+                                            <td class="score-center" t-if="doc.secondary_supervisor_id"><t t-esc="'%.2f' % doc.total_secondary_score" /></td>
+                                            <td class="score-center" t-if="doc.reviewer_id"><t t-esc="'%.2f' % doc.total_reviewer_score" /></td>
+                                        </tr>
+                                        <t t-if="doc.competency_score_ids">
+                                            <tr>
+                                                <td style="font-weight:600;">Competency</td>
+                                                <td class="score-center"><t t-esc="'%.2f' % doc.competency_max_total" /></td>
+                                                <td class="score-center"><t t-esc="'%.2f' % doc.competency_self_total" /></td>
+                                                <td class="score-center"><t t-esc="'%.2f' % doc.competency_supervisor_total" /></td>
+                                                <td class="score-center" t-if="doc.secondary_supervisor_id"><t t-esc="'%.2f' % doc.competency_secondary_total" /></td>
+                                                <td class="score-center" t-if="doc.reviewer_id"><t t-esc="'%.2f' % doc.competency_reviewer_total" /></td>
+                                            </tr>
+                                        </t>
+                                        <tr class="total-row">
+    <td>Total</td>
+    <td class="score-center">
+        <t t-esc="'%.2f' % (doc.planning_total_score + doc.competency_max_total)" />
+    </td>
+    <td class="score-center"><t t-esc="'%.2f' % doc.grand_total_self_score" /></td>
+    <td class="score-center"><t t-esc="'%.2f' % doc.grand_total_supervisor_score" /></td>
+    <td class="score-center" t-if="doc.secondary_supervisor_id">
+        <t t-esc="'%.2f' % doc.grand_total_secondary_score" />
+    </td>
+    <td class="score-center" t-if="doc.reviewer_id">
+        <t t-esc="'%.2f' % doc.grand_total_reviewer_score" />
+    </td>
+</tr>
+                                    </tbody>
+                                </table>
 
-                        <div class="mt-5 pt-4" style="page-break-inside: avoid;">
-
-                            <div class="d-flex justify-content-between align-items-end mb-2">
-                                <h4 class="mb-0">
-                                    <strong>Total Scores</strong>
-                                </h4>
-                                <div class="fs-6 fw-bold text-muted"> Final Score basis: <span
-                                        class="text-dark">
-                                        <t t-if="doc.cycle_id.final_score_selection == 'average'">Average
-                                    of Supervisor Scores</t>
-                                        <t t-elif="doc.cycle_id.final_score_selection == 'reviewer'">Reviewer
-                                    Score</t>
+                                <div style="text-align:right;margin-top:12px;">
+                                    <span style="border:2px solid #1a3557;border-radius:6px;padding:8px 20px;display:inline-block;font-weight:bold;font-size:14px;">
+                                        Final Score basis:
+                                        <t t-if="doc.cycle_id.final_score_selection == 'average'">Average of Supervisor Scores</t>
+                                        <t t-elif="doc.cycle_id.final_score_selection == 'reviewer'">Reviewer Score</t>
                                         <t t-else="">Not Set</t>
+                                        — <span style="color:#1a3557;font-size:1.2em;">
+                                            <t t-esc="'%.2f' % doc.final_appraisal_score" />
+                                        </span>
                                     </span>
                                 </div>
                             </div>
 
-                            <table class="table table-bordered mt-2 shadow-sm">
-                                <thead class="bg-light text-uppercase" style="font-size:12px;">
+                        </div>
+
+                        <!-- ══════════════════════════════════════════
+                             PRINT LAYOUT (used by html2pdf)
+                        ══════════════════════════════════════════ -->
+                        <div class="print-only-layout">
+
+                            <!-- KPI flat table -->
+                            <div style="background:#2563a8;color:#fff;padding:6px 10px;font-size:11px;font-weight:bold;margin-bottom:0;">KPI / KRA Scores</div>
+                            <table class="apr-table">
+                                <thead>
                                     <tr>
-                                        <th class="p-2">Component</th>
-                                        <th class="text-center p-2">Emp Total</th>
-                                        <th class="text-center p-2">Sup Total</th>
-                                        <th class="text-center p-2"
-                                            t-if="doc.secondary_supervisor_id">2nd Sup Total</th>
-                                        <th class="text-center p-2"
-                                            t-if="doc.reviewer_id">Rev Total</th>
+                                        <th class="text-left" style="width:11%;">KRA</th>
+                                        <th class="text-left" style="width:13%;">KPI</th>
+                                        <th class="text-left" style="width:17%;">Criteria</th>
+                                        <th class="text-left" style="width:17%;">Target</th>
+                                        <th style="width:6%;">Max</th>
+                                        <th style="width:7%;">Self</th>
+                                        <th style="width:7%;">Supervisor</th>
+                                        <th style="width:7%;" t-if="doc.secondary_supervisor_id">Secondary</th>
+                                        <th style="width:7%;" t-if="doc.reviewer_id">Reviewer</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr>
-                                        <td class="fw-bold p-2">KRA / KPI</td>
-                                        <td class="text-center p-2">
-                                            <t t-esc="'%.2f' % doc.total_self_score" />
-                                        </td>
-                                        <td class="text-center p-2">
-                                            <t t-esc="'%.2f' % doc.total_supervisor_score" />
-                                        </td>
-                                        <td class="text-center p-2"
-                                            t-if="doc.secondary_supervisor_id">
-                                            <t t-esc="'%.2f' % doc.total_secondary_score" />
-                                        </td>
-                                        <td class="text-center p-2"
-                                            t-if="doc.reviewer_id">
-                                            <t t-esc="'%.2f' % doc.total_reviewer_score" />
-                                        </td>
-                                    </tr>
-
-                                    <t t-if="doc.competency_score_ids">
-                                        <tr>
-                                            <td class="fw-bold p-2">Competency</td>
-                                            <td class="text-center p-2">
-                                                <t t-esc="'%.2f' % doc.competency_self_total" />
-                                            </td>
-                                            <td class="text-center p-2">
-                                                <t t-esc="'%.2f' % doc.competency_supervisor_total" />
-                                            </td>
-                                            <td class="text-center p-2"
-                                                t-if="doc.secondary_supervisor_id">
-                                                <t t-esc="'%.2f' % doc.competency_secondary_total" />
-                                            </td>
-                                            <td class="text-center p-2"
-                                                t-if="doc.reviewer_id">
-                                                <t t-esc="'%.2f' % doc.competency_reviewer_total" />
-                                            </td>
-                                        </tr>
+                                    <t t-foreach="doc.kra_ids" t-as="kra">
+                                        <t t-set="active_kpis" t-value="kra.kpi_ids.filtered(lambda k: k.is_selected)" />
+                                        <t t-foreach="active_kpis" t-as="kpi">
+                                            <tr>
+                                                <td class="kra-cell"><t t-esc="kra.name" /></td>
+                                                <td style="font-weight:600;vertical-align:middle;"><t t-esc="kpi.name" /></td>
+                                                <td><t t-esc="(kpi.criteria or '').strip()" /></td>
+                                                <td><t t-esc="(kpi.target or '').strip()" /></td>
+                                                <td class="score-center"><t t-esc="kpi.weightage" /></td>
+                                                <td class="score-center"><t t-esc="kpi.self_score or 0" /></td>
+                                                <td class="score-center"><t t-esc="kpi.supervisor_score or 0" /></td>
+                                                <td class="score-center" t-if="doc.secondary_supervisor_id"><t t-esc="kpi.secondary_supervisor_score or 0" /></td>
+                                                <td class="score-center" t-if="doc.reviewer_id"><t t-esc="kpi.reviewer_score or 0" /></td>
+                                            </tr>
+                                        </t>
                                     </t>
-
-                                    <tr class="table-active fw-bold" style="background:#e8f0fe;">
-                                        <td class="p-2">Grand Total</td>
-                                        <td class="text-center p-2 fs-6">
-                                            <t t-esc="'%.2f' % doc.grand_total_self_score" />
-                                        </td>
-                                        <td class="text-center p-2 fs-6">
-                                            <t t-esc="'%.2f' % doc.grand_total_supervisor_score" />
-                                        </td>
-                                        <td class="text-center p-2 fs-6"
-                                            t-if="doc.secondary_supervisor_id">
-                                            <t t-esc="'%.2f' % doc.grand_total_secondary_score" />
-                                        </td>
-                                        <td class="text-center p-2 fs-6"
-                                            t-if="doc.reviewer_id">
-                                            <t t-esc="'%.2f' % doc.grand_total_reviewer_score" />
-                                        </td>
+                                    <!-- KPI total row -->
+                                    <tr class="total-row">
+                                        <td colspan="4" style="text-align:right;">KPI Total</td>
+                                        <td class="score-center"><t t-esc="'%.2f' % doc.planning_total_score" /></td>
+                                        <td class="score-center"><t t-esc="'%.2f' % doc.total_self_score" /></td>
+                                        <td class="score-center"><t t-esc="'%.2f' % doc.total_supervisor_score" /></td>
+                                        <td class="score-center" t-if="doc.secondary_supervisor_id"><t t-esc="'%.2f' % doc.total_secondary_score" /></td>
+                                        <td class="score-center" t-if="doc.reviewer_id"><t t-esc="'%.2f' % doc.total_reviewer_score" /></td>
                                     </tr>
                                 </tbody>
                             </table>
 
-                            <div class="text-end mt-3">
-                                <span class="fs-5 fw-bold text-dark"
-                                    style="border:2px solid #1a3c5e;border-radius:6px;padding:8px 20px;display:inline-block;">
-                                    Final Appraisal Score: <span
-                                        style="color:#1a3c5e;font-size:1.2em;">
+                            <!-- Competency flat table -->
+                            <t t-if="doc.competency_score_ids">
+                                <div style="background:#2563a8;color:#fff;padding:6px 10px;font-size:11px;font-weight:bold;margin-top:14px;margin-bottom:0;">Competency Scores</div>
+                                <table class="apr-table">
+                                    <thead>
+                                        <tr>
+                                            <th class="text-left" style="width:8%;">Group</th>
+                                            <th class="text-left" style="width:6%;">Code</th>
+                                            <th class="text-left" style="width:18%;">Competency</th>
+                                            <th class="text-left" style="width:26%;">Targets</th>
+                                            <th style="width:7%;">Max</th>
+                                            <th style="width:7%;">Self</th>
+                                            <th style="width:7%;">Supervisor</th>
+                                            <th style="width:7%;" t-if="doc.secondary_supervisor_id">Secondary</th>
+                                            <th style="width:7%;" t-if="doc.reviewer_id">Reviewer</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <t t-set="comp_rows_print" t-value="doc.competency_score_ids.sorted(key=lambda r: (r.group_sequence or 0, r.line_sequence or 0))" />
+                                        <t t-foreach="comp_rows_print" t-as="crow">
+                                            <tr>
+                                                <td class="kra-cell" style="font-size:10px;"><t t-esc="crow.group_name or ''" /></td>
+                                                <td style="font-size:10px;vertical-align:middle;"><t t-esc="crow.line_full_code or ''" /></td>
+                                                <td style="font-size:10px;vertical-align:middle;"><t t-esc="crow.line_name or ''" /></td>
+                                                <td style="font-size:10px;color:#444;"><t t-esc="(crow.line_description or '').strip()" /></td>
+                                                <td class="score-center"><t t-esc="'%.2f' % (crow.line_points or 0)" /></td>
+                                                <td class="score-center"><t t-esc="crow.self_score or 0" /></td>
+                                                <td class="score-center"><t t-esc="crow.supervisor_score or 0" /></td>
+                                                <td class="score-center" t-if="doc.secondary_supervisor_id"><t t-esc="crow.secondary_supervisor_score or 0" /></td>
+                                                <td class="score-center" t-if="doc.reviewer_id"><t t-esc="crow.reviewer_score or 0" /></td>
+                                            </tr>
+                                        </t>
+                                        <!-- Competency total row -->
+                                        <tr class="total-row">
+                                            <td colspan="4" style="text-align:right;">Competency Total</td>
+                                            <td class="score-center"><t t-esc="'%.2f' % doc.competency_max_total" /></td>
+                                            <td class="score-center"><t t-esc="'%.2f' % doc.competency_self_total" /></td>
+                                            <td class="score-center"><t t-esc="'%.2f' % doc.competency_supervisor_total" /></td>
+                                            <td class="score-center" t-if="doc.secondary_supervisor_id"><t t-esc="'%.2f' % doc.competency_secondary_total" /></td>
+                                            <td class="score-center" t-if="doc.reviewer_id"><t t-esc="'%.2f' % doc.competency_reviewer_total" /></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </t>
+
+                            <!-- Grand total summary table -->
+                            <div style="margin-top:14px;">
+                                <div style="background:#1a3557;color:#fff;padding:6px 10px;font-size:11px;font-weight:bold;margin-bottom:0;">Grand Total Summary</div>
+                                <table class="apr-table">
+                                    <thead>
+                                        <tr>
+                                            <th class="text-left" style="width:30%;">Component</th>
+                                            <th style="width:14%;">Max</th>
+                                            <th style="width:14%;">Self</th>
+                                            <th style="width:14%;">Supervisor</th>
+                                            <th style="width:14%;" t-if="doc.secondary_supervisor_id">Secondary</th>
+                                            <th style="width:14%;" t-if="doc.reviewer_id">Rev</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td style="font-weight:600;">KPI / KRA</td>
+                                            <td class="score-center"><t t-esc="'%.2f' % doc.planning_total_score" /></td>
+                                            <td class="score-center"><t t-esc="'%.2f' % doc.total_self_score" /></td>
+                                            <td class="score-center"><t t-esc="'%.2f' % doc.total_supervisor_score" /></td>
+                                            <td class="score-center" t-if="doc.secondary_supervisor_id"><t t-esc="'%.2f' % doc.total_secondary_score" /></td>
+                                            <td class="score-center" t-if="doc.reviewer_id"><t t-esc="'%.2f' % doc.total_reviewer_score" /></td>
+                                        </tr>
+                                        <t t-if="doc.competency_score_ids">
+                                            <tr>
+                                                <td style="font-weight:600;">Competency</td>
+                                                <td class="score-center"><t t-esc="'%.2f' % doc.competency_max_total" /></td>
+                                                <td class="score-center"><t t-esc="'%.2f' % doc.competency_self_total" /></td>
+                                                <td class="score-center"><t t-esc="'%.2f' % doc.competency_supervisor_total" /></td>
+                                                <td class="score-center" t-if="doc.secondary_supervisor_id"><t t-esc="'%.2f' % doc.competency_secondary_total" /></td>
+                                                <td class="score-center" t-if="doc.reviewer_id"><t t-esc="'%.2f' % doc.competency_reviewer_total" /></td>
+                                            </tr>
+                                        </t>
+                                        <tr class="total-row">
+                                            <td>Grand Total</td>
+                                            <td class="score-center">—</td>
+                                            <td class="score-center"><t t-esc="'%.2f' % doc.grand_total_self_score" /></td>
+                                            <td class="score-center"><t t-esc="'%.2f' % doc.grand_total_supervisor_score" /></td>
+                                            <td class="score-center" t-if="doc.secondary_supervisor_id"><t t-esc="'%.2f' % doc.grand_total_secondary_score" /></td>
+                                            <td class="score-center" t-if="doc.reviewer_id"><t t-esc="'%.2f' % doc.grand_total_reviewer_score" /></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                                <div style="text-align:right;margin-top:10px;font-weight:bold;font-size:13px;">
+                                    Final Score:
+                                    <t t-if="doc.cycle_id.final_score_selection == 'average'">Average of Supervisor Scores</t>
+                                    <t t-elif="doc.cycle_id.final_score_selection == 'reviewer'">Reviewer Score</t>
+                                    <t t-else="">Not Set</t>
+                                    — <span style="color:#1a3557;font-size:1.3em;">
                                         <t t-esc="'%.2f' % doc.final_appraisal_score" />
                                     </span>
-                                </span>
+                                </div>
                             </div>
 
                         </div>
 
                     </div>
+
+                    <script type="text/javascript"
+                        src="/hr_employee_evaluation/static/lib/html2pdf.bundle.min.js">
+                    </script>
+
+                    <script type="text/javascript">
+                        function exportAppraisalPDF(e, containerId, filename) {
+                            e.preventDefault();
+                            var container = document.getElementById(containerId);
+                            if (!container) { alert('Report content not found.'); return; }
+
+                            var screenLayouts = container.querySelectorAll('.screen-only-layout');
+                            var printLayouts  = container.querySelectorAll('.print-only-layout');
+
+                            screenLayouts.forEach(function(el) { el.style.setProperty('display', 'none', 'important'); });
+                            printLayouts.forEach(function(el)  { el.style.setProperty('display', 'block', 'important'); });
+
+                            var opt = {
+                                margin:      [10, 8, 10, 8],
+                                filename:    filename || 'Appraisal_Summary.pdf',
+                                image:       { type: 'jpeg', quality: 0.98 },
+                                html2canvas: { scale: 2, useCORS: true, logging: false, scrollY: 0 },
+                                jsPDF:       { unit: 'mm', format: 'a4', orientation: 'landscape' },
+                                pagebreak:   { mode: ['avoid-all', 'css', 'legacy'] }
+                            };
+
+                            html2pdf()
+                                .set(opt)
+                                .from(container)
+                                .save()
+                                .then(function() {
+                                    screenLayouts.forEach(function(el) { el.style.removeProperty('display'); });
+                                    printLayouts.forEach(function(el)  { el.style.removeProperty('display'); });
+                                });
+                        }
+                    </script>
+
                 </t>
             </t>
         </t>

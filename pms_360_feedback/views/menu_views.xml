@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <menuitem id="menu_pms_360_root"
+              name="360° Feedback"
+              sequence="90"
+              active="False"/>
+
+    <menuitem id="menu_pms_360_admin"
+              name="Feedback Management"
+              parent="menu_pms_360_root"
+              sequence="10"
+              groups="pms_360_feedback.group_pms_hr_admin"/>
+
+    <menuitem id="menu_pms_360_templates"
+              name="Question Templates"
+              parent="menu_pms_360_admin"
+              action="action_feedback_template"
+              sequence="10"
+              groups="pms_360_feedback.group_pms_hr_admin"/>
+
+    <menuitem id="menu_pms_360_sessions_admin"
+              name="Feedback Sessions"
+              parent="menu_pms_360_admin"
+              action="action_feedback_session_admin"
+              sequence="20"
+              groups="pms_360_feedback.group_pms_hr_admin"/>
+
+    <menuitem id="menu_pms_360_responses_admin"
+              name="All Responses"
+              parent="menu_pms_360_admin"
+              action="action_feedback_response_admin"
+              sequence="30"
+              groups="pms_360_feedback.group_pms_hr_admin"/>
+
+    <menuitem id="menu_pms_360_employee"
+              name="My Feedback"
+              parent="menu_pms_360_root"
+              sequence="20"
+              groups="pms_360_feedback.group_pms_employee"/>
+
+    <menuitem id="menu_pms_360_active_sessions"
+              name="Active Sessions"
+              parent="menu_pms_360_employee"
+              action="action_feedback_session_employee"
+              sequence="10"
+              groups="pms_360_feedback.group_pms_employee"/>
+
+    <menuitem id="menu_pms_360_give_feedback"
+              name="Feedback Submitted"
+              parent="menu_pms_360_employee"
+              action="action_feedback_response_give"
+              sequence="20"
+              groups="pms_360_feedback.group_pms_employee"/>
+
+    <menuitem id="menu_pms_360_received_feedback"
+              name="Feedback Received"
+              parent="menu_pms_360_employee"
+              action="action_feedback_received"
+              sequence="30"
+              groups="pms_360_feedback.group_pms_employee"/>
+
+    <record id="action_feedback_dashboard" model="ir.actions.client">
+        <field name="name">My Feedback Dashboard</field>
+        <field name="tag">pms_feedback_dashboard</field>
+    </record>
+
+    <menuitem id="menu_pms_360_dashboard"
+              name="Feedback Dashboard"
+              parent="menu_pms_360_employee"
+              action="action_feedback_dashboard"
+              sequence="40"
+              groups="pms_360_feedback.group_pms_employee"/>
+
+    <!-- 360° Question Templates inside Employee Evaluation → Configuration -->
+    <record id="action_360_template_in_eval" model="ir.actions.act_window">
+        <field name="name">360° Question Templates</field>
+        <field name="res_model">pms.feedback.template</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Create your first question template</p>
+            <p>Build reusable question sets for 360° feedback sessions.</p>
+        </field>
+    </record>
+
+    <menuitem id="menu_360_templates_in_eval_config"
+              name="360° Question Templates"
+              parent="hr_employee_evaluation.menu_appraisal_configuration"
+              action="action_360_template_in_eval"
+              sequence="3"
+              groups="hr_employee_evaluation.group_pms_hr_manager"/>
+
+    <!-- My Feedback menu inside Employee Evaluation app between Appraisal and Configuration -->
+    <menuitem id="menu_eval_my_feedback"
+              name="Feedback"
+              parent="hr_employee_evaluation.menu_appraisal_root"
+              sequence="50"/>
+
+    <menuitem id="menu_eval_active_sessions"
+              name="Active Sessions"
+              parent="menu_eval_my_feedback"
+              action="action_feedback_session_employee"
+              sequence="10"/>
+
+    <menuitem id="menu_eval_feedback_submitted"
+              name="Feedback Submitted"
+              parent="menu_eval_my_feedback"
+              action="action_feedback_response_give"
+              sequence="20"/>
+
+    <menuitem id="menu_eval_feedback_received"
+              name="Feedback Received"
+              parent="menu_eval_my_feedback"
+              action="action_feedback_received"
+              sequence="30"/>
+
+    <menuitem id="menu_eval_feedback_dashboard"
+              name="Feedback Dashboard"
+              parent="menu_eval_my_feedback"
+              action="action_feedback_dashboard"
+              sequence="40"/>
+
+</odoo>

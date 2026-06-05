@@ -46,6 +46,10 @@ access_competency_framework_group_manager,competency.framework.group.manager,mod
 access_competency_framework_line_user,competency.framework.line.user,model_competency_framework_line,base.group_user,1,0,0,0
 access_competency_framework_line_manager,competency.framework.line.manager,model_competency_framework_line,base.group_system,1,1,1,1
 
+access_competency_framework_template_hr,competency.framework.template.hr,model_competency_framework_template,group_pms_hr_manager,1,1,1,1
+access_competency_framework_group_hr,competency.framework.group.hr,model_competency_framework_group,group_pms_hr_manager,1,1,1,1
+access_competency_framework_line_hr,competency.framework.line.hr,model_competency_framework_line,group_pms_hr_manager,1,1,1,1
+
 access_pms_rating_definition_manager,pms.rating.definition.manager,model_pms_rating_definition,group_pms_hr_manager,1,1,1,1
 access_pms_rating_definition_supervisor,pms.rating.definition.supervisor,model_pms_rating_definition,group_pms_supervisor,1,0,0,0
 access_pms_rating_definition_reviewer,pms.rating.definition.reviewer,model_pms_rating_definition,group_pms_reviewer,1,0,0,0
@@ -84,6 +88,13 @@ access_pms_cycle_enrollment_hr,pms.cycle.enrollment.hr,model_pms_cycle_enrollmen
 access_pms_cycle_enrollment_supervisor,pms.cycle.enrollment.supervisor,model_pms_cycle_enrollment,group_pms_supervisor,1,0,0,0
 access_pms_cycle_enrollment_employee,pms.cycle.enrollment.employee,model_pms_cycle_enrollment,group_pms_employee,1,0,0,0
 
-access_pms_enrollment_wizard_hr,pms.enrollment.wizard.hr,model_pms_enrollment_wizard,group_pms_hr_manager,1,1,1,1
-access_pms_enrollment_wizard_supervisor,pms.enrollment.wizard.supervisor,model_pms_enrollment_wizard,group_pms_supervisor,1,1,1,1
-access_pms_enrollment_wizard_employee,pms.enrollment.wizard.employee,model_pms_enrollment_wizard,group_pms_employee,1,0,0,0
+access_pms_add_employee_wizard_hr,pms.add.employee.wizard.hr,model_pms_add_employee_wizard,hr_employee_evaluation.group_pms_hr_manager,1,1,1,1
+access_pms_add_employee_wizard_reviewer,pms.add.employee.wizard.reviewer,model_pms_add_employee_wizard,hr_employee_evaluation.group_pms_reviewer,1,0,0,0
+access_pms_add_employee_wizard_supervisor,pms.add.employee.wizard.supervisor,model_pms_add_employee_wizard,hr_employee_evaluation.group_pms_supervisor,1,0,0,0
+access_pms_add_employee_wizard_employee,pms.add.employee.wizard.employee,model_pms_add_employee_wizard,hr_employee_evaluation.group_pms_employee,1,0,0,0
+
+access_pms_appraisal_reviewer,pms.appraisal.reviewer,model_pms_appraisal,hr_employee_evaluation.group_pms_reviewer,1,1,0,0
+access_pms_cycle_reviewer,pms.cycle.reviewer,model_pms_cycle,hr_employee_evaluation.group_pms_reviewer,1,0,0,0
+access_pms_kra_reviewer,pms.kra.reviewer,model_pms_appraisal_kra,hr_employee_evaluation.group_pms_reviewer,1,1,0,0
+access_pms_kpi_reviewer,pms.kpi.reviewer,model_pms_appraisal_kpi,hr_employee_evaluation.group_pms_reviewer,1,1,0,0
+access_pms_competency_reviewer,pms.competency.reviewer,model_appraisal_competency_score,hr_employee_evaluation.group_pms_reviewer,1,1,0,0

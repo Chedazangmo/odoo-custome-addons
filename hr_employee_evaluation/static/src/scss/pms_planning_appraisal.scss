@@ -1,8 +1,13 @@
+// ═══════════════════════════════════════════════════════════════════════════════
+// PMS Appraisal — full stylesheet
+// Covers: profile header, stat cards, details card, appraisal/competency tables
+// ═══════════════════════════════════════════════════════════════════════════════
+
+// ── Profile header AGVDbNVutgwiep6615bjTJnQkScwWuUEMuU95NredRG5─────────────────
 
 .pms_plan_header {
     width: 100%;
 }
-
 
 .pms_plan_profile_row {
     display: flex;
@@ -11,7 +16,6 @@
     width: 100%;
 }
 
-// Avatar styling
 .pms_plan_avatar_field {
     flex-shrink: 0 !important;
     min-width: 100px !important;
@@ -39,7 +43,6 @@
     }
 }
 
-// Profile info container
 .pms_plan_profile_info {
     display: flex;
     flex-direction: column;
@@ -49,11 +52,8 @@
     flex: 1;
 }
 
-// Employee name
 .pms_plan_emp_name {
-    .o_field_widget,
-    a,
-    span {
+    .o_field_widget, a, span {
         font-size: 1.5rem !important;
         font-weight: 600 !important;
         color: #1a1a2e !important;
@@ -63,7 +63,6 @@
     }
 }
 
-// Meta info row 
 .pms_plan_meta_row {
     display: flex;
     flex-wrap: wrap;
@@ -80,27 +79,21 @@
     }
 }
 
-.pms_plan_meta_sep { 
-    color: #dee2e6; 
-}
+.pms_plan_meta_sep { color: #dee2e6; }
 
-.pms_plan_meta_item { 
-    display: inline-flex; 
-    align-items: center; 
-    gap: 5px; 
+.pms_plan_meta_item {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
     white-space: nowrap;
-    
-    i {
-        font-size: 0.8rem;
-    }
+
+    i { font-size: 0.8rem; }
 }
 
-// Statusbar row
-.pms_plan_status_row {
-    width: 100%;
-}
+.pms_plan_status_row { width: 100%; }
 
-// Inline statusbar styling 
+// ── Inline status bar AGVDbNVutgwiep6615bjTJnQkScwWuUEMuU95NredRG5──────────────
+
 .pms_inline_statusbar {
     display: inline-flex !important;
     flex-wrap: wrap !important;
@@ -108,14 +101,14 @@
     border-radius: 8px !important;
     overflow: hidden !important;
     background: #f8f9fa !important;
-    
+
     .o_statusbar_status {
         display: flex !important;
         flex-wrap: wrap !important;
         margin: 0 !important;
         padding: 0 !important;
     }
-    
+
     button, .o_arrow_button {
         position: relative;
         display: inline-flex !important;
@@ -129,41 +122,34 @@
         color: #6c757d !important;
         border: none !important;
         margin-left: -1px !important;
-        
+
         &:first-child {
             margin-left: 0 !important;
             padding-left: 18px !important;
         }
-        
-        // Arrow effect between buttons
+
         &::before {
             content: '';
             position: absolute;
-            left: 0;
-            top: 0;
-            bottom: 0;
+            left: 0; top: 0; bottom: 0;
             width: 0;
         }
     }
-    
-    // Current/active state
+
     .o_arrow_button_current {
         background: #7367f0 !important;
         color: #fff !important;
         z-index: 1;
         box-shadow: none !important;
     }
-    
+
     .btn-primary, .o_arrow_button_current {
         background: #7367f0 !important;
         color: #fff !important;
     }
-    
-    // Hide dropdown toggles
-    .dropdown-toggle {
-        display: none !important;
-    }
-    
+
+    .dropdown-toggle { display: none !important; }
+
     .dropdown-menu {
         position: static !important;
         display: inline-flex !important;
@@ -172,15 +158,14 @@
         padding: 0 !important;
         box-shadow: none !important;
     }
-    
-    // Completed states (previous steps)
+
     button:not(.o_arrow_button_current):not(.dropdown-toggle) {
         background: #e9ecef !important;
         color: #495057 !important;
     }
 }
 
-// ── Stats Row ─────────────────────────────────────────────────────────────────
+// ── Stat cards AGVDbNVutgwiep6615bjTJnQkScwWuUEMuU95NredRG5─────────────────────
 
 .pms_plan_stats_row {
     display: flex;
@@ -197,12 +182,12 @@
     padding: 14px 18px;
     border: 1px solid #e9ecef;
     transition: all 0.2s ease;
-    
+
     &:hover {
         border-color: #dee2e6;
         box-shadow: 0 2px 8px rgba(0,0,0,0.04);
     }
-    
+
     .pms_stat_label {
         font-size: 0.7rem;
         text-transform: uppercase;
@@ -211,12 +196,12 @@
         letter-spacing: 0.8px;
         margin-bottom: 6px;
     }
-    
+
     .pms_stat_value {
         font-size: 1.4rem;
         font-weight: 700;
         color: #1a1a2e;
-        
+
         .o_field_widget, .o_field_float, .o_field_date, span {
             font-size: inherit !important;
             font-weight: inherit !important;
@@ -225,17 +210,12 @@
     }
 }
 
-// Score matching styling
 .pms_stat_score_current .pms_stat_value {
-    .text-success, &.text-success { 
-        color: #28a745 !important; 
-    }
-    .text-danger, &.text-danger { 
-        color: #dc3545 !important; 
-    }
+    .text-success, &.text-success { color: #28a745 !important; }
+    .text-danger,  &.text-danger  { color: #dc3545 !important; }
 }
 
-// ── Two Column Layout ────────────────────────────────────────────────────────
+// ── Two-column layout AGVDbNVutgwiep6615bjTJnQkScwWuUEMuU95NredRG5──────────────
 
 .pms_plan_two_col_wrapper {
     display: flex;
@@ -243,18 +223,10 @@
     margin-top: 8px;
 }
 
-.pms_plan_left_col {
-    flex: 2;
-    min-width: 0;
-}
+.pms_plan_left_col  { flex: 2; min-width: 0; }
+.pms_plan_right_col { flex: 1; min-width: 280px; max-width: 340px; }
 
-.pms_plan_right_col {
-    flex: 1;
-    min-width: 280px;
-    max-width: 340px;
-}
-
-// ── Details Card ─────────────────────────────────────────────────────────────
+// ── Details card AGVDbNVutgwiep6615bjTJnQkScwWuUEMuU95NredRG5───────────────────
 
 .pms_details_card {
     background: #f8f9fa;
@@ -278,15 +250,9 @@
     align-items: center;
     padding: 10px 0;
     border-bottom: 1px solid #e9ecef;
-    
-    &:last-child {
-        border-bottom: none;
-        padding-bottom: 0;
-    }
-    
-    &:first-child {
-        padding-top: 0;
-    }
+
+    &:last-child { border-bottom: none; padding-bottom: 0; }
+    &:first-child { padding-top: 0; }
 }
 
 .pms_detail_label {
@@ -300,7 +266,7 @@
     font-weight: 600;
     color: #1a1a2e;
     text-align: right;
-    
+
     .o_field_widget, .o_field_many2one, span, a {
         font-size: inherit !important;
         font-weight: inherit !important;
@@ -310,7 +276,7 @@
     }
 }
 
-// ── Alert Warning ────────────────────────────────────────────────────────────
+// ── Alert warning AGVDbNVutgwiep6615bjTJnQkScwWuUEMuU95NredRG5──────────────────
 
 .alert-warning {
     background-color: #fff3cd;
@@ -319,100 +285,502 @@
     border-radius: 10px;
     padding: 12px 16px;
     font-size: 0.85rem;
-    
-    i {
-        margin-right: 8px;
-    }
+
+    i { margin-right: 8px; }
 }
 
-// ── Responsive Design ────────────────────────────────────────────────────────
-
-@media (max-width: 992px) {
-    .pms_plan_two_col_wrapper {
-        flex-direction: column;
-        gap: 24px;
-    }
-    
-    .pms_plan_right_col {
-        max-width: 100%;
-    }
-}
-
-@media (max-width: 768px) {
-    .pms_plan_profile_row {
-        flex-direction: column;
-        align-items: center;
-        text-align: center;
-    }
-    
-    .pms_plan_profile_info {
-        align-items: center;
-    }
-    
-    .pms_plan_meta_row {
-        justify-content: center;
-    }
-    
-    .pms_plan_stats_row {
-        flex-direction: column;
-        gap: 12px;
-    }
-    
-    .pms_plan_stat_card {
-        min-width: auto;
-    }
-    
-    .pms_details_card {
-        padding: 14px 16px;
-    }
-}
-
-@media (max-width: 480px) {
-    .pms_plan_avatar_field {
-        min-width: 80px !important;
-        max-width: 80px !important;
-        height: 80px !important;
-    }
-    
-    .pms_plan_emp_name .o_field_widget,
-    .pms_plan_emp_name a,
-    .pms_plan_emp_name span {
-        font-size: 1.25rem !important;
-    }
-    
-    .pms_inline_statusbar button, 
-    .pms_inline_statusbar .o_arrow_button {
-        padding: 6px 12px 6px 20px !important;
-        font-size: 0.6rem !important;
-    }
-}
-
-// ── Appraisal Layout Support────────────────────
+// ── Appraisal layout (two-column grid) ───────────────────────────────────────
 
 .pms_appraisal_layout {
     display: flex !important;
     gap: 40px !important;
     margin-top: 8px !important;
-    
+
     > div:first-child {
         flex: 2 !important;
         min-width: 0 !important;
     }
-    
+
     > div:last-child {
         flex: 1 !important;
         min-width: 280px !important;
         max-width: 340px !important;
     }
-    
+
     @media (max-width: 992px) {
         flex-direction: column !important;
-        
-        > div:last-child {
-            max-width: 100% !important;
+        > div:last-child { max-width: 100% !important; }
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// APPRAISAL TABLE — shared base for KPI and Competency tables
+// Targets: .appraisal-wrapper > table.appraisal-flex-table
+// ═══════════════════════════════════════════════════════════════════════════════
+
+.appraisal-wrapper {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    border: 1px solid #e9ecef;
+    border-radius: 10px;
+    background: #fff;
+
+    // ── Shared table base AGVDbNVutgwiep6615bjTJnQkScwWuUEMuU95NredRG5──────────
+    table.appraisal-flex-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 0;
+        font-size: 13px;
+
+        // ── Header AGVDbNVutgwiep6615bjTJnQkScwWuUEMuU95NredRG5────────────────
+        thead tr {
+            background: #f8f9fa;
+            border-bottom: 2px solid #dee2e6;
+        }
+
+        thead th {
+            padding: 10px 12px !important;
+            font-size: 11px !important;
+            font-weight: 700 !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.05em !important;
+            color: #6c757d !important;
+            white-space: nowrap !important;
+            vertical-align: middle !important;
+            border: none !important;
+            background: transparent !important;
+
+            // Score / numeric columns — center the header label
+            &.col-score,
+            &.col-emp-score,
+            &.col-sup-score,
+            &.col-2nd-score,
+            &.col-rev-score,
+            &.col-max-pts {
+                text-align: center !important;
+            }
+        }
+
+        // ── Body rows AGVDbNVutgwiep6615bjTJnQkScwWuUEMuU95NredRG5──────────────
+        tbody tr {
+            border-bottom: 1px solid #f0f0f0;
+            transition: background 0.12s;
+
+            &:last-child { border-bottom: none; }
+            &:hover { background: #fafbff; }
+        }
+
+        tbody td {
+            padding: 10px 12px !important;
+            vertical-align: middle !important;
+            color: #212529;
+            border: none !important;
+
+            // ── Score / numeric cells — center value ──────────────────────────
+            &.col-score,
+            &.col-emp-score,
+            &.col-sup-score,
+            &.col-2nd-score,
+            &.col-rev-score,
+            &.col-max-pts {
+                text-align: center !important;
+
+                input.form-control {
+                    text-align: center !important;
+                    max-width: 72px !important;
+                    margin: 0 auto !important;
+                    display: block !important;
+                }
+
+                .appraisal-readonly-text {
+                    text-align: center !important;
+                    display: block !important;
+                }
+            }
+
+            // ── Remarks cells — left aligned ──────────────────────────────────
+            &.col-emp-remarks,
+            &.col-sup-remarks,
+            &.col-2nd-remarks,
+            &.col-rev-remarks {
+                text-align: left !important;
+            }
+
+            // ── Code cell — compact AGVDbNVutgwiep6615bjTJnQkScwWuUEMuU95NredRG5
+            &.col-code {
+                font-weight: 600;
+                color: #495057;
+                white-space: nowrap;
+            }
+        }
+
+        // ── form-control inputs inside cells ──────────────────────────────────
+        td input.form-control,
+        td textarea.form-control {
+            border: 1px solid transparent !important;
+            background: transparent !important;
+            box-shadow: none !important;
+            font-size: 13px !important;
+            padding: 4px 8px !important;
+            border-radius: 4px !important;
+            transition: border-color 0.15s, background 0.15s !important;
+            width: 100% !important;
+
+            &:focus {
+                border-color: #7367f0 !important;
+                background: #fff !important;
+                box-shadow: 0 0 0 2px rgba(115, 103, 240, 0.08) !important;
+                outline: none !important;
+            }
+        }
+
+        tbody tr:hover td input.form-control,
+        tbody tr:hover td textarea.form-control {
+            border-color: #e9ecef !important;
+            background: #fff !important;
+        }
+
+        // Remove browser number-input arrows
+        td input[type="number"] {
+            -moz-appearance: textfield !important;
+            appearance: textfield !important;
+            &::-webkit-outer-spin-button,
+            &::-webkit-inner-spin-button {
+                -webkit-appearance: none !important;
+                appearance: none !important;
+                margin: 0 !important;
+            }
+        }
+
+        // Auto-height textareas
+        td textarea.form-control {
+            resize: none !important;
+            overflow: hidden !important;
+            min-height: 34px !important;
+        }
+
+        // Readonly text display
+        .appraisal-readonly-text {
+            font-size: 13px;
+            color: #212529;
+            line-height: 1.5;
+            padding: 2px 0;
+            word-break: break-word;
+            white-space: pre-wrap;
+        }
+
+        // Empty state row
+        td[colspan] {
+            text-align: center !important;
+            color: #6c757d !important;
+            padding: 40px 12px !important;
+            background: #fafafa !important;
+            font-style: italic;
         }
     }
 }
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// COMPETENCY TABLE — specific column widths
+// Column order: Code | Competency | Targets | Max Pts | Emp Score | Emp Remarks
+//               | Sup Score | Sup Remarks | 2nd Sup Score | 2nd Sup Remarks
+//               | Rev Score | Rev Remarks
+// ═══════════════════════════════════════════════════════════════════════════════
+
+.appraisal-wrapper table.o_competency_inline_table,
+.appraisal-expand-wrapper table.o_competency_expand_table {
+
+    // Use colgroup-style fixed widths via th
+    thead th {
+        // Col 1 — Code
+        &:nth-child(1) { width: 65px !important; min-width: 65px !important; }
+        // Col 2 — Competency
+        &:nth-child(2) { width: 160px !important; min-width: 140px !important; }
+        // Col 3 — Targets
+        &:nth-child(3) { width: 260px !important; min-width: 220px !important; }
+        // Col 4 — Max Pts
+        &:nth-child(4) {
+            width: 80px !important;
+            min-width: 70px !important;
+            text-align: center !important;
+        }
+        // Col 5 — Emp Score
+        &:nth-child(5) {
+            width: 90px !important;
+            min-width: 80px !important;
+            text-align: center !important;
+        }
+        // Col 6 — Emp Remarks
+        &:nth-child(6) { width: 150px !important; min-width: 130px !important; }
+        // Col 7 — Sup Score
+        &:nth-child(7) {
+            width: 90px !important;
+            min-width: 80px !important;
+            text-align: center !important;
+        }
+        // Col 8 — Sup Remarks
+        &:nth-child(8) { width: 150px !important; min-width: 130px !important; }
+        // Col 9 — 2nd Sup Score
+        &:nth-child(9) {
+            width: 100px !important;
+            min-width: 90px !important;
+            text-align: center !important;
+        }
+        // Col 10 — 2nd Sup Remarks
+        &:nth-child(10) { width: 150px !important; min-width: 130px !important; }
+        // Col 11 — Rev Score
+        &:nth-child(11) {
+            width: 90px !important;
+            min-width: 80px !important;
+            text-align: center !important;
+        }
+        // Col 12 — Rev Remarks
+        &:nth-child(12) { width: 150px !important; min-width: 130px !important; }
+    }
+
+    tbody td {
+        // Col 1 — Code
+        &:nth-child(1) {
+            font-weight: 600;
+            color: #495057;
+            white-space: nowrap;
+        }
+        // Col 4 — Max Pts (centered, readonly)
+        &:nth-child(4) {
+            text-align: center !important;
+            .appraisal-readonly-text { text-align: center !important; display: block !important; }
+        }
+        // Col 5, 7, 9, 11 — Score inputs (centered)
+        &:nth-child(5),
+        &:nth-child(7),
+        &:nth-child(9),
+        &:nth-child(11) {
+            text-align: center !important;
+
+            input.form-control {
+                text-align: center !important;
+                max-width: 72px !important;
+                margin: 0 auto !important;
+                display: block !important;
+            }
+
+            .appraisal-readonly-text {
+                text-align: center !important;
+                display: block !important;
+            }
+        }
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// KPI APPRAISAL TABLE — specific column widths
+// Column order: KPI Name | Score | Criteria | Target | Emp Score | Emp Remarks
+//               | Sup Score | Sup Remarks | 2nd Sup Score | 2nd Sup Remarks
+//               | Rev Score | Rev Remarks
+// ═══════════════════════════════════════════════════════════════════════════════
+
+.appraisal-wrapper table.appraisal-flex-table:not(.o_competency_inline_table) {
+
+    thead th {
+        // Col 1 — KPI Name
+        &:nth-child(1) { width: 160px !important; min-width: 140px !important; }
+        // Col 2 — Score
+        &:nth-child(2) {
+            width: 80px !important;
+            min-width: 70px !important;
+            text-align: center !important;
+        }
+        // Col 3 — Criteria
+        &:nth-child(3) { width: 160px !important; min-width: 130px !important; }
+        // Col 4 — Target
+        &:nth-child(4) { width: 160px !important; min-width: 130px !important; }
+        // Col 5 — Emp Score
+        &:nth-child(5) {
+            width: 90px !important;
+            min-width: 80px !important;
+            text-align: center !important;
+        }
+        // Col 6 — Emp Remarks
+        &:nth-child(6) { width: 150px !important; min-width: 120px !important; }
+        // Col 7 — Sup Score
+        &:nth-child(7) {
+            width: 90px !important;
+            min-width: 80px !important;
+            text-align: center !important;
+        }
+        // Col 8 — Sup Remarks
+        &:nth-child(8) { width: 150px !important; min-width: 120px !important; }
+        // Col 9 — 2nd Sup Score
+        &:nth-child(9) {
+            width: 100px !important;
+            min-width: 90px !important;
+            text-align: center !important;
+        }
+        // Col 10 — 2nd Sup Remarks
+        &:nth-child(10) { width: 150px !important; min-width: 120px !important; }
+        // Col 11 — Rev Score
+        &:nth-child(11) {
+            width: 90px !important;
+            min-width: 80px !important;
+            text-align: center !important;
+        }
+        // Col 12 — Rev Remarks
+        &:nth-child(12) { width: 150px !important; min-width: 120px !important; }
+    }
+
+    tbody td {
+        // Col 2 — Score (readonly, centered)
+        &:nth-child(2) {
+            text-align: center !important;
+            input.form-control {
+                text-align: center !important;
+                max-width: 72px !important;
+                margin: 0 auto !important;
+                display: block !important;
+            }
+            .appraisal-readonly-text { text-align: center !important; display: block !important; }
+        }
+        // Col 5, 7, 9, 11 — Score inputs (centered)
+        &:nth-child(5),
+        &:nth-child(7),
+        &:nth-child(9),
+        &:nth-child(11) {
+            text-align: center !important;
+
+            input.form-control {
+                text-align: center !important;
+                max-width: 72px !important;
+                margin: 0 auto !important;
+                display: block !important;
+            }
+
+            .appraisal-readonly-text {
+                text-align: center !important;
+                display: block !important;
+            }
+        }
+    }
+}
+
+// ── Competency code badge ──────────────────────────────────────────────────────
+
+.o_comp_line_code {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 700;
+    color: #495057;
+    background: #f0f1f3;
+    border-radius: 4px;
+    padding: 2px 6px;
+    white-space: nowrap;
+    letter-spacing: 0.03em;
+}
+
+// ── Competency totals summary bar ─────────────────────────────────────────────
+
+.o_competency_totals_bar {
+    background: #f0f4ff;
+    border: 1px solid #c7d6f5;
+    border-radius: 8px;
+    padding: 10px 16px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 24px;
+    margin-bottom: 16px;
+
+    .o_comp_total_item {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+    }
+
+    .o_comp_total_label {
+        font-size: 0.7em;
+        font-weight: 600;
+        color: #64748b;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .o_comp_total_value {
+        font-size: 1.05em;
+        font-weight: 700;
+        color: #1e293b;
+
+        &.emp   { color: #1d4ed8; }
+        &.sup   { color: #059669; }
+        &.sec   { color: #d97706; }
+        &.rev   { color: #7c3aed; }
+    }
+}
+
+// ── Expand dialog tables ───────────────────────────────────────────────────────
+
+.appraisal-expand-wrapper {
+    width: 100%;
+    overflow-x: auto;
+
+    .appraisal-expand-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px;
+
+        thead th {
+            padding: 10px 12px !important;
+            font-size: 11px !important;
+            font-weight: 700 !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.05em !important;
+            color: #6c757d !important;
+            white-space: nowrap !important;
+            vertical-align: middle !important;
+            background: #f8f9fa !important;
+            border-bottom: 2px solid #dee2e6 !important;
+        }
+
+        tbody td {
+            padding: 10px 12px !important;
+            vertical-align: middle !important;
+            border-bottom: 1px solid #f0f0f0 !important;
+            font-size: 13px;
+        }
+
+        tbody tr:last-child td { border-bottom: none !important; }
+        tbody tr:hover { background: #fafbff; }
+
+        td input.form-control,
+        td textarea.form-control {
+            border: 1px solid #e9ecef !important;
+            font-size: 13px !important;
+            padding: 4px 8px !important;
+
+            &:focus {
+                border-color: #7367f0 !important;
+                box-shadow: 0 0 0 2px rgba(115,103,240,0.08) !important;
+            }
+        }
+
+        td input[type="number"] {
+            -moz-appearance: textfield !important;
+            appearance: textfield !important;
+            &::-webkit-outer-spin-button,
+            &::-webkit-inner-spin-button {
+                -webkit-appearance: none !important;
+                appearance: none !important;
+                margin: 0 !important;
+            }
+        }
+
+        .appraisal-readonly-text {
+            font-size: 13px;
+            color: #212529;
+            line-height: 1.5;
+        }
+    }
+}
+
+// ── Template / KRA card section ───────────────────────────────────────────────
 
 .appraisal-cards-container {
     display: grid;
@@ -427,16 +795,25 @@
     border: 1px solid #e9ecef;
     transition: all 0.2s ease;
     overflow: hidden;
+    animation: fadeInUp 0.3s ease-out;
+
+    &:hover {
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        border-color: #dee2e6;
+    }
+
+    &:nth-child(1) { animation-delay: 0s; }
+    &:nth-child(2) { animation-delay: 0.05s; }
+    &:nth-child(3) { animation-delay: 0.1s; }
+    &:nth-child(4) { animation-delay: 0.15s; }
 }
 
-.appraisal-card-compact:hover {
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-    border-color: #dee2e6;
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
 }
 
-.appraisal-card-content {
-    padding: 12px 16px;
-}
+.appraisal-card-content { padding: 12px 16px; }
 
 .compact-header {
     display: flex;
@@ -445,39 +822,23 @@
     margin-bottom: 12px;
     padding-bottom: 8px;
     border-bottom: 1px solid #f0f0f0;
+
+    i { font-size: 14px; }
+
+    strong {
+        font-size: 13px;
+        font-weight: 600;
+        color: #2c3e50;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
 }
 
-.compact-header i {
-    font-size: 14px;
-}
+.card-icon-blue   { color: #4a90e2; }
+.card-icon-purple { color: #9b59b6; }
+.card-icon-green  { color: #27ae60; }
 
-.compact-header strong {
-    font-size: 13px;
-    font-weight: 600;
-    color: #2c3e50;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.card-icon-blue {
-    color: #4a90e2;
-}
-
-.card-icon-purple {
-    color: #9b59b6;
-}
-
-.card-icon-green {
-    color: #27ae60;
-}
-
-.compact-group {
-    margin-bottom: 10px;
-}
-
-.compact-group:last-child {
-    margin-bottom: 0;
-}
+.compact-group { margin-bottom: 10px; &:last-child { margin-bottom: 0; } }
 
 .compact-label {
     font-size: 11px;
@@ -494,26 +855,28 @@
     padding: 6px 8px !important;
     height: auto !important;
     min-height: 32px !important;
+
+    &:focus {
+        border-color: #7367f0 !important;
+        box-shadow: 0 0 0 2px rgba(115, 103, 240, 0.1) !important;
+    }
 }
 
-.compact-input:focus {
-    border-color: #7367f0 !important;
-    box-shadow: 0 0 0 2px rgba(115, 103, 240, 0.1) !important;
-}
-
-.compact-field-box {
-    margin-bottom: 0;
-}
+.compact-field-box { margin-bottom: 0; }
 
 .compact-points {
     text-align: center;
     margin: 8px 0;
-}
 
-.compact-points .points-value {
-    font-size: 20px;
-    font-weight: 700;
-    color: #2c3e50;
+    .points-value { font-size: 20px; font-weight: 700; color: #2c3e50; }
+    .kpi          { color: #4a90e2; }
+    .competency   { color: #27ae60; }
+    .total        { color: #6c757d; font-size: 16px; }
+
+    &:hover .points-value {
+        transform: scale(1.02);
+        transition: transform 0.2s ease;
+    }
 }
 
 .compact-points-field {
@@ -535,47 +898,29 @@
     margin-top: 2px;
 }
 
-.compact-points .kpi {
-    color: #4a90e2;
-}
-
-.compact-points .competency {
-    color: #27ae60;
-}
-
-.compact-points .total {
-    color: #6c757d;
-    font-size: 16px;
-}
-
 .compact-progress {
     height: 4px !important;
     background: #f0f0f0;
     border-radius: 2px;
     overflow: hidden;
     margin-top: 8px;
-}
 
-.compact-progress .progress-bar-fill {
-    height: 100%;
-    background: linear-gradient(90deg, #7367f0, #9b8bf4);
-    border-radius: 2px;
-    transition: width 0.3s ease;
+    .progress-bar-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #7367f0, #9b8bf4);
+        border-radius: 2px;
+        transition: width 0.3s ease;
+    }
 }
 
 .appraisal-card-compact:nth-child(3) .compact-progress .progress-bar-fill {
     background: linear-gradient(90deg, #4a90e2, #6ba3f5);
 }
-
 .appraisal-card-compact:nth-child(4) .compact-progress .progress-bar-fill {
     background: linear-gradient(90deg, #27ae60, #2ecc71);
 }
 
-.compact-btn-group {
-    margin-top: 6px;
-    display: flex;
-    gap: 6px;
-}
+.compact-btn-group { margin-top: 6px; display: flex; gap: 6px; }
 
 .btn-compact {
     padding: 4px 10px !important;
@@ -583,32 +928,21 @@
     height: auto !important;
     line-height: 1.4 !important;
     border-radius: 4px !important;
-}
 
-.btn-compact i {
-    font-size: 11px !important;
-    margin-right: 4px !important;
-}
+    i { font-size: 11px !important; margin-right: 4px !important; }
 
-.btn-compact.btn-primary {
-    background-color: #7367f0 !important;
-    border-color: #7367f0 !important;
-}
+    &.btn-primary {
+        background-color: #7367f0 !important;
+        border-color: #7367f0 !important;
+        &:hover { background-color: #5f52e0 !important; border-color: #5f52e0 !important; }
+    }
 
-.btn-compact.btn-primary:hover {
-    background-color: #5f52e0 !important;
-    border-color: #5f52e0 !important;
-}
-
-.btn-compact.btn-default {
-    background-color: #f8f9fa !important;
-    border-color: #dee2e6 !important;
-    color: #495057 !important;
-}
-
-.btn-compact.btn-default:hover {
-    background-color: #e9ecef !important;
-    border-color: #ced4da !important;
+    &.btn-default {
+        background-color: #f8f9fa !important;
+        border-color: #dee2e6 !important;
+        color: #495057 !important;
+        &:hover { background-color: #e9ecef !important; border-color: #ced4da !important; }
+    }
 }
 
 .compact-alert {
@@ -619,14 +953,8 @@
     display: flex !important;
     align-items: center !important;
     gap: 6px !important;
-}
 
-.compact-alert i {
-    font-size: 11px;
-}
-
-.compact-alert span {
-    font-size: 11px;
+    i, span { font-size: 11px; }
 }
 
 .alert-warning-card {
@@ -643,15 +971,9 @@
     display: flex !important;
     align-items: center !important;
     gap: 8px !important;
-}
 
-.compact-alert-wide i {
-    font-size: 14px;
-}
-
-.compact-alert-wide strong {
-    font-weight: 600;
-    margin-right: 4px;
+    i { font-size: 14px; }
+    strong { font-weight: 600; margin-right: 4px; }
 }
 
 .alert-danger-card {
@@ -666,213 +988,205 @@
     padding-top: 20px;
 }
 
+.field-group .o_field_widget { width: 100%; }
+.o_form_sheet .oe_button_box { margin-bottom: 10px; }
+.compact-field-box .o_field_many2one { width: 100%; }
+.compact-input[readonly] { background-color: #f8f9fa; cursor: default; }
+.compact-input:focus-visible { outline: 2px solid #7367f0; outline-offset: 1px; }
+.btn-compact:focus-visible { outline: 2px solid #7367f0; outline-offset: 2px; }
+
+// ── Responsive ────────────────────────────────────────────────────────────────
+
 @media (max-width: 992px) and (min-width: 769px) {
-    .appraisal-cards-container {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 14px;
+    .appraisal-cards-container { grid-template-columns: repeat(2, 1fr); gap: 14px; }
+
+    // Competency table — tighten code & targets slightly on medium screens
+    .appraisal-wrapper table.o_competency_inline_table,
+    .appraisal-expand-wrapper table.o_competency_expand_table {
+        thead th {
+            &:nth-child(1) { width: 58px !important; min-width: 58px !important; }   // Code
+            &:nth-child(3) { width: 200px !important; min-width: 180px !important; } // Targets
+        }
+    }
+
+    // KPI table — modest column adjustments
+    .appraisal-wrapper table.appraisal-flex-table:not(.o_competency_inline_table) {
+        thead th {
+            &:nth-child(1) { width: 140px !important; min-width: 120px !important; } // KPI Name
+            &:nth-child(3) { width: 130px !important; min-width: 110px !important; } // Criteria
+            &:nth-child(4) { width: 130px !important; min-width: 110px !important; } // Target
+        }
     }
 }
 
 @media (max-width: 768px) {
-    .appraisal-cards-container {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 12px;
-        margin-bottom: 16px;
+    .appraisal-cards-container { grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 16px; }
+    .appraisal-card-content { padding: 10px 14px; }
+    .compact-header { margin-bottom: 10px; padding-bottom: 6px; strong { font-size: 12px; } }
+    .compact-label { font-size: 10px; }
+    .compact-points { .points-value { font-size: 18px; } }
+    .compact-points-field { font-size: 18px !important; }
+    .kra-tabs-section { margin-top: 16px; padding-top: 16px; }
+    .pms_plan_profile_row { flex-direction: column; align-items: center; text-align: center; }
+    .pms_plan_profile_info { align-items: center; }
+    .pms_plan_meta_row { justify-content: center; }
+    .pms_plan_stats_row { flex-direction: column; gap: 12px; }
+    .pms_plan_stat_card { min-width: auto; }
+    .pms_details_card { padding: 14px 16px; }
+
+    // Competency table — reduce all columns to keep table scrollable but readable
+    .appraisal-wrapper table.o_competency_inline_table,
+    .appraisal-expand-wrapper table.o_competency_expand_table {
+        thead th {
+            &:nth-child(1) { width: 55px !important; min-width: 55px !important; }   // Code
+            &:nth-child(2) { width: 120px !important; min-width: 110px !important; } // Competency
+            &:nth-child(3) { width: 160px !important; min-width: 140px !important; } // Targets
+            &:nth-child(4) { width: 70px !important;  min-width: 60px !important;  } // Max Pts
+            &:nth-child(5),
+            &:nth-child(7),
+            &:nth-child(9),
+            &:nth-child(11) { width: 80px !important; min-width: 70px !important; }  // Score cols
+            &:nth-child(6),
+            &:nth-child(8),
+            &:nth-child(10),
+            &:nth-child(12) { width: 120px !important; min-width: 100px !important; } // Remarks cols
+        }
     }
-    
-    .appraisal-card-content {
-        padding: 10px 14px;
-    }
-    
-    .compact-header {
-        margin-bottom: 10px;
-        padding-bottom: 6px;
-    }
-    
-    .compact-header strong {
-        font-size: 12px;
-    }
-    
-    .compact-label {
-        font-size: 10px;
-    }
-    
-    .compact-points .points-value {
-        font-size: 18px;
-    }
-    
-    .compact-points-field {
-        font-size: 18px !important;
-    }
-    
-    .kra-tabs-section {
-        margin-top: 16px;
-        padding-top: 16px;
+
+    // KPI table — scale down on tablet
+    .appraisal-wrapper table.appraisal-flex-table:not(.o_competency_inline_table) {
+        thead th {
+            &:nth-child(1) { width: 120px !important; min-width: 100px !important; } // KPI Name
+            &:nth-child(2) { width: 70px !important;  min-width: 60px !important;  } // Score
+            &:nth-child(3) { width: 120px !important; min-width: 100px !important; } // Criteria
+            &:nth-child(4) { width: 120px !important; min-width: 100px !important; } // Target
+            &:nth-child(5),
+            &:nth-child(7),
+            &:nth-child(9),
+            &:nth-child(11) { width: 80px !important; min-width: 70px !important; }  // Score cols
+            &:nth-child(6),
+            &:nth-child(8),
+            &:nth-child(10),
+            &:nth-child(12) { width: 120px !important; min-width: 100px !important; } // Remarks cols
+        }
     }
 }
 
 @media (max-width: 576px) {
-    .appraisal-cards-container {
-        grid-template-columns: 1fr;
-        gap: 12px;
-    }
-    
-    .appraisal-card-content {
-        padding: 10px 12px;
-    }
-    
-    .compact-header {
-        margin-bottom: 8px;
-    }
-    
-    .compact-header strong {
-        font-size: 12px;
-    }
-    
-    .compact-header i {
-        font-size: 12px;
-    }
-    
-    .compact-group {
-        margin-bottom: 8px;
-    }
-    
-    .compact-label {
-        font-size: 10px;
-        margin-bottom: 3px;
-    }
-    
-    .compact-input {
-        font-size: 12px !important;
-        padding: 5px 7px !important;
-        min-height: 30px !important;
-    }
-    
-    .compact-points {
-        margin: 6px 0;
-    }
-    
-    .compact-points .points-value {
-        font-size: 16px;
-    }
-    
-    .compact-points-field {
-        font-size: 16px !important;
-    }
-    
-    .compact-points-label {
-        font-size: 8px;
-    }
-    
-    .btn-compact {
-        padding: 3px 8px !important;
-        font-size: 10px !important;
-    }
-    
-    .compact-alert {
-        padding: 5px 7px !important;
-        font-size: 10px !important;
-    }
-    
-    .compact-alert-wide {
-        padding: 8px 10px !important;
+    .appraisal-cards-container { grid-template-columns: 1fr; gap: 12px; }
+    .appraisal-card-content { padding: 10px 12px; }
+    .compact-header { margin-bottom: 8px; strong { font-size: 12px; } i { font-size: 12px; } }
+    .compact-group { margin-bottom: 8px; }
+    .compact-label { font-size: 10px; margin-bottom: 3px; }
+    .compact-input { font-size: 12px !important; padding: 5px 7px !important; min-height: 30px !important; }
+    .compact-points { margin: 6px 0; .points-value { font-size: 16px; } }
+    .compact-points-field { font-size: 16px !important; }
+    .compact-points-label { font-size: 8px; }
+    .btn-compact { padding: 3px 8px !important; font-size: 10px !important; }
+    .compact-alert { padding: 5px 7px !important; font-size: 10px !important; }
+    .compact-alert-wide { padding: 8px 10px !important; font-size: 11px !important; }
+
+    // Competency table — compact widths for small phones, rely on horizontal scroll
+    .appraisal-wrapper table.o_competency_inline_table,
+    .appraisal-expand-wrapper table.o_competency_expand_table {
         font-size: 11px !important;
+        thead th {
+            padding: 8px 8px !important;
+            font-size: 10px !important;
+            &:nth-child(1) { width: 50px !important; min-width: 50px !important; }   // Code
+            &:nth-child(2) { width: 100px !important; min-width: 90px !important; }  // Competency
+            &:nth-child(3) { width: 130px !important; min-width: 110px !important; } // Targets
+            &:nth-child(4) { width: 60px !important;  min-width: 55px !important;  } // Max Pts
+            &:nth-child(5),
+            &:nth-child(7),
+            &:nth-child(9),
+            &:nth-child(11) { width: 70px !important; min-width: 65px !important; }  // Score cols
+            &:nth-child(6),
+            &:nth-child(8),
+            &:nth-child(10),
+            &:nth-child(12) { width: 100px !important; min-width: 90px !important; } // Remarks cols
+        }
+        tbody td {
+            padding: 8px 8px !important;
+            font-size: 11px !important;
+            input.form-control { font-size: 11px !important; max-width: 60px !important; }
+        }
+    }
+
+    // KPI table — compact for small phones
+    .appraisal-wrapper table.appraisal-flex-table:not(.o_competency_inline_table) {
+        font-size: 11px !important;
+        thead th {
+            padding: 8px 8px !important;
+            font-size: 10px !important;
+            &:nth-child(1) { width: 100px !important; min-width: 90px !important; }  // KPI Name
+            &:nth-child(2) { width: 60px !important;  min-width: 55px !important;  } // Score
+            &:nth-child(3) { width: 100px !important; min-width: 90px !important; }  // Criteria
+            &:nth-child(4) { width: 100px !important; min-width: 90px !important; }  // Target
+            &:nth-child(5),
+            &:nth-child(7),
+            &:nth-child(9),
+            &:nth-child(11) { width: 70px !important; min-width: 65px !important; }  // Score cols
+            &:nth-child(6),
+            &:nth-child(8),
+            &:nth-child(10),
+            &:nth-child(12) { width: 100px !important; min-width: 90px !important; } // Remarks cols
+        }
+        tbody td {
+            padding: 8px 8px !important;
+            font-size: 11px !important;
+            input.form-control { font-size: 11px !important; max-width: 60px !important; }
+        }
+    }
+}
+
+@media (max-width: 480px) {
+    .pms_plan_avatar_field { min-width: 80px !important; max-width: 80px !important; height: 80px !important; }
+    .pms_plan_emp_name .o_field_widget,
+    .pms_plan_emp_name a,
+    .pms_plan_emp_name span { font-size: 1.25rem !important; }
+    .pms_inline_statusbar button,
+    .pms_inline_statusbar .o_arrow_button { padding: 6px 12px 6px 20px !important; font-size: 0.6rem !important; }
+
+    // Tables — minimum viable widths at very small screens
+    .appraisal-wrapper table.o_competency_inline_table,
+    .appraisal-expand-wrapper table.o_competency_expand_table,
+    .appraisal-wrapper table.appraisal-flex-table:not(.o_competency_inline_table) {
+        font-size: 10px !important;
+        thead th { padding: 6px 6px !important; font-size: 9px !important; }
+        tbody td {
+            padding: 6px 6px !important;
+            font-size: 10px !important;
+            input.form-control { font-size: 10px !important; max-width: 52px !important; padding: 3px 5px !important; }
+        }
+    }
+
+    // Code column — keep badge legible at minimum size
+    .appraisal-wrapper table.o_competency_inline_table thead th:nth-child(1),
+    .appraisal-expand-wrapper table.o_competency_expand_table thead th:nth-child(1) {
+        width: 46px !important;
+        min-width: 46px !important;
     }
 }
 
 @media (max-width: 400px) {
-    .appraisal-card-content {
-        padding: 8px 10px;
-    }
-    
-    .compact-header {
-        gap: 6px;
-        margin-bottom: 8px;
-    }
-    
-    .compact-header strong {
-        font-size: 11px;
-    }
-    
-    .compact-label {
-        font-size: 9px;
-    }
-    
-    .compact-input {
-        font-size: 11px !important;
-        padding: 4px 6px !important;
-        min-height: 28px !important;
-    }
+    .appraisal-card-content { padding: 8px 10px; }
+    .compact-header { gap: 6px; margin-bottom: 8px; strong { font-size: 11px; } }
+    .compact-label { font-size: 9px; }
+    .compact-input { font-size: 11px !important; padding: 4px 6px !important; min-height: 28px !important; }
 }
 
 @media print {
-    .appraisal-card-compact {
-        break-inside: avoid;
-        box-shadow: none;
-        border: 1px solid #ddd;
+    .appraisal-card-compact { break-inside: avoid; box-shadow: none; border: 1px solid #ddd; &:hover { box-shadow: none; } }
+    .compact-progress .progress-bar-fill { background: #7367f0; }
+    .btn-compact { display: none !important; }
+
+    // Print — restore full-width columns so nothing truncates
+    .appraisal-wrapper table.o_competency_inline_table,
+    .appraisal-expand-wrapper table.o_competency_expand_table {
+        thead th {
+            &:nth-child(1) { width: 65px !important;  min-width: 65px !important; }
+            &:nth-child(3) { width: 260px !important; min-width: 220px !important; }
+        }
     }
-    
-    .appraisal-card-compact:hover {
-        box-shadow: none;
-    }
-    
-    .compact-progress .progress-bar-fill {
-        background: #7367f0;
-    }
-    
-    .btn-compact {
-        display: none !important;
-    }
-}
-
-@keyframes fadeInUp {
-    from {
-        opacity: 0;
-        transform: translateY(10px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-.appraisal-card-compact {
-    animation: fadeInUp 0.3s ease-out;
-}
-
-.appraisal-card-compact:nth-child(1) { animation-delay: 0s; }
-.appraisal-card-compact:nth-child(2) { animation-delay: 0.05s; }
-.appraisal-card-compact:nth-child(3) { animation-delay: 0.1s; }
-.appraisal-card-compact:nth-child(4) { animation-delay: 0.15s; }
-
-.field-group .o_field_widget {
-    width: 100%;
-}
-
-.o_form_sheet .oe_button_box {
-    margin-bottom: 10px;
-}
-
-.compact-field-box .o_field_many2one {
-    width: 100%;
-}
-
-.compact-input[readonly] {
-    background-color: #f8f9fa;
-    cursor: default;
-}
-
-.compact-points:hover .points-value {
-    transform: scale(1.02);
-    transition: transform 0.2s ease;
-}
-
-.compact-input:focus-visible {
-    outline: 2px solid #7367f0;
-    outline-offset: 1px;
-}
-
-.btn-compact:focus-visible {
-    outline: 2px solid #7367f0;
-    outline-offset: 2px;
 }

@@ -118,65 +118,9 @@
                                         create="false" delete="false" edit="1">
                                         <field name="rating_name" string="Rating Tier" readonly="1" />
                                         <field name="eligibility_percentage"
-                                            string="Eligibility %"
-                                            widget="progressbar"
-                                            options="{'editable': True, 'max_value': 100}" />
+                                            string="Eligibility %" />
                                     </list>
                                 </field>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="pms-advanced-section">
-                        <div class="pms-advanced-header">
-                            <i class="fa fa-sliders" aria-hidden="true" />
-                            <span>Advanced Configuration</span>
-                        </div>
-                        <div class="pms-advanced-grid">
-                            <div class="pms-adv-card">
-                                <div class="pms-adv-card-header pms-adv-purple">
-                                    <i class="fa fa-line-chart" aria-hidden="true" />
-                                    <span>Tenure Weighting</span>
-                                </div>
-                                <div class="pms-adv-card-body">
-                                    <div class="pms-adv-field">
-                                        <field name="use_tenure_weight" />
-                                        <label class="pms-check-label" for="use_tenure_weight">Enable
-                                            tenure weighting</label>
-                                    </div>
-                                    <div class="pms-adv-field" invisible="not use_tenure_weight">
-                                        <label class="o_form_label" for="tenure_max_months">Maximum
-                                            tenure months</label>
-                                        <field name="tenure_max_months" class="pms-adv-input" />
-                                    </div>
-                                    <div class="pms-adv-field" invisible="not use_tenure_weight">
-                                        <label class="o_form_label" for="tenure_weight">Weight
-                                            multiplier</label>
-                                        <field name="tenure_weight" class="pms-adv-input" />
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="pms-adv-card">
-                                <div class="pms-adv-card-header pms-adv-teal">
-                                    <i class="fa fa-adjust" aria-hidden="true" />
-                                    <span>Cap &amp; Floor</span>
-                                </div>
-                                <div class="pms-adv-card-body">
-                                    <div class="pms-adv-field">
-                                        <field name="use_cap" />
-                                        <label class="pms-check-label" for="use_cap">Apply maximum
-                                            cap</label>
-                                        <field name="max_cap_percent" class="pms-adv-input"
-                                            invisible="not use_cap" />
-                                    </div>
-                                    <div class="pms-adv-divider"></div>
-                                    <div class="pms-adv-field">
-                                        <field name="use_floor" />
-                                        <label class="pms-check-label" for="use_floor">Apply minimum
-                                            floor</label>
-                                        <field name="min_floor_amount" class="pms-adv-input"
-                                            invisible="not use_floor" />
-                                    </div>
-                                </div>
                             </div>
                         </div>
                     </div>
@@ -215,11 +159,13 @@
         <field name="arch" type="xml">
             <form class="pms-calculation-form">
                 <header>
+
                     <button name="action_calculate" type="object"
-                        string="Run Calculation" class="btn btn-primary"
+                        string="Execute Bonus" class="btn btn-primary"
                         invisible="state != 'draft'" />
+                    <!-- Export button  -->
                     <button name="action_export_to_payroll" type="object"
-                        string="Export to Payroll" class="btn btn-secondary"
+                        string="Export to Excel" class="btn btn-secondary"
                         invisible="state != 'calculated'" />
                 </header>
                 <sheet>
@@ -257,23 +203,42 @@
                     </div>
                     <div class="pms-results-section" invisible="state == 'draft'">
                         <div class="pms-results-header">
-                            <i class="fa fa-table" aria-hidden="true" />
-                            <span>Employee Bonus Details</span>
+                            <div class="d-flex align-items-center justify-content-between w-100">
+                                <div class="d-flex align-items-center gap-2">
+                                    <i class="fa fa-table" aria-hidden="true" />
+                                    <span>Employee Bonus Details</span>
+                                </div>
+
+                                <button name="action_recalculate" type="object"
+                                    string="Calculate Bonus"
+                                    class="btn btn-warning btn-sm"
+                                    invisible="state == 'draft'"
+                                    icon="fa-refresh"
+                                    title="Re-run the bonus calculation using current edited values" />
+                            </div>
                         </div>
                         <field name="line_ids" nolabel="1" class="pms-bonus-results-table">
-                            <list create="false" delete="false" edit="false" limit="100">
-                                <field name="employee_id" string="Employee" />
+                            <list create="false" delete="false" editable="bottom" limit="100">
+                                <field name="employee_id" string="Employee" readonly="1" />
                                 <field name="score" string="Score"
+                                    readonly="1"
                                     decoration-success="score >= 80"
                                     decoration-warning="score >= 60 and score &lt; 80"
                                     decoration-danger="score &lt; 60" />
-                                <field name="rating_id" string="Rating" />
-                                <field name="eligibility_percentage" string="Eligibility %"
-                                    widget="progressbar" options="{'max_value': 100}" />
-                                <field name="base_salary" widget="monetary" string="Base Salary" />
-                                <field name="months_served" string="Months Served" optional="show" />
-                                <field name="bonus_amount" widget="monetary"
-                                    string="Bonus Amount" sum="Total" />
+                                <field name="rating_id" string="Rating" readonly="1" />
+
+                                <field name="eligibility_percentage"
+                                    string="Eligibility %" />
+                                <field name="base_salary"
+                                    widget="monetary"
+                                    string="Base Salary" />
+                                <field name="months_served"
+                                    string="Months Served"
+                                    optional="show" />
+                                <field name="bonus_amount"
+                                    widget="monetary"
+                                    string="Bonus Amount"
+                                    sum="Total" />
                             </list>
                         </field>
                     </div>
@@ -283,7 +248,7 @@
     </record>
 
     <record id="action_pms_bonus_calculation" model="ir.actions.act_window">
-        <field name="name">Automatic Bonus Calculation</field>
+        <field name="name">Bonus Calculation</field>
         <field name="res_model">pms.bonus.calculation</field>
         <field name="view_mode">list,form</field>
     </record>
@@ -307,7 +272,7 @@
                     <div class="pms-export-section">
                         <div class="pms-export-header">
                             <i class="fa fa-download" aria-hidden="true" />
-                            <span>Export bonus to payroll</span>
+                            <span>Export bonus to Excel</span>
                         </div>
                         <group>
                             <field name="calculation_id" readonly="1" />

@@ -17,8 +17,8 @@ class PMSDashboard extends Component {
     setup() {
         this.action = this.env.services.action;
         const actionParams = this.props.action?.params || {};
-        const requestedRole = actionParams.role || 'overview';
-
+        const requestedRole = actionParams.role || 'auto';
+        const returnCycleId = actionParams.cycle_id || null;
         this.state = useState({
             // Core
             loading: true,
@@ -28,14 +28,12 @@ class PMSDashboard extends Component {
             employee_name: "",
             requestedRole: requestedRole,
 
-
+             _returnToCycleDetail: false,
 
             // HR Manager data
             stats: {},
             active_cycles_list: [],
             completed_cycles_list: [],
-            top_performers: [],
-            bottom_performers: [],
             overview_stats: {},
 
             // Employee data
@@ -70,7 +68,7 @@ class PMSDashboard extends Component {
             selected_full_plan: null,
             show_full_appraisal_details: false,
             selected_full_appraisal: null,
-            show_all_appraisals_modal: false,
+           // show_all_appraisals_modal: false,
             all_appraisals_data: [],
             all_appraisals_summary: null,
             show_completed_cycle_modal: false,
@@ -102,19 +100,37 @@ class PMSDashboard extends Component {
         this._refreshInterval = null;
 
         onMounted(async () => {
+    await this._loadData();
+
+    // ✅ Restore cycle detail if returning from a plan form
+    const returnCycleId = sessionStorage.getItem('pms_return_cycle_id');
+    const returnTab = sessionStorage.getItem('pms_return_tab');
+    if (returnCycleId) {
+        sessionStorage.removeItem('pms_return_cycle_id');
+        sessionStorage.removeItem('pms_return_tab');
+        const allCycles = [
+            ...(this.state.active_cycles_list || []),
+            ...(this.state.supervisor?.active_cycles || []),
+            ...(this.state.reviewer?.active_cycles || []),
+        ];
+        const cycle = allCycles.find(c => c.id === parseInt(returnCycleId));
+        if (cycle) {
+            await this.openCycleDetail(cycle);
+            this.state.cycle_active_tab = returnTab || 'planning';
+        }
+    }
+
+    this._refreshInterval = setInterval(async () => {
+        try {
             await this._loadData();
-            this._refreshInterval = setInterval(async () => {
-                try {
-                    await this._loadData();
-                    if (this.state.show_cycle_detail && this.state.selected_cycle_id) {
-                        await this.loadCycleData(this.state.selected_cycle_id);
-                        this.state.selected_cycle = this._safeCycle(this.state.selected_cycle);
-                    }
-                } catch {
-                    console.log('Refresh skipped');
-                }
-            }, 30000);
-        });
+            if (this.state.show_cycle_detail && this.state.selected_cycle_id) {
+                await this.loadCycleData(this.state.selected_cycle_id);
+                this.state.selected_cycle = this._safeCycle(this.state.selected_cycle);
+            }
+        } catch {
+        }
+    }, 30000);
+});
 
         onWillUnmount(() => {
             this._destroyAllCharts();
@@ -127,28 +143,50 @@ class PMSDashboard extends Component {
     // ============================================================
 
     openCycleDetail = async (cycle) => {
-        this.state.cycle_planning_search = '';
-        this.state.cycle_appraisal_search = '';
-        this.filterCyclePlanningData();
+    this.state.cycle_planning_search = '';
+    this.state.cycle_appraisal_search = '';
+    this.filterCyclePlanningData();
 
-        if (cycle.state === 'completed') {
-            await this.loadCompletedCycleDetails(cycle);
-            return;
-        }
-
-        this.state.show_cycle_detail = true;
-        this.state.selected_cycle_id = cycle.id;
-        this.state.cycle_active_tab = cycle.state === 'appraisal' ? 'appraisal' : 'planning';
-        this.state.selected_cycle = this._safeCycle(cycle);
-
-        await this.loadCycleData(cycle.id);
-        this.state.selected_cycle = this._safeCycle(this.state.selected_cycle);
-
-        if (this.state.cycle_active_tab === 'planning') {
-            await this._renderPlanningChartsByRole();
-        }
+    if (cycle.state === 'completed') {
+        await this.loadCompletedCycleDetails(cycle);
+        return;
     }
 
+    this.state.show_cycle_detail = true;
+    this.state.selected_cycle_id = cycle.id;
+    this.state.cycle_active_tab = cycle.state === 'appraisal' ? 'appraisal' : 'planning';
+    this.state.selected_cycle = this._safeCycle(cycle);
+
+    await this.loadCycleData(cycle.id);
+    this.state.selected_cycle = this._safeCycle(this.state.selected_cycle);
+
+    if (this.state.cycle_active_tab === 'planning') {
+         this._destroyPlanningCharts();
+        await this._waitForDOM(300);
+        await this._renderPlanningChartsByRole();
+    }
+
+}
+_destroyPlanningCharts = () => {
+    const Chart = window.Chart;
+    if (!Chart) return;
+    [
+        this.cyclePlansDeptChartRef,
+        this.cyclePlansGroupChartRef,
+        this.cyclePlanStatusChartRef,
+    ].forEach(ref => {
+        if (ref && ref.el) {
+            try {
+                const existing = Chart.getChart(ref.el);
+                if (existing) {
+                    existing.destroy();
+                    const idx = this.chartInstances.indexOf(existing);
+                    if (idx > -1) this.chartInstances.splice(idx, 1);
+                }
+            } catch (e) {}
+        }
+    });
+}
     _safeCycle(cycle) {
         return {
             ...cycle,
@@ -167,8 +205,6 @@ class PMSDashboard extends Component {
             pending_appraisal_secondary_list: Array.isArray(cycle.pending_appraisal_secondary_list) ? cycle.pending_appraisal_secondary_list : [],
             pending_appraisal_reviewer_list: Array.isArray(cycle.pending_appraisal_reviewer_list) ? cycle.pending_appraisal_reviewer_list : [],
             all_appraisals: Array.isArray(cycle.all_appraisals) ? cycle.all_appraisals : [],
-            top_performers: Array.isArray(cycle.top_performers) ? cycle.top_performers : [],
-            bottom_performers: Array.isArray(cycle.bottom_performers) ? cycle.bottom_performers : [],
             rating_distribution: Array.isArray(cycle.rating_distribution) ? cycle.rating_distribution : [],
             total_employees: cycle.total_employees ?? 0,
             total_team_members: cycle.total_team_members ?? 0,
@@ -215,14 +251,14 @@ class PMSDashboard extends Component {
             await this.loadPerformanceData();
 
             this.state.cycle_planning_data = data.planning_data || [];
-            this.state.cycle_appraisal_data = data.appraisal_data || [];
-            this.state.filtered_cycle_appraisal_data = [...(data.appraisal_data || [])];
+
             this.state.filtered_cycle_planning_data = [...(data.planning_data || [])];
 
             if (this.state.selected_cycle) {
             if (data.cycle_info) {
                 this.state.selected_cycle = {
                     ...this.state.selected_cycle,
+
                     // Planning dates
                     planning_start_date: data.cycle_info.planning_start_date || this.state.selected_cycle.start_date || '-',
                     planning_end_date: data.cycle_info.planning_end_date || '-',
@@ -239,7 +275,6 @@ class PMSDashboard extends Component {
                     state: this.state.selected_cycle.state,
                     name: this.state.selected_cycle.name,
                 };
-                console.log('Updated selected_cycle with dates:', this.state.selected_cycle);
             }
 
                 const currentRole = this.state.role;
@@ -266,29 +301,34 @@ class PMSDashboard extends Component {
                     user_role: plan.user_role,
                 }));
 
-                const teamAppraisals = (data.appraisal_data || []).map(appraisal => ({
-                    id: appraisal.plan_id || appraisal.id,
-                    appraisal_id: appraisal.plan_id || appraisal.id,
-                    employee_id: appraisal.employee_id,
-                    name: appraisal.name,
-                    department: appraisal.department,
-                    self_score: appraisal.self_score || 0,
-                    supervisor_score: appraisal.supervisor_score || 0,
-                    secondary_score: appraisal.secondary_score || 0,
-                    reviewer_score: appraisal.reviewer_score || 0,
-                    final_score: appraisal.final_score || 0,
-                    state: appraisal.state,
-                    state_key: appraisal.state_key,
-                    progress: appraisal.progress || 0,
-                    rating: appraisal.rating,
-                    supervisor_id: appraisal.supervisor_id,
-                    secondary_id: appraisal.secondary_id,
-                    reviewer_id: appraisal.reviewer_id,
-                    user_role: appraisal.user_role,
-                     supervisor_name: appraisal.supervisor_name || '',
+              const teamAppraisals = (data.appraisal_data || []).map(appraisal => ({
+    id: appraisal.plan_id || appraisal.id,
+    appraisal_id: appraisal.plan_id || appraisal.id,
+    employee_id: appraisal.employee_id,
+    name: appraisal.name,
+    department: appraisal.department,
+     evaluation_group: appraisal.evaluation_group,
+     total_weightage: appraisal.total_weightage || null,
+    self_score: appraisal.self_score !== null && appraisal.self_score !== undefined ? appraisal.self_score : null,
+    supervisor_score: appraisal.supervisor_score !== null && appraisal.supervisor_score !== undefined ? appraisal.supervisor_score : null,
+    secondary_score: appraisal.secondary_score !== null && appraisal.secondary_score !== undefined ? appraisal.secondary_score : null,  // ← no || 0
+    reviewer_score: appraisal.reviewer_score !== null && appraisal.reviewer_score !== undefined ? appraisal.reviewer_score : null,
+    final_score: appraisal.final_score !== null && appraisal.final_score !== undefined ? appraisal.final_score : null,
+    state: appraisal.state,
+    state_key: appraisal.state_key,
+    progress: appraisal.progress || 0,
+    rating: appraisal.rating,
+    supervisor_name: appraisal.supervisor_name || '',
     secondary_name: appraisal.secondary_name || '',
     reviewer_name: appraisal.reviewer_name || '',
-                }));
+    supervisor_id: appraisal.supervisor_id,
+    secondary_id: appraisal.secondary_id,
+    reviewer_id: appraisal.reviewer_id,
+    user_role: appraisal.user_role,
+
+}));
+this.state.cycle_appraisal_data = teamAppraisals;
+this.state.filtered_cycle_appraisal_data = [...teamAppraisals];
 
                 const appraisalStartedCount = teamAppraisals.filter(a => a.state_key !== 'appraisal_draft').length;
                 const appraisalApprovedCount = teamAppraisals.filter(a => a.state_key === 'appraisal_approved').length;
@@ -372,6 +412,13 @@ class PMSDashboard extends Component {
                     all_appraisals: teamAppraisals,
                     appraisal_started: appraisalStartedCount,
                     appraisal_approved: appraisalApprovedCount,
+                     total_pending_plans: teamPlans.filter(p =>
+        ['draft', 'pending_supervisor', 'pending_secondary_supervisor', 'pending_reviewer'].includes(p.state_key)
+    ).length,
+    total_pending_appraisals: teamAppraisals.filter(a =>
+        a.state_key.includes('appraisal') && a.state_key !== 'appraisal_approved'
+    ).length,
+
                     team_plans: (currentRole === 'supervisor' || currentRole === 'reviewer')
                         ? teamPlans.filter(p =>
                             p.supervisor_id === currentEmployeeId ||
@@ -477,7 +524,6 @@ class PMSDashboard extends Component {
                     evaluation_group: emp.evaluation_group,
                     total_score: emp.final_score || emp.total_score || 0,
                     rating: emp.rating,
-                    rating_class: emp.rating_class,
                 }));
                 this.state.filtered_performance_employees = [...this.state.performance_employees_list];
                 this.state.performance_filter = 'all';
@@ -595,7 +641,6 @@ class PMSDashboard extends Component {
                 end_date: cycle.end_date || '-',
                 final_score: cycle.final_score || 0,
                 rating: cycle.rating || '—',
-                rating_class: cycle.rating_class || 'bg-secondary',
                 employee_name: result.employee_name || '-',
                 department: result.department || '-',
                 supervisor_name: result.supervisor_name || '-',
@@ -621,7 +666,6 @@ class PMSDashboard extends Component {
                 completed_date: cycle.completed_date || '-',
                 final_score: cycle.final_score || 0,
                 rating: cycle.rating || '—',
-                rating_class: cycle.rating_class || 'bg-secondary',
                 kpi_lines: [],
                 competency_lines: [],
             };
@@ -652,31 +696,66 @@ class PMSDashboard extends Component {
     }
 
     _generateAllPlansPDF = (plans, cycle) => {
-        const allHTML = plans.map((plan, i) => `
-            <div style="page-break-after:${i < plans.length - 1 ? 'always' : 'avoid'};">
-                ${this._buildPlanHTML(plan, cycle)}
-            </div>`).join('');
-        const win = window.open('', '_blank');
-        win.document.write(`<!DOCTYPE html><html><head>
-            <title>${cycle.name || 'Plans'} – All Employee Plans</title>
-            <style>
-                * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-                body { margin: 0; padding: 20px; font-family: Arial, sans-serif; }
-                @media print { body { padding: 0; } @page { margin: 15mm; } }
-                table { width: 100%; border-collapse: collapse; }
-                th, td { border: 1px solid #c5d5ea; padding: 8px 12px; text-align: left; }
-                th { background: #2563a8; color: #fff; }
-            </style>
-        </head><body>
-            <div style="text-align:center;margin-bottom:20px;display:flex;gap:10px;justify-content:center;">
-                <button onclick="window.print();" style="padding:10px 20px;background:#1a3557;color:#fff;border:none;border-radius:5px;cursor:pointer;">📄 Save as PDF / Print</button>
-                <button onclick="window.close();" style="padding:10px 20px;background:#6c757d;color:#fff;border:none;border-radius:5px;cursor:pointer;">✖ Close Window</button>
-            </div>
-            ${allHTML}
-        </body></html>`);
-        win.document.close();
-        win.focus();
-    }
+    const win = window.open('', '_blank');
+    win.document.write(`<!DOCTYPE html><html><head>
+        <title>${cycle.name || 'Plans'} – All Employee Plans</title>
+        <style>
+            * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+            body { margin: 0; padding: 0; font-family: Arial, sans-serif; }
+            .toolbar {
+                position: fixed;
+                top: 0; left: 0; right: 0;
+                z-index: 9999;
+                background: #f1f5f9;
+                border-bottom: 1px solid #c5d5ea;
+                padding: 10px 20px;
+                display: flex;
+                gap: 10px;
+                justify-content: center;
+                align-items: center;
+            }
+            .print-tip {
+                font-size: 11px;
+                color: #666;
+                background: #fff8e1;
+                border: 1px solid #f0c040;
+                border-radius: 4px;
+                padding: 4px 10px;
+            }
+            .plans-wrapper {
+                margin-top: 65px;
+                padding: 20px;
+            }
+            @media print {
+                .toolbar { display: none !important; }
+                .plans-wrapper { margin-top: 0 !important; padding: 0 !important; }
+                @page {
+                    margin: 15mm;
+                    size: A4;
+                }
+                .page-block { page-break-after: always; }
+                .page-block:last-child { page-break-after: avoid; }
+            }
+            table { width: 100%; border-collapse: collapse; }
+            th, td { border: 1px solid #c5d5ea; padding: 8px 12px; text-align: left; }
+            th { background: #2563a8; color: #fff; }
+        </style>
+    </head><body>
+        <div class="toolbar">
+            <button onclick="window.print();" style="padding:10px 20px;background:#1a3557;color:#fff;border:none;border-radius:5px;cursor:pointer;">Save as PDF / Print</button>
+            <button onclick="window.close();" style="padding:10px 20px;background:#6c757d;color:#fff;border:none;border-radius:5px;cursor:pointer;">✖ Close Window</button>
+
+        </div>
+        <div class="plans-wrapper">
+            ${plans.map((plan, i) => `
+                <div class="page-block" style="${i < plans.length - 1 ? 'page-break-after:always;' : 'page-break-after:avoid;'}">
+                    ${this._buildPlanHTML(plan, cycle)}
+                </div>`).join('')}
+        </div>
+    </body></html>`);
+    win.document.close();
+    win.focus();
+}
 
     _enrichPlanWithKRAs = async (plan) => {
         try {
@@ -689,201 +768,299 @@ class PMSDashboard extends Component {
         }
     }
 
-    _buildPlanHTML = (plan, cycle) => {
-        const companyName = plan.company_name;
-        const kras = plan.kra_lines || [];
-        const kraRows = kras.length > 0
-            ? kras.map((k, i) => `
-                <tr style="background:${k.is_selected === false ? '#fff5f5' : (i % 2 === 0 ? '#fff' : '#f5f8fd')};">
-                    <td style="padding:8px 6px;border:1px solid #c5d5ea;font-size:11px;">${k.kra || ''}</td>
-                    <td style="padding:8px 6px;border:1px solid #c5d5ea;font-size:11px;">${k.kpi || ''}</td>
-                    <td style="padding:8px 6px;border:1px solid #c5d5ea;font-size:11px;">${k.description || ''}</td>
-                    <td style="padding:8px 6px;border:1px solid #c5d5ea;font-size:11px;">${k.criteria || ''}</td>
-                    <td style="padding:8px 6px;border:1px solid #c5d5ea;font-size:11px;text-align:center;font-weight:bold;color:#1a3557;">
-                        ${k.is_selected === false ? '<span style="color:#9e9e9e;font-style:italic;">— N/A</span>' : (k.score || '')}
-                    </td>
-                    <td style="padding:8px 6px;border:1px solid #c5d5ea;font-size:11px;">
-                        ${k.is_selected === false
-                            ? '<span style="background:#fdecea;color:#c62828;padding:2px 8px;border-radius:10px;font-size:10px;">✕ Deselected</span>'
-                            : (k.target || '<span style="background:#fff8e1;color:#f57c00;padding:2px 8px;border-radius:10px;font-size:10px;">Pending</span>')}
-                    </td>
-                </tr>`).join('')
-            : `<tr><td colspan="6" style="text-align:center;padding:20px;color:#999;font-size:12px;">No KRA lines found.</td></tr>`;
+   _buildPlanHTML = (plan, cycle) => {
+    const companyName = plan.company_name;
+    const kras = plan.kra_lines || [];
+    const totalScore = kras
+        .filter(k => k.is_selected !== false && k.score)
+        .reduce((sum, k) => sum + (parseFloat(k.score) || 0), 0);
+    const scoredCount = kras.filter(k => k.is_selected !== false && k.score).length;
 
-        return `
-        <div style="font-family:Arial,sans-serif;">
-            <div style="background:#1a3557;color:#fff;padding:14px 20px;text-align:center;">
-                <div style="font-size:17px;font-weight:bold;">${companyName}</div>
-                <div style="font-size:10px;color:#aecde8;margin-top:3px;">Employee Performance Appraisal Plan</div>
+    const kraRows = kras.length > 0
+        ? kras.map((k, i) => `
+            <tr style="background:${k.is_selected === false ? '#fff5f5' : (i % 2 === 0 ? '#fff' : '#f5f8fd')};">
+                <td style="padding:8px 6px;border:1px solid #c5d5ea;font-size:11px;">${k.kra || ''}</td>
+                <td style="padding:8px 6px;border:1px solid #c5d5ea;font-size:11px;">${k.kpi || ''}</td>
+                <td style="padding:8px 6px;border:1px solid #c5d5ea;font-size:11px;">${k.description || ''}</td>
+                <td style="padding:8px 6px;border:1px solid #c5d5ea;font-size:11px;">${k.criteria || ''}</td>
+                <td style="padding:8px 6px;border:1px solid #c5d5ea;font-size:11px;text-align:center;font-weight:bold;color:#1a3557;">
+                    ${k.is_selected === false ? '<span style="color:#9e9e9e;font-style:italic;">— N/A</span>' : (k.score || '')}
+                </td>
+                <td style="padding:8px 6px;border:1px solid #c5d5ea;font-size:11px;">
+                    ${k.is_selected === false
+                        ? '<span style="background:#fdecea;color:#c62828;padding:2px 8px;border-radius:10px;font-size:10px;">✕ Deselected</span>'
+                        : (k.target || '<span style="background:#fff8e1;color:#f57c00;padding:2px 8px;border-radius:10px;font-size:10px;">Pending</span>')}
+                </td>
+            </tr>`).join('')
+        : `<tr><td colspan="6" style="text-align:center;padding:20px;color:#999;font-size:12px;">No KRA lines found.</td></tr>`;
+
+    const totalRow = `
+        <tr style="background:#eaf1fb;font-weight:bold;border-top:2px solid #2563a8;">
+            <td colspan="4" style="padding:8px 12px;border:1px solid #c5d5ea;font-size:11px;text-align:right;color:#1a3557;">
+                Total Score (${scoredCount} KRA${scoredCount !== 1 ? 's' : ''} scored)
+            </td>
+            <td style="padding:8px 6px;border:1px solid #c5d5ea;font-size:13px;text-align:center;font-weight:bold;color:#1a3557;">
+                ${totalScore % 1 === 0 ? totalScore : totalScore.toFixed(2)}
+            </td>
+            <td style="padding:8px 6px;border:1px solid #c5d5ea;"></td>
+        </tr>`;
+
+    // Build signature columns dynamically based on available roles
+    const signatories = [
+        { label: 'Employee', name: plan.name },
+        { label: 'Supervisor', name: plan.supervisor_name },
+        ...(plan.secondary_name ? [{ label: 'Secondary Supervisor', name: plan.secondary_name }] : []),
+        { label: 'Reviewer', name: plan.reviewer_name },
+    ];
+    const colWidth = `${100 / signatories.length}%`;
+    const signatureCols = signatories.map((s, i) => `
+        <div style="padding:12px;text-align:center;${i < signatories.length - 1 ? 'border-right:1px solid #c5d5ea;' : ''}width:${colWidth};box-sizing:border-box;">
+            <div style="font-size:10px;color:#666;font-weight:bold;margin-bottom:4px;">${s.label}</div>
+            <div style="margin-top:28px;border-top:1px solid #bbb;padding-top:4px;font-size:9px;color:#999;">${s.name || ''}</div>
+        </div>`).join('');
+
+    return `
+    <div style="font-family:Arial,sans-serif;">
+
+        <!-- Header: Company name + title -->
+        <div style="background:#1a3557;color:#fff;padding:14px 20px;text-align:center;">
+            <div style="font-size:17px;font-weight:bold;">${companyName}</div>
+            <div style="font-size:10px;color:#aecde8;margin-top:3px;letter-spacing:1px;text-transform:uppercase;">Employee Performance Appraisal Plan</div>
+        </div>
+
+        <!-- Cycle info bar -->
+        <div style="background:#2563a8;color:#fff;display:flex;justify-content:space-around;padding:7px 20px;">
+            <div style="text-align:center;"><div style="font-size:9px;color:#aecde8;">Appraisal Cycle</div><div style="font-size:11px;font-weight:bold;">${cycle.name || '-'}</div></div>
+            <div style="text-align:center;"><div style="font-size:9px;color:#aecde8;">Start Date</div><div style="font-size:11px;font-weight:bold;">${cycle.start_date || '-'}</div></div>
+            <div style="text-align:center;"><div style="font-size:9px;color:#aecde8;">End Date</div><div style="font-size:11px;font-weight:bold;">${cycle.appraisal_end_date || '-'}</div></div>
+        </div>
+
+        <!-- Employee details grid -->
+        <div style="background:#eaf1fb;border:1px solid #2563a8;">
+            <div style="display:grid;grid-template-columns:1fr 1fr;">
+                <div style="padding:10px 14px;border-right:1px solid #c5d5ea;border-bottom:1px solid #c5d5ea;">
+                    <div style="font-size:9px;color:#2563a8;font-weight:bold;">EMPLOYEE NAME</div>
+                    <div style="font-size:13px;">${plan.name || '-'}</div>
+                </div>
+                <div style="padding:10px 14px;border-bottom:1px solid #c5d5ea;">
+                    <div style="font-size:9px;color:#2563a8;font-weight:bold;">DEPARTMENT</div>
+                    <div style="font-size:13px;">${plan.department || '-'}</div>
+                </div>
+                <div style="padding:10px 14px;border-right:1px solid #c5d5ea;${plan.secondary_name ? 'border-bottom:1px solid #c5d5ea;' : ''}">
+                    <div style="font-size:9px;color:#2563a8;font-weight:bold;">SUPERVISOR</div>
+                    <div style="font-size:13px;">${plan.supervisor_name || '-'}</div>
+                </div>
+                <div style="padding:10px 14px;${plan.secondary_name ? 'border-bottom:1px solid #c5d5ea;' : ''}">
+                    <div style="font-size:9px;color:#2563a8;font-weight:bold;">REVIEWER</div>
+                    <div style="font-size:13px;">${plan.reviewer_name || '-'}</div>
+                </div>
+                ${plan.secondary_name ? `
+                <div style="padding:10px 14px;grid-column:1/-1;">
+                    <div style="font-size:9px;color:#2563a8;font-weight:bold;">SECONDARY SUPERVISOR</div>
+                    <div style="font-size:13px;">${plan.secondary_name}</div>
+                </div>` : ''}
             </div>
-            <div style="background:#2563a8;color:#fff;display:flex;justify-content:space-around;padding:7px 20px;">
-                <div style="text-align:center;"><div style="font-size:9px;color:#aecde8;">Appraisal Cycle</div><div style="font-size:11px;font-weight:bold;">${cycle.name || '-'}</div></div>
-                <div style="text-align:center;"><div style="font-size:9px;color:#aecde8;">Start Date</div><div style="font-size:11px;font-weight:bold;">${cycle.start_date || '-'}</div></div>
-                <div style="text-align:center;"><div style="font-size:9px;color:#aecde8;">End Date</div><div style="font-size:11px;font-weight:bold;">${cycle.end_date || '-'}</div></div>
-            </div>
-            <div style="background:#eaf1fb;display:grid;grid-template-columns:1fr 1fr;border:1px solid #2563a8;">
-                <div style="padding:10px 14px;border-right:1px solid #c5d5ea;"><div style="font-size:9px;color:#2563a8;font-weight:bold;">EMPLOYEE NAME</div><div style="font-size:13px;">${plan.name || '-'}</div></div>
-                <div style="padding:10px 14px;"><div style="font-size:9px;color:#2563a8;font-weight:bold;">DEPARTMENT</div><div style="font-size:13px;">${plan.department || '-'}</div></div>
-                <div style="padding:10px 14px;border-top:1px solid #c5d5ea;border-right:1px solid #c5d5ea;"><div style="font-size:9px;color:#2563a8;font-weight:bold;">SUPERVISOR</div><div style="font-size:13px;">${plan.supervisor_name || '-'}</div></div>
-                <div style="padding:10px 14px;border-top:1px solid #c5d5ea;"><div style="font-size:9px;color:#2563a8;font-weight:bold;">MANAGER / REVIEWER</div><div style="font-size:13px;">${plan.reviewer_name || plan.secondary_name || '-'}</div></div>
-            </div>
-            <div style="background:#1a3557;color:#fff;padding:7px 12px;font-size:11px;font-weight:bold;text-align:center;margin-top:14px;">PERFORMANCE PLANNING TEMPLATE – KRA / KPI DETAILS</div>
-            <table style="width:100%;border-collapse:collapse;">
-                <thead>
-                    <tr style="background:#2563a8;color:#fff;">
-                        <th style="padding:8px 6px;border:1px solid #1a3557;font-size:10px;width:14%;">KRA / Goal</th>
-                        <th style="padding:8px 6px;border:1px solid #1a3557;font-size:10px;width:14%;">KPI / Metric</th>
-                        <th style="padding:8px 6px;border:1px solid #1a3557;font-size:10px;width:26%;">Description</th>
-                        <th style="padding:8px 6px;border:1px solid #1a3557;font-size:10px;width:26%;">Criteria</th>
-                        <th style="padding:8px 6px;border:1px solid #1a3557;font-size:10px;width:8%;">Score</th>
-                        <th style="padding:8px 6px;border:1px solid #1a3557;font-size:10px;width:12%;">Target</th>
-                    </tr>
-                </thead>
-                <tbody>${kraRows}</tbody>
-            </table>
-            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;border:1px solid #c5d5ea;margin-top:18px;background:#f5f8fd;">
-                <div style="padding:12px;text-align:center;border-right:1px solid #c5d5ea;"><div style="font-size:10px;color:#666;">Employee Signature</div><div style="margin-top:28px;border-top:1px solid #bbb;padding-top:4px;font-size:9px;color:#999;">${plan.name || ''}</div></div>
-                <div style="padding:12px;text-align:center;border-right:1px solid #c5d5ea;"><div style="font-size:10px;color:#666;">Supervisor Signature</div><div style="margin-top:28px;border-top:1px solid #bbb;padding-top:4px;font-size:9px;color:#999;">${plan.supervisor_name || ''}</div></div>
-                <div style="padding:12px;text-align:center;"><div style="font-size:10px;color:#666;">Manager Signature</div><div style="margin-top:28px;border-top:1px solid #bbb;padding-top:4px;font-size:9px;color:#999;">${plan.reviewer_name || plan.secondary_name || ''}</div></div>
-            </div>
-        </div>`;
-    }
+        </div>
+
+        <!-- KRA Table -->
+        <div style="background:#1a3557;color:#fff;padding:7px 12px;font-size:11px;font-weight:bold;text-align:center;margin-top:14px;">PERFORMANCE PLANNING TEMPLATE – KRA / KPI DETAILS</div>
+        <table style="width:100%;border-collapse:collapse;">
+            <thead>
+                <tr style="background:#2563a8;color:#fff;">
+                    <th style="padding:8px 6px;border:1px solid #1a3557;font-size:10px;width:14%;">KRA / Goal</th>
+                    <th style="padding:8px 6px;border:1px solid #1a3557;font-size:10px;width:14%;">KPI / Metric</th>
+                    <th style="padding:8px 6px;border:1px solid #1a3557;font-size:10px;width:26%;">Description</th>
+                    <th style="padding:8px 6px;border:1px solid #1a3557;font-size:10px;width:26%;">Criteria</th>
+                    <th style="padding:8px 6px;border:1px solid #1a3557;font-size:10px;width:8%;">Score</th>
+                    <th style="padding:8px 6px;border:1px solid #1a3557;font-size:10px;width:12%;">Target</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${kraRows}
+                ${totalRow}
+            </tbody>
+        </table>
+
+        <!-- Signature section -->
+        <div style="display:flex;border:1px solid #c5d5ea;margin-top:18px;background:#f5f8fd;">
+            ${signatureCols}
+        </div>
+
+    </div>`;
+}
 
     // ============================================================
     // VIEW ALL APPRAISALS - HR MANAGER
     // ============================================================
 
     viewAllEmployeeAppraisals = async () => {
-        this.state.all_appraisals_loading = true;
-        try {
-            const cycle = this.state.selected_cycle;
-            if (!cycle || !cycle.id) {
-                this.env.services.notification.add("No cycle selected", { type: "warning" });
-                return;
-            }
-            const result = await rpc("/hr_pms_dashboard/get_cycle_all_appraisals", { cycle_id: cycle.id });
-            if (result && !result.error && result.appraisals && result.appraisals.length > 0) {
-                this.state.all_appraisals_data = result.appraisals;
-                this.state.all_appraisals_summary = result.summary;
-                this._generateAllAppraisalsPDF(result.appraisals, {
-                    name: cycle.name,
-                    start_date: cycle.start_date,
-                    end_date: cycle.end_date,
-                });
-            } else {
-                this.env.services.notification.add(result?.error || "No appraisal data found", { type: "warning" });
-            }
-        } catch (error) {
-            console.error("Error generating appraisals:", error);
-            this.env.services.notification.add("Error generating appraisals", { type: "danger" });
-        } finally {
-            this.state.all_appraisals_loading = false;
-        }
-    }
-
-    closeAllAppraisalsModal = () => {
-        this.state.show_all_appraisals_modal = false;
-        this.state.all_appraisals_data = [];
-        this.state.all_appraisals_summary = null;
-    }
-
-    exportAllAppraisalsToExcel = () => {
-        if (!this.state.all_appraisals_data || this.state.all_appraisals_data.length === 0) {
-            this.env.services.notification.add("No data to export", { type: "warning" });
+    this.state.all_appraisals_loading = true;
+    try {
+        const cycle = this.state.selected_cycle;
+        if (!cycle || !cycle.id) {
+            this.env.services.notification.add("No cycle selected", { type: "warning" });
             return;
         }
-        const cycle = this.state.selected_cycle;
-        const employees = this.state.all_appraisals_data;
-        const headers = ['Sl No', 'Emp ID', 'Employee Name', 'Designation', 'DOJ',
-            'Self Rating', '1st Manager Score', '2nd Manager Score', 'Reviewer Score',
-            'Final Score', 'Rating', 'Bonus Eligibility %', 'Basic Pay', 'Bonus Amount'];
-        const csvLines = [`Cycle: ${cycle?.name || ''}`, `Generated: ${new Date().toLocaleString()}`, '', headers.join(',')];
-        employees.forEach((emp, idx) => {
-            csvLines.push([
-                idx + 1, emp.employee_id, emp.name, emp.designation || '-', emp.doj || '-',
-                emp.self_score || 0, emp.supervisor_score || 0, emp.secondary_score || '-',
-                emp.reviewer_score || 0, emp.final_score || 0, emp.rating || '-',
-                emp.eligibility_pct || 0, emp.basic_pay || 0, emp.bonus_amount || 0,
-            ].map(cell => {
-                if (typeof cell === 'string' && (cell.includes(',') || cell.includes('"'))) {
-                    return `"${cell.replace(/"/g, '""')}"`;
-                }
-                return cell;
-            }).join(','));
-        });
-        this._downloadCSV(csvLines.join('\n'), `${cycle?.name || 'cycle'}_appraisals.csv`);
-        this.env.services.notification.add("Exported successfully!", { type: "success" });
+        const result = await rpc("/hr_pms_dashboard/get_cycle_all_appraisals", { cycle_id: cycle.id });
+        if (result && !result.error && result.appraisals && result.appraisals.length > 0) {
+            this.state.all_appraisals_data = result.appraisals;
+            this.state.all_appraisals_summary = result.summary;
+            this._generateAllAppraisalsPDF(result.appraisals, cycle); // ← open window directly
+        } else {
+            this.env.services.notification.add(result?.error || "No appraisal data found", { type: "warning" });
+        }
+    } catch (error) {
+        console.error("Error generating appraisals:", error);
+        this.env.services.notification.add("Error generating appraisals", { type: "danger" });
+    } finally {
+        this.state.all_appraisals_loading = false;
     }
+}
 
-    exportAllAppraisalsToPDF = () => {
-        this._generateAllAppraisalsPDF(this.state.all_appraisals_data, this.state.selected_cycle);
-    }
+exportAllAppraisalsToPDF = () => {
+    this._generateAllAppraisalsPDF(this.state.all_appraisals_data, this.state.selected_cycle);
+}
+
+exportAllAppraisalsToExcel = () => {
+    this._generateAllAppraisalsPDF(this.state.all_appraisals_data, this.state.selected_cycle);
+}
+
 
     _generateAllAppraisalsPDF = (appraisals, cycle) => {
-        const companyName = this.state.all_appraisals_summary?.company_name || 'Company';
-        const rows = appraisals.map((emp, idx) => `
-            <tr>
-                <td class="text-center">${idx + 1}</td>
-                <td class="text-center">${emp.employee_id || '-'}</td>
-                <td class="text-left font-bold">${this._escapeHtml(emp.name || '-')}</td>
-                <td class="text-left">${this._escapeHtml(emp.designation || '-')}</td>
-                <td class="text-center">${emp.self_score || 0}</td>
-                <td class="text-center">${emp.supervisor_score || 0}</td>
-                <td class="text-center">${emp.secondary_score || '-'}</td>
-                <td class="text-center">${emp.reviewer_score || 0}</td>
-                <td class="text-center font-bold">${emp.final_score || 0}</td>
-                <td class="text-center">${emp.rating || '-'}</td>
-                <td class="text-center">${emp.eligibility_pct || 0}%</td>
-                <td class="text-right">${this._formatCurrency(emp.basic_pay || 0)}</td>
-                <td class="text-right font-bold">${this._formatCurrency(emp.bonus_amount || 0)}</td>
-            </tr>`).join('');
+    const companyName = this.state.all_appraisals_summary?.company_name || 'Company';
+    const rows = appraisals.map((emp, idx) => `
+        <tr>
+            <td class="text-center">${idx + 1}</td>
+            <td class="text-center">${emp.employee_id || '-'}</td>
+            <td class="text-left font-bold">${this._escapeHtml(emp.name || '-')}</td>
+            <td class="text-left">${this._escapeHtml(emp.designation || '-')}</td>
+            <td class="text-center">${emp.self_score !== null && emp.self_score !== undefined ? emp.self_score : '<span style="color:#999;font-style:italic">Not Given</span>'}</td>
+            <td class="text-center">${emp.supervisor_score !== null && emp.supervisor_score !== undefined ? emp.supervisor_score : '<span style="color:#999;font-style:italic">Not Given</span>'}</td>
+            <td class="text-center">${emp.secondary_score !== null && emp.secondary_score !== undefined ? emp.secondary_score : '<span style="color:#999;font-style:italic">Not Given</span>'}</td>
+            <td class="text-center">${emp.reviewer_score !== null && emp.reviewer_score !== undefined ? emp.reviewer_score : '<span style="color:#999;font-style:italic">Not Given</span>'}</td>
+            <td class="text-center font-bold">${emp.final_score !== null && emp.final_score !== undefined ? emp.final_score : '—'}</td>
+            <td class="text-center">${emp.rating || '-'}</td>
+            <td class="text-center">${emp.eligibility_pct !== null && emp.eligibility_pct !== undefined ? emp.eligibility_pct + '%' : '—'}</td>
+            <td class="text-right">${this._formatCurrency(emp.basic_pay ?? 0)}</td>
+            <td class="text-right font-bold">${this._formatCurrency(emp.bonus_amount ?? 0)}</td>
+        </tr>`).join('');
+        const totalBasicPay = appraisals.reduce((sum, emp) => sum + (emp.basic_pay ?? 0), 0);
+const totalBonusAmount = appraisals.reduce((sum, emp) => sum + (emp.bonus_amount ?? 0), 0);
 
-        const html = `<!DOCTYPE html><html><head>
-            <title>${cycle.name || 'Appraisals'} – Employee Appraisal Report</title>
-            <style>
-                * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-                body { font-family: Arial, sans-serif; margin: 0; padding: 20px; font-size: 12px; }
-                @media print { body { padding: 0; } @page { margin: 15mm; } .no-print { display: none; } }
-                table { width: 100%; border-collapse: collapse; font-size: 11px; }
-                th { background: #1a3557; color: #fff; padding: 10px 6px; border: 1px solid #1a3557; text-align: center; }
-                td { padding: 8px 6px; border: 1px solid #c5d5ea; }
-                .text-center { text-align: center; } .text-right { text-align: right; }
-                .text-left { text-align: left; } .font-bold { font-weight: bold; }
-                .no-print { text-align: center; margin-bottom: 20px; }
-                button { padding: 10px 20px; margin: 10px; background: #1a3557; color: #fff; border: none; border-radius: 5px; cursor: pointer; }
-            </style>
-        </head><body>
-            <div class="no-print">
-                <button onclick="window.print();">📄 Save as PDF / Print</button>
-                <button onclick="window.close();">✖ Close Window</button>
-            </div>
-            <div style="background:#1a3557;color:#fff;padding:20px;text-align:center;">
-                <h1 style="margin:0;font-size:20px;">${this._escapeHtml(companyName)}</h1>
-                <p style="margin:5px 0 0;font-size:12px;color:#aecde8;">Employee Performance Appraisal Report</p>
-            </div>
-            <div style="background:#2563a8;color:#fff;display:flex;justify-content:space-between;padding:12px 20px;">
-                <div style="text-align:center;flex:1;"><div style="font-size:9px;color:#aecde8;">Appraisal Cycle</div><div style="font-size:12px;font-weight:bold;">${this._escapeHtml(cycle.name || '-')}</div></div>
-                <div style="text-align:center;flex:1;"><div style="font-size:9px;color:#aecde8;">Start Date</div><div style="font-size:12px;font-weight:bold;">${cycle.start_date || '-'}</div></div>
-                <div style="text-align:center;flex:1;"><div style="font-size:9px;color:#aecde8;">End Date</div><div style="font-size:12px;font-weight:bold;">${cycle.end_date || '-'}</div></div>
-            </div>
-            <table style="margin-top:20px;">
-                <thead><tr>
-                    <th>#</th><th>Emp ID</th><th>Employee Name</th><th>Designation</th>
-                    <th>Self</th><th>1st Mgr</th><th>2nd Mgr</th><th>Reviewer</th>
-                    <th>Final</th><th>Rating</th><th>Bonus %</th><th>Basic Pay</th><th>Bonus Amount</th>
-                </tr></thead>
-                <tbody>${rows}</tbody>
-            </table>
-            <div style="text-align:center;font-size:8px;color:#999;margin-top:20px;padding-top:10px;border-top:1px solid #eee;">
-                Generated on: ${new Date().toLocaleString()}
-            </div>
-        </body></html>`;
+const totalRow = `
+    <tr style="font-weight:bold;background:#e8f0fe;">
+        <td colspan="11" class="text-right" style="text-align:right;">TOTAL</td>
+        <td class="text-right">${this._formatCurrency(totalBasicPay)}</td>
+        <td class="text-right">${this._formatCurrency(totalBonusAmount)}</td>
+    </tr>`;
 
-        const win = window.open('', '_blank');
-        win.document.write(html);
-        win.document.close();
-        win.focus();
-    }
+    const csvData = this._buildCSVData(appraisals, cycle);
+
+    const html = `<!DOCTYPE html><html><head>
+        <title>${cycle.name || 'Appraisals'} – Employee Appraisal Report</title>
+        <style>
+            * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+            body { font-family: Arial, sans-serif; margin: 0; padding: 20px; font-size: 12px; }
+            @media print { body { padding: 0; } @page { margin: 15mm; } .no-print { display: none; } }
+            table { width: 100%; border-collapse: collapse; font-size: 11px; }
+            th { background: #1a3557; color: #fff; padding: 10px 6px; border: 1px solid #1a3557; text-align: center; }
+            td { padding: 8px 6px; border: 1px solid #c5d5ea; }
+            .text-center { text-align: center; } .text-right { text-align: right; }
+            .text-left { text-align: left; } .font-bold { font-weight: bold; }
+            .no-print { text-align: center; margin-bottom: 20px; }
+            button { padding: 10px 20px; margin: 10px; color: #fff; border: none; border-radius: 5px; cursor: pointer; font-size: 13px; }
+            .btn-pdf { background: #1a3557; }
+            .btn-excel { background: #1e7e34; }
+            .btn-close { background: #c0392b; }
+        </style>
+    </head><body>
+        <div class="no-print">
+            <button class="btn-pdf" onclick="window.print();"> Download as PDF</button>
+            <button class="btn-excel" onclick="downloadExcel();"> Download as Excel</button>
+            <button class="btn-close" onclick="window.close();">✖ Close Window</button>
+        </div>
+        <div style="background:#1a3557;color:#fff;padding:20px;text-align:center;">
+            <h1 style="margin:0;font-size:20px;">${this._escapeHtml(companyName)}</h1>
+            <p style="margin:5px 0 0;font-size:12px;color:#aecde8;">Employee Performance Appraisal Report</p>
+        </div>
+        <div style="background:#2563a8;color:#fff;display:flex;justify-content:space-between;padding:12px 20px;">
+            <div style="text-align:center;flex:1;"><div style="font-size:9px;color:#aecde8;">Appraisal Cycle</div><div style="font-size:12px;font-weight:bold;">${this._escapeHtml(cycle.name || '-')}</div></div>
+            <div style="text-align:center;flex:1;"><div style="font-size:9px;color:#aecde8;">Start Date</div><div style="font-size:12px;font-weight:bold;">${cycle.start_date || '-'}</div></div>
+            <div style="text-align:center;flex:1;"><div style="font-size:9px;color:#aecde8;">End Date</div><div style="font-size:12px;font-weight:bold;">${cycle.appraisal_end_date || '-'}</div></div>
+        </div>
+        <table style="margin-top:20px;">
+           <thead><tr>
+    <th>#</th><th>Emp ID</th><th>Employee Name</th><th>Designation</th>
+    <th>Self</th><th>Supervisor</th><th>Secondary</th><th>Reviewer</th>
+    <th>Final</th><th>Rating</th><th>Eligibility %</th><th>Basic Pay</th><th>Bonus Amount</th>
+</tr></thead>
+            <tbody>${rows} ${totalRow}</tbody>
+        </table>
+        <div style="text-align:center;font-size:8px;color:#999;margin-top:20px;padding-top:10px;border-top:1px solid #eee;">
+            Generated on: ${new Date().toLocaleString()}
+        </div>
+        <script>
+            const csvData = ${JSON.stringify(csvData)};
+            function downloadExcel() {
+                const blob = new Blob([csvData], { type: 'text/csv;charset=utf-8;' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = '${(cycle.name || 'cycle').replace(/[^a-z0-9]/gi, '_')}_appraisals.csv';
+                a.click();
+                URL.revokeObjectURL(url);
+            }
+        <\/script>
+    </body></html>`;
+
+    const win = window.open('', '_blank');
+    win.document.write(html);
+    win.document.close();
+    win.focus();
+}
+    _buildCSVData = (employees, cycle) => {
+    const headers = [
+        'Sl No', 'Emp ID', 'Employee Name', 'Designation',
+        'Self', 'Supervisor', 'Secondary', 'Reviewer',
+        'Final', 'Rating', 'Eligibility %', 'Basic Pay', 'Bonus Amount'
+    ];
+
+    const csvLines = [
+        `Cycle: ${cycle?.name || ''}`,
+        `Start Date: ${cycle?.start_date || '-'}`,
+        `End Date: ${cycle?.appraisal_end_date || '-'}`,
+        `Generated: ${new Date().toLocaleString()}`,
+        '',
+        headers.join(',')
+    ];
+
+    employees.forEach((emp, idx) => {
+        csvLines.push([
+            idx + 1,
+            emp.employee_id || '-',
+            emp.name || '-',
+            emp.designation || '-',
+            emp.self_score !== null && emp.self_score !== undefined ? emp.self_score : 'Not Given',
+            emp.supervisor_score !== null && emp.supervisor_score !== undefined ? emp.supervisor_score : 'Not Given',
+            emp.secondary_score !== null && emp.secondary_score !== undefined ? emp.secondary_score : 'Not Given',
+            emp.reviewer_score !== null && emp.reviewer_score !== undefined ? emp.reviewer_score : 'Not Given',
+            emp.final_score !== null && emp.final_score !== undefined ? emp.final_score : '-',
+            emp.rating || '-',
+            emp.eligibility_pct !== null && emp.eligibility_pct !== undefined ? `${emp.eligibility_pct}%` : '-',
+            emp.basic_pay ?? 0,
+            emp.bonus_amount ?? 0,
+        ].map(cell => {
+            if (typeof cell === 'string' && (cell.includes(',') || cell.includes('"'))) {
+                return `"${cell.replace(/"/g, '""')}"`;
+            }
+            return cell;
+        }).join(','));
+    });
+
+    return csvLines.join('\n');
+}
+
+
 
     // ============================================================
     // PLAN CLICK HANDLERS
@@ -903,7 +1080,7 @@ class PMSDashboard extends Component {
         views: [[false, 'list']],
         target: 'current',
         name: 'All Cycles',
-    });
+    },{ stackPosition: 'pushState' });
 }
 
 onClickProbationActiveCycles = () => {
@@ -963,55 +1140,74 @@ onClickTotalActiveEmployees = () => {
     // ============================================================
 
     onOpenPlanRecord = (plan) => {
-        const planId = plan.plan_id || plan.id;
-        if (!planId) {
-            this.env.services.notification.add("Cannot open plan: Invalid data", { type: "warning" });
-            return;
-        }
-        const isPendingApproval = plan.state_key === 'pending_supervisor' ||
-            plan.state_key === 'pending_secondary_supervisor' ||
-            plan.state_key === 'pending_reviewer';
-        const formViewRef = isPendingApproval
-            ? 'hr_employee_evaluation.view_employee_plans_supervisor_form'
-            : 'hr_employee_evaluation.view_employee_performance_planning_form';
-        const title = isPendingApproval ? 'Review Performance Plan'
-            : plan.state_key === 'draft' ? 'Edit My Performance Plan'
-            : 'My Performance Plan';
-        this.action.doAction({
-            type: 'ir.actions.act_window',
-            name: title,
-            res_model: 'pms.appraisal',
-            res_id: planId,
-            views: [[false, 'form']],
-            target: 'current',
-            context: { create: false, delete: false, form_view_ref: formViewRef },
-        });
+    const planId = plan.plan_id || plan.id;
+    if (!planId) {
+        this.env.services.notification.add("Cannot open plan: Invalid data", { type: "warning" });
+        return;
     }
 
+    // ✅ Save cycle detail state before navigating away
+    sessionStorage.setItem('pms_return_cycle_id', String(this.state.selected_cycle_id));
+    sessionStorage.setItem('pms_return_tab', this.state.cycle_active_tab || 'planning');
+
+    const isPendingApproval =
+        plan.state_key === 'pending_supervisor' ||
+        plan.state_key === 'pending_secondary_supervisor' ||
+        plan.state_key === 'pending_reviewer';
+    const isDraft = plan.state_key === 'draft';
+    const formViewRef = isPendingApproval
+        ? 'hr_employee_evaluation.view_employee_plans_supervisor_form'
+        : 'hr_employee_evaluation.view_employee_performance_planning_form';
+    const title = isPendingApproval ? 'Review Performance Plan'
+        : isDraft ? 'Edit My Performance Plan'
+        : 'My Performance Plan';
+
+    this.action.doAction({
+        type: 'ir.actions.act_window',
+        name: title,
+        res_model: 'pms.appraisal',
+        res_id: planId,
+        views: [[false, 'form']],
+        target: 'current',
+        context: {
+            create: false,
+            delete: false,
+            form_view_ref: formViewRef,
+            default_state: isDraft ? 'draft' : undefined,
+        },
+    }, { stackPosition: 'pushState' });
+}
+
     onOpenAppraisalRecord = (appraisal) => {
-        if (appraisal && appraisal.constructor && appraisal.constructor.name === 'PointerEvent') {
-            console.error("Wrong parameter passed to onOpenAppraisalRecord");
-            return;
-        }
-        const appraisalId = appraisal.id || appraisal.appraisal_id;
-        if (!appraisalId) {
-            this.env.services.notification.add("Cannot open appraisal: Invalid data", { type: "danger" });
-            return;
-        }
-        const isSupervisorOrReviewer = this.state.role === 'supervisor' ||
-            this.state.role === 'secondary_supervisor' || this.state.role === 'reviewer';
-        const formViewRef = isSupervisorOrReviewer
-            ? 'hr_employee_evaluation.view_employee_appraisals_supervisor_form'
-            : 'hr_employee_evaluation.view_pms_appraisal_form';
-        this.action.doAction({
-            type: 'ir.actions.act_window',
-            res_model: 'pms.appraisal',
-            res_id: appraisalId,
-            views: [[false, 'form']],
-            target: 'current',
-            context: { form_view_ref: formViewRef, no_breadcrumbs: false },
-        });
+    if (appraisal && appraisal.constructor && appraisal.constructor.name === 'PointerEvent') {
+        console.error("Wrong parameter passed to onOpenAppraisalRecord");
+        return;
     }
+    const appraisalId = appraisal.id || appraisal.appraisal_id;
+    if (!appraisalId) {
+        this.env.services.notification.add("Cannot open appraisal: Invalid data", { type: "danger" });
+        return;
+    }
+
+    // ✅ Save cycle detail state before navigating away
+    sessionStorage.setItem('pms_return_cycle_id', String(this.state.selected_cycle_id));
+    sessionStorage.setItem('pms_return_tab', this.state.cycle_active_tab || 'planning');
+
+    const isSupervisorOrReviewer = this.state.role === 'supervisor' ||
+        this.state.role === 'secondary_supervisor' || this.state.role === 'reviewer';
+    const formViewRef = isSupervisorOrReviewer
+        ? 'hr_employee_evaluation.view_employee_appraisals_supervisor_form'
+        : 'hr_employee_evaluation.view_pms_appraisal_form';
+
+    this.action.doAction({
+        type: 'ir.actions.act_window',
+        res_model: 'pms.appraisal',
+        res_id: appraisalId,
+        views: [[false, 'form']],
+        target: 'current',
+        context: { form_view_ref: formViewRef },
+    }, { stackPosition: 'replaceLast' });
+}
 
     onClickEmployeeAppraisal = (appraisal) => {
         const appraisalId = appraisal.id || appraisal.appraisal_id || appraisal.plan_id;
@@ -1023,15 +1219,19 @@ onClickTotalActiveEmployees = () => {
     }
 
     onDoAction = (action) => {
-        if (action.action_type === 'complete_plan' || action.action_type === 'view_plan') {
-            this.onOpenPlanRecord({ id: action.plan_id, plan_id: action.plan_id, state_key: action.action_type === 'complete_plan' ? 'draft' : '' });
-        } else if (action.action_type === 'start_appraisal' || action.action_type === 'view_appraisal') {
-            this.onOpenAppraisalRecord({ id: action.appraisal_id });
-        } else {
-            if (action.plan_id) this.onOpenPlanRecord({ id: action.plan_id });
-            else if (action.appraisal_id) this.onOpenAppraisalRecord({ id: action.appraisal_id });
-        }
+    if (action.action_type === 'complete_plan' || action.action_type === 'view_plan') {
+        this.onOpenPlanRecord({
+            id: action.plan_id,
+            plan_id: action.plan_id,
+            state_key: action.action_type === 'complete_plan' ? 'draft' : action.state_key || ''
+        });
+    } else if (action.action_type === 'start_appraisal' || action.action_type === 'view_appraisal') {
+        this.onOpenAppraisalRecord({ id: action.appraisal_id });
+    } else {
+        if (action.plan_id) this.onOpenPlanRecord({ id: action.plan_id, plan_id: action.plan_id, state_key: action.state_key || '' });
+        else if (action.appraisal_id) this.onOpenAppraisalRecord({ id: action.appraisal_id });
     }
+}
 
     // ============================================================
     // FULL PLAN / APPRAISAL DETAILS (EMPLOYEE VIEW)
@@ -1039,6 +1239,7 @@ onClickTotalActiveEmployees = () => {
 
     openFullPlanDetails = (plan) => {
         this.state.selected_full_plan = {
+
             ...plan,
             cycle_id: plan.cycle_id || plan.id,
             evaluation_group: plan.evaluation_group || '-',
@@ -1191,14 +1392,14 @@ onClickTotalActiveEmployees = () => {
             `Reviewer:,${escape(appraisal.reviewer_name || '-')}`,
             `Total Weightage:,${escape(appraisal.total_weightage || 0)}%`,
             '', 'KPI SCORES,,,,,,',
-            'KPI,Weightage,Emp Score,1st Manager,2nd Manager,Reviewer Score',
+            'KPI,Weightage,Emp Score,Supervisor,Secondary,Reviewer Score',
         ];
         (appraisal.kpi_lines || []).forEach(line => {
             csvLines.push([escape(line.kpi_name), escape(line.weightage || 0),
                 escape(line.self_score || '-'), escape(line.supervisor_score || '-'),
                 escape(line.secondary_score || '-'), escape(line.reviewer_score || '-')].join(','));
         });
-        csvLines.push('', 'COMPETENCY SCORES,,,,,,', 'Competency,Emp Score,1st Manager,2nd Manager,Reviewer Score');
+        csvLines.push('', 'COMPETENCY SCORES,,,,,,', 'Competency,Emp Score,Supervisor,Secondary,Reviewer Score');
         (appraisal.competency_lines || []).forEach(line => {
             csvLines.push([escape(line.competency_name), escape(line.self_score || '-'),
                 escape(line.supervisor_score || '-'), escape(line.secondary_score || '-'),
@@ -1252,8 +1453,8 @@ onClickTotalActiveEmployees = () => {
                 <div><span style="font-size:9px;color:#aecde8;">Final Score</span><br/><b>${appraisal.final_score || 0}</b></div>
                 <div><span style="font-size:9px;color:#aecde8;">Rating</span><br/><b>${appraisal.rating || '-'}</b></div>
             </div>
-            ${kpiRows ? `<div style="margin-top:14px;"><div style="background:#1a3557;color:#fff;padding:7px;font-size:11px;font-weight:bold;">KPI SCORES</div><table style="width:100%;border-collapse:collapse;font-size:11px;"><thead><tr style="background:#2563a8;color:#fff;"><th style="padding:7px;border:1px solid #1a3557;">KPI</th><th style="padding:7px;border:1px solid #1a3557;width:8%;">Weight</th><th style="padding:7px;border:1px solid #1a3557;width:10%;">Self</th><th style="padding:7px;border:1px solid #1a3557;width:10%;">1st Mgr</th><th style="padding:7px;border:1px solid #1a3557;width:10%;">2nd Mgr</th><th style="padding:7px;border:1px solid #1a3557;width:10%;">Reviewer</th></tr></thead><tbody>${kpiRows}</tbody></table></div>` : ''}
-            ${compRows ? `<div style="margin-top:14px;"><div style="background:#1a3557;color:#fff;padding:7px;font-size:11px;font-weight:bold;">COMPETENCY SCORES</div><table style="width:100%;border-collapse:collapse;font-size:11px;"><thead><tr style="background:#2563a8;color:#fff;"><th style="padding:7px;border:1px solid #1a3557;">Competency</th><th style="padding:7px;border:1px solid #1a3557;width:10%;">Self</th><th style="padding:7px;border:1px solid #1a3557;width:10%;">1st Mgr</th><th style="padding:7px;border:1px solid #1a3557;width:10%;">2nd Mgr</th><th style="padding:7px;border:1px solid #1a3557;width:10%;">Reviewer</th></tr></thead><tbody>${compRows}</tbody></table></div>` : ''}
+            ${kpiRows ? `<div style="margin-top:14px;"><div style="background:#1a3557;color:#fff;padding:7px;font-size:11px;font-weight:bold;">KPI SCORES</div><table style="width:100%;border-collapse:collapse;font-size:11px;"><thead><tr style="background:#2563a8;color:#fff;"><th style="padding:7px;border:1px solid #1a3557;">KPI</th><th style="padding:7px;border:1px solid #1a3557;width:8%;">Weight</th><th style="padding:7px;border:1px solid #1a3557;width:10%;">Self</th><th style="padding:7px;border:1px solid #1a3557;width:10%;">Supervisor</th><th style="padding:7px;border:1px solid #1a3557;width:10%;">Secondary</th><th style="padding:7px;border:1px solid #1a3557;width:10%;">Reviewer</th></tr></thead><tbody>${kpiRows}</tbody></table></div>` : ''}
+            ${compRows ? `<div style="margin-top:14px;"><div style="background:#1a3557;color:#fff;padding:7px;font-size:11px;font-weight:bold;">COMPETENCY SCORES</div><table style="width:100%;border-collapse:collapse;font-size:11px;"><thead><tr style="background:#2563a8;color:#fff;"><th style="padding:7px;border:1px solid #1a3557;">Competency</th><th style="padding:7px;border:1px solid #1a3557;width:10%;">Self</th><th style="padding:7px;border:1px solid #1a3557;width:10%;">Supervisor</th><th style="padding:7px;border:1px solid #1a3557;width:10%;">Secondary</th><th style="padding:7px;border:1px solid #1a3557;width:10%;">Reviewer</th></tr></thead><tbody>${compRows}</tbody></table></div>` : ''}
             <div style="margin-top:14px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;text-align:center;background:#f5f8fd;border:1px solid #c5d5ea;padding:10px;">
                 <div><div style="font-size:10px;color:#666;">KPI Total</div><div style="font-size:16px;font-weight:bold;color:#1a3557;">${appraisal.kpi_total || 0}</div></div>
                 <div><div style="font-size:10px;color:#666;">Competency Total</div><div style="font-size:16px;font-weight:bold;color:#1a3557;">${appraisal.competency_total || 0}</div></div>
@@ -1495,7 +1696,7 @@ exportCompletedCycleToPDF() {
             domain: [['state', 'in', ['planning', 'appraisal']]],
             target: 'current',
             name: 'Active Cycles',
-        });
+        },{ stackPosition: 'pushState' });
     }
 
     onClickEmployeesInActiveCycles = () => {
@@ -1514,7 +1715,7 @@ exportCompletedCycleToPDF() {
         domain: [['id', 'in', uniqueIds]],
         target: 'current',
         name: 'Employees in Active Cycles',
-    });
+    },{ stackPosition: 'pushState' });
 }
 
     // ============================================================
@@ -1522,74 +1723,84 @@ exportCompletedCycleToPDF() {
     // ============================================================
 
     async _loadData() {
-        try {
-            const data = await rpc("/hr_pms_dashboard/data", { requested_role: this.state.requestedRole });
-            if (data.error) {
-                this.state.error = data.error + (data.traceback ? '\n' + data.traceback : '');
-                this.state.loading = false;
-                return;
-            }
-            this._dataCache = data;
-            this.state.employee_id = data.employee_id || 0;
-            this.state.employee_name = data.employee_name || "";
+    try {
+        const data = await rpc("/hr_pms_dashboard/data", {
+            requested_role: this.state.requestedRole
+        });
 
-            if (this.state.requestedRole === 'hr_manager' && data.role === 'hr_manager') {
-                this.state.role = 'hr_manager';
-                this.state.stats = data.stats || {};
-                this.state.stats.employees_in_active_cycles = data.employees_in_active_cycles || 0;
-                this.state.active_cycles_list = data.active_cycles_list || [];
-                this.state.completed_cycles_list = data.completed_cycles_list || [];
-                this.state.filtered_completed_cycles_list = [...(data.completed_cycles_list || [])];
-                this.state.top_performers = data.top_performers || [];
-                this.state.bottom_performers = data.bottom_performers || [];
-                this.state.employees_with_plan = data.employees_with_plan || [];
-                this.state.employees_no_plan_count = data.employees_no_plan_count || 0;
-                this.state.employees_no_appraisal_count = data.employees_no_appraisal_count || 0;
-                this.state.loading = false;
-                await this._ensureChartJS();
-                return;
-            }
-
-            if (this.state.requestedRole === 'employee' && data.employee) {
-                this.state.role = 'employee';
-                this.state.employee = data.employee;
-                if (data.employee.past_cycles) {
-                    this.state.filtered_past_cycles = [...data.employee.past_cycles];
-                }
-                this.state.loading = false;
-                await this._ensureChartJS();
-                await this._waitForDOM(200);
-                this._destroyAllCharts();
-
-                return;
-            }
-
-            if (this.state.requestedRole === 'supervisor' && data.supervisor) {
-                this.state.role = 'supervisor';
-                this.state.supervisor = data.supervisor;
-                this.state.loading = false;
-                await this._ensureChartJS();
-                return;
-            }
-
-            if (this.state.requestedRole === 'reviewer' && data.reviewer) {
-                this.state.role = 'reviewer';
-                this.state.reviewer = data.reviewer;
-                this.state.loading = false;
-                await this._ensureChartJS();
-                return;
-            }
-
-            // Fallback
-            this.state.role = data.role;
+        if (data.error) {
+            this.state.error = data.error + (data.traceback ? '\n' + data.traceback : '');
             this.state.loading = false;
-
-        } catch (e) {
-            console.error("Dashboard load error:", e);
-            this.state.error = "Failed to load dashboard data. Please refresh.";
-            this.state.loading = false;
+            return;
         }
+
+        // Auto-detect: re-call with the real role
+        if (this.state.requestedRole === 'auto') {
+            this.state.requestedRole = data.role || 'employee';
+            await this._loadData(); // re-call with correct role now set
+            return;
+        }
+
+        this._dataCache = data;
+        this.state.employee_id = data.employee_id || 0;
+        this.state.employee_name = data.employee_name || "";
+
+        if (this.state.requestedRole === 'hr_manager' && data.role === 'hr_manager') {
+            this.state.role = 'hr_manager';
+            this.state.stats = data.stats || {};
+            this.state.stats.employees_in_active_cycles = data.employees_in_active_cycles || 0;
+            this.state.active_cycles_list = data.active_cycles_list || [];
+            this.state.completed_cycles_list = data.completed_cycles_list || [];
+            this.state.filtered_completed_cycles_list = [...(data.completed_cycles_list || [])];
+            this.state.employees_with_plan = data.employees_with_plan || [];
+            this.state.employees_no_plan_count = data.employees_no_plan_count || 0;
+            this.state.employees_no_appraisal_count = data.employees_no_appraisal_count || 0;
+            this.state.loading = false;
+            await this._ensureChartJS();
+            return;
+        }
+
+        if (this.state.requestedRole === 'employee' && data.employee) {
+            this.state.role = 'employee';
+            this.state.employee = data.employee;
+            if (data.employee.past_cycles) {
+                this.state.filtered_past_cycles = [...data.employee.past_cycles];
+            }
+            this.state.loading = false;
+            await this._ensureChartJS();
+            await this._waitForDOM(200);
+            this._destroyAllCharts();
+            return;
+        }
+
+        if (this.state.requestedRole === 'supervisor' && data.supervisor) {
+            this.state.role = 'supervisor';
+            this.state.supervisor = data.supervisor;
+            this.state.stats = data.stats || {};
+            this.state.loading = false;
+            await this._ensureChartJS();
+            return;
+        }
+
+        if (this.state.requestedRole === 'reviewer' && data.reviewer) {
+            this.state.role = 'reviewer';
+            this.state.reviewer = data.reviewer;
+            this.state.stats = data.stats || {};
+            this.state.loading = false;
+            await this._ensureChartJS();
+            return;
+        }
+
+        // Fallback
+        this.state.role = data.role;
+        this.state.loading = false;
+
+    } catch (e) {
+        console.error("Dashboard load error:", e);
+        this.state.error = "Failed to load dashboard data. Please refresh.";
+        this.state.loading = false;
     }
+}
 
     // ============================================================
     // CHART HELPERS

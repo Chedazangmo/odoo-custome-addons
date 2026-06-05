@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_pms_cycle_360_inherit" model="ir.ui.view">
+        <field name="name">pms.cycle.360.inherit</field>
+        <field name="model">pms.cycle</field>
+        <field name="inherit_id" ref="hr_employee_evaluation.view_pms_cycle_form"/>
+        <field name="arch" type="xml">
+
+            <!-- Add smart button -->
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <button name="action_view_feedback_session"
+                        type="object"
+                        class="oe_stat_button"
+                        icon="fa-comments"
+                        invisible="not feedback_session_id">
+                    <div class="o_field_widget o_stat_info">
+                        <span class="o_stat_text">360° Feedback</span>
+                    </div>
+                </button>
+            </xpath>
+
+            <!-- Add 360 feedback settings group after Employee Application group -->
+            <xpath expr="//field[@name='active']/.." position="after">
+                <group string="360° Feedback Settings">
+                    <field name="feedback_template_id"
+                           options="{'no_create': True}"
+                           readonly="state != 'draft'"
+                           placeholder="Select a published feedback template (optional)"/>
+                    <field name="feedback_session_id"
+                           readonly="1"
+                           invisible="not feedback_session_id"/>
+                </group>
+            </xpath>
+
+            <!-- Info alert -->
+            <xpath expr="//notebook" position="before">
+                <div class="alert alert-info" role="alert"
+                     invisible="not feedback_template_id or feedback_session_id">
+                    <i class="fa fa-info-circle"/>
+                    A 360° Feedback session will be automatically created when
+                    the cycle moves to <strong>Appraisal Phase</strong>.
+                </div>
+                <div class="alert alert-success" role="alert"
+                     invisible="not feedback_session_id">
+                    <i class="fa fa-check-circle"/>
+                    360° Feedback session is active. Click the button above to view it.
+                </div>
+            </xpath>
+
+        </field>
+    </record>
+
+</odoo>

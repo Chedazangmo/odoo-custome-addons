@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="0">
+
+        <!--
+            RECORD RULES
+            ─────────────────────────────────────────────────────────────────────
+            These rules control ROW-LEVEL access (which records a user can see).
+            Model-level access is controlled in ir.model.access.csv.
+        -->
+
+        <!-- ── Feedback Template: Users read ALL active templates ── -->
+        <record id="rule_feedback_template_user_read" model="ir.rule">
+            <field name="name">360 Feedback: Employees read active templates</field>
+            <field name="model_id" ref="model_pms_feedback_template"/>
+            <field name="groups" eval="[(4, ref('group_pms_360_user'))]"/>
+            <field name="domain_force">[('state', '=', 'active')]</field>
+            <field name="perm_read">1</field>
+            <field name="perm_write">0</field>
+            <field name="perm_create">0</field>
+            <field name="perm_unlink">0</field>
+        </record>
+
+        <!-- ── Feedback Session: Employees only see sessions assigned to them ── -->
+        <record id="rule_feedback_session_user" model="ir.rule">
+            <field name="name">360 Feedback: Employees see their assigned sessions</field>
+            <field name="model_id" ref="model_pms_feedback_session"/>
+            <field name="groups" eval="[(4, ref('group_pms_360_user'))]"/>
+            <field name="domain_force">[
+                '|',
+                ('reviewer_ids.user_id', '=', user.id),
+                ('subject_employee_id.user_id', '=', user.id)
+            ]</field>
+            <field name="perm_read">1</field>
+            <field name="perm_write">0</field>
+            <field name="perm_create">0</field>
+            <field name="perm_unlink">0</field>
+        </record>
+
+        <!-- ── Feedback Response: Reviewer can only see/edit their own response ── -->
+        <!--    Subject can read responses about themselves (anonymity handled in view) -->
+        <record id="rule_feedback_response_reviewer" model="ir.rule">
+            <field name="name">360 Feedback: Reviewer access own response</field>
+            <field name="model_id" ref="model_pms_feedback_response"/>
+            <field name="groups" eval="[(4, ref('group_pms_360_user'))]"/>
+            <field name="domain_force">[
+                '|',
+                ('reviewer_user_id', '=', user.id),
+                ('subject_employee_id.user_id', '=', user.id)
+            ]</field>
+            <field name="perm_read">1</field>
+            <field name="perm_write">1</field>
+            <field name="perm_create">0</field>
+            <field name="perm_unlink">0</field>
+        </record>
+
+        <!-- ── Response Lines: Same rule as Response (reviewer or subject) ── -->
+        <record id="rule_feedback_response_line_user" model="ir.rule">
+            <field name="name">360 Feedback: Users access own response lines</field>
+            <field name="model_id" ref="model_pms_feedback_response_line"/>
+            <field name="groups" eval="[(4, ref('group_pms_360_user'))]"/>
+            <field name="domain_force">[
+                '|',
+                ('response_id.reviewer_user_id', '=', user.id),
+                ('response_id.subject_employee_id.user_id', '=', user.id)
+            ]</field>
+            <field name="perm_read">1</field>
+            <field name="perm_write">1</field>
+            <field name="perm_create">0</field>
+            <field name="perm_unlink">0</field>
+        </record>
+
+        <!-- ── HR Admin: no domain restrictions (see all records) ── -->
+        <record id="rule_feedback_template_hr_admin" model="ir.rule">
+            <field name="name">360 Feedback: HR Admin full template access</field>
+            <field name="model_id" ref="model_pms_feedback_template"/>
+            <field name="groups" eval="[(4, ref('group_pms_360_hr_admin'))]"/>
+            <field name="domain_force">[(1, '=', 1)]</field>
+            <field name="perm_read">1</field>
+            <field name="perm_write">1</field>
+            <field name="perm_create">1</field>
+            <field name="perm_unlink">1</field>
+        </record>
+
+        <record id="rule_feedback_session_hr_admin" model="ir.rule">
+            <field name="name">360 Feedback: HR Admin full session access</field>
+            <field name="model_id" ref="model_pms_feedback_session"/>
+            <field name="groups" eval="[(4, ref('group_pms_360_hr_admin'))]"/>
+            <field name="domain_force">[(1, '=', 1)]</field>
+            <field name="perm_read">1</field>
+            <field name="perm_write">1</field>
+            <field name="perm_create">1</field>
+            <field name="perm_unlink">1</field>
+        </record>
+
+        <record id="rule_feedback_response_hr_admin" model="ir.rule">
+            <field name="name">360 Feedback: HR Admin full response access</field>
+            <field name="model_id" ref="model_pms_feedback_response"/>
+            <field name="groups" eval="[(4, ref('group_pms_360_hr_admin'))]"/>
+            <field name="domain_force">[(1, '=', 1)]</field>
+            <field name="perm_read">1</field>
+            <field name="perm_write">1</field>
+            <field name="perm_create">1</field>
+            <field name="perm_unlink">1</field>
+        </record>
+
+    </data>
+</odoo>

@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <data>
+
+    <record id="view_employee_pms_form" model="ir.ui.view">
+      <field name="name">employee.pms.form</field>
+      <field name="model">hr.employee</field>
+      <field name="inherit_id" ref="hr.view_employee_form" />
+      <field name="arch" type="xml">
+
+        <xpath expr="//field[@name='parent_id']" position="after">
+          <field name="secondary_manager_id" />
+          <field name="reviewer_id" />
+          <field name="evaluation_group_id" />
+        </xpath>
+
+      </field>
+    </record>
+
+    <record id="view_employee_form_cid_number" model="ir.ui.view">
+      <field name="name">hr.employee.form.cid.number</field>
+      <field name="model">hr.employee</field>
+      <field name="inherit_id" ref="hr.view_employee_form" />
+      <field name="arch" type="xml">
+
+        <!--
+            required="1" is set HERE in the view (not on the field definition)
+            so that the DB column is created without a NOT NULL constraint,
+            allowing the upgrade to succeed on existing employee rows.
+            Once existing employees have their CID filled in, the
+            "Missing not-null constraint" warning in the logs will disappear.
+
+            xpath targets identification_id which is stable inside the
+            Private Information tab across all Odoo versions.
+            Fallback: use //field[@name='ssnid'] if this xpath still fails.
+          -->
+        <xpath expr="//field[@name='identification_id']" position="after">
+          <field
+            name="cid_number"
+            required="1"
+            placeholder="e.g. 10101000001"
+          />
+        </xpath>
+
+      </field>
+    </record>
+
+  </data>
+</odoo>

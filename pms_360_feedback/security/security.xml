@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="group_pms_employee" model="res.groups">
+        <field name="name">PMS Employee</field>
+    </record>
+
+    <record id="group_pms_hr_admin" model="res.groups">
+        <field name="name">PMS HR/Admin</field>
+        <field name="implied_ids" eval="[(4, ref('pms_360_feedback.group_pms_employee'))]"/>
+    </record>
+
+    <record id="rule_feedback_template_employee" model="ir.rule">
+        <field name="name">Feedback Template: Employee Read Published Only</field>
+        <field name="model_id" ref="model_pms_feedback_template"/>
+        <field name="groups" eval="[(4, ref('pms_360_feedback.group_pms_employee'))]"/>
+        <field name="perm_read">1</field>
+        <field name="perm_write">0</field>
+        <field name="perm_create">0</field>
+        <field name="perm_unlink">0</field>
+        <field name="domain_force">[('state', '=', 'published')]</field>
+    </record>
+
+    <record id="rule_feedback_template_admin" model="ir.rule">
+        <field name="name">Feedback Template: Admin Full Access</field>
+        <field name="model_id" ref="model_pms_feedback_template"/>
+        <field name="groups" eval="[(4, ref('pms_360_feedback.group_pms_hr_admin'))]"/>
+        <field name="perm_read">1</field>
+        <field name="perm_write">1</field>
+        <field name="perm_create">1</field>
+        <field name="perm_unlink">1</field>
+        <field name="domain_force">[(1, '=', 1)]</field>
+    </record>
+
+    <record id="rule_feedback_session_employee" model="ir.rule">
+        <field name="name">Feedback Session: Employee Read Open Only</field>
+        <field name="model_id" ref="model_pms_feedback_session"/>
+        <field name="groups" eval="[(4, ref('pms_360_feedback.group_pms_employee'))]"/>
+        <field name="perm_read">1</field>
+        <field name="perm_write">0</field>
+        <field name="perm_create">0</field>
+        <field name="perm_unlink">0</field>
+        <field name="domain_force">[('state', '=', 'open')]</field>
+    </record>
+
+    <record id="rule_feedback_session_admin" model="ir.rule">
+        <field name="name">Feedback Session: Admin Full Access</field>
+        <field name="model_id" ref="model_pms_feedback_session"/>
+        <field name="groups" eval="[(4, ref('pms_360_feedback.group_pms_hr_admin'))]"/>
+        <field name="perm_read">1</field>
+        <field name="perm_write">1</field>
+        <field name="perm_create">1</field>
+        <field name="perm_unlink">1</field>
+        <field name="domain_force">[(1, '=', 1)]</field>
+    </record>
+
+    <record id="rule_feedback_response_employee" model="ir.rule">
+        <field name="name">Feedback Response: Employee Own Records Only</field>
+        <field name="model_id" ref="model_pms_feedback_response"/>
+        <field name="groups" eval="[(4, ref('pms_360_feedback.group_pms_employee'))]"/>
+        <field name="domain_force">['|',
+            ('reviewer_employee_id.user_id', '=', user.id),
+            ('reviewee_employee_id.user_id', '=', user.id)
+        ]</field>
+    </record>
+
+    <record id="rule_feedback_response_admin" model="ir.rule">
+        <field name="name">Feedback Response: Admin Full Access</field>
+        <field name="model_id" ref="model_pms_feedback_response"/>
+        <field name="groups" eval="[(4, ref('pms_360_feedback.group_pms_hr_admin'))]"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+    </record>
+
+    <record id="rule_feedback_answer_employee" model="ir.rule">
+        <field name="name">Feedback Answer: Employee Own Records Only</field>
+        <field name="model_id" ref="model_pms_feedback_answer"/>
+        <field name="groups" eval="[(4, ref('pms_360_feedback.group_pms_employee'))]"/>
+        <field name="domain_force">['|',
+            ('response_id.reviewer_employee_id.user_id', '=', user.id),
+            ('response_id.reviewee_employee_id.user_id', '=', user.id)
+        ]</field>
+    </record>
+
+    <record id="rule_feedback_answer_admin" model="ir.rule">
+        <field name="name">Feedback Answer: Admin Full Access</field>
+        <field name="model_id" ref="model_pms_feedback_answer"/>
+        <field name="groups" eval="[(4, ref('pms_360_feedback.group_pms_hr_admin'))]"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+    </record>
+
+</odoo>

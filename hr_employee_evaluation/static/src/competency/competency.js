@@ -64,7 +64,7 @@ import { onMounted, onPatched } from "@odoo/owl";
             font-size: 0.85em; cursor: pointer; border: none; transition: opacity 0.15s;
         }
         .cf-export-btn:hover { opacity: 0.85; }
-        .cf-export-btn-pdf   { background: #1a3c5e; color: #fff; }
+        .cf-export-btn-pdf   { background: #4a5568; color: #fff; }
         .cf-export-btn-excel { background: #15803d; color: #fff; }
         .cf-appraisal-progress-wrap { margin-top: 6px; }
         .cf-progress-track {
@@ -446,14 +446,150 @@ function _getTemplateName() {
     return span ? span.textContent.trim() : 'Competency Template';
 }
 
+/* ─────────────────────────────────────────────────────────────────────────
+ * parseExportRows()
+ * Returns structured array of group / line / footer objects.
+ * FIXED: Removes duplicate Total Points and ensures Description appears with each group,
+ *        with Total Points at the very end
+ * ──────────────────────────────────────────────────────────────────────── */
+function parseExportRows() {
+    const form = document.querySelector('.o_competency_template_form');
+    if (!form) return [];
+
+    const tableHtmlWidget = form.querySelector('[name="competency_table_html"] .o_field_html, [name="competency_table_html"]');
+    if (!tableHtmlWidget || !tableHtmlWidget.innerHTML) return [];
+
+    const parser = new DOMParser();
+    const doc    = parser.parseFromString(tableHtmlWidget.innerHTML, 'text/html');
+    const table  = doc.querySelector('table');
+    if (!table) return [];
+
+    const rows = [];
+    let footerAdded = false;
+    let currentGroup = null;
+
+    const tbody = table.querySelector('tbody');
+    if (tbody) {
+        for (const tr of tbody.querySelectorAll('tr')) {
+            const cells   = tr.querySelectorAll('td');
+            if (!cells.length) continue;
+            const colspan = parseInt(cells[0].getAttribute('colspan') || '1');
+
+            // Check for Total Points row to skip duplicates
+            const firstCellText = cells[0] ? cells[0].textContent.trim().toLowerCase() : '';
+            const isTotalPointsRow = firstCellText === 'total points' ||
+                                      (colspan === 3 && cells.length === 2 && (firstCellText.includes('total') || cells[2]?.textContent.toLowerCase().includes('total')));
+
+            if (isTotalPointsRow) {
+                if (!footerAdded) {
+                    // This is the first Total Points row - add as footer
+                    let label = 'Total Points';
+                    let points = '';
+                    if (cells.length === 2) {
+                        label = cells[0].textContent.trim();
+                        points = cells[1].textContent.trim();
+                    } else if (cells.length >= 4) {
+                        label = cells[2].textContent.trim();
+                        points = cells[3].textContent.trim();
+                    }
+                    rows.push({
+                        type:   'footer',
+                        label:  label,
+                        points: points,
+                    });
+                    footerAdded = true;
+                }
+                continue; // Skip this row from further processing
+            }
+
+            // Check for Description row (colspan=4, cells.length=1 or 2)
+            const isDescriptionRow = (colspan === 4 && cells.length === 1) ||
+                                      (colspan === 4 && cells.length === 2);
+
+            if (isDescriptionRow && currentGroup) {
+                const desc = cells[0].textContent.replace(/^(Targets:|Description:)/i, '').trim();
+                currentGroup.description = desc;
+                continue;
+            }
+
+            // Group row (colspan >= 3 and 2 cells)
+            if (colspan >= 3 && cells.length === 2) {
+                currentGroup = {
+                    type:        'group',
+                    name:        cells[0].textContent.trim(),
+                    description: '',
+                    points:      cells[1].textContent.trim(),
+                };
+                rows.push(currentGroup);
+                continue;
+            }
+
+            // Competency line row (4 or more cells)
+            if (cells.length >= 4) {
+                // Skip if this looks like a Total Points row masquerading as line
+                const isFooterLike = (cells[0].textContent.trim() === '' &&
+                                     cells[1].textContent.trim() === '' &&
+                                     cells[2].textContent.trim().toLowerCase().includes('total')) ||
+                                     (cells[2].textContent.trim().toLowerCase() === 'total points');
+
+                if (!isFooterLike) {
+                    rows.push({
+                        type:       'line',
+                        code:       cells[0].textContent.trim(),
+                        competency: cells[1].textContent.trim(),
+                        targets:    cells[2].textContent.trim(),
+                        points:     cells[3].textContent.trim(),
+                    });
+                }
+            }
+        }
+    }
+
+    // Also check for footer in tfoot if exists and not already added
+    const tfoot = table.querySelector('tfoot');
+    if (tfoot && !footerAdded) {
+        for (const tr of tfoot.querySelectorAll('tr')) {
+            const cells = tr.querySelectorAll('td');
+            if (cells.length >= 2) {
+                rows.push({
+                    type:   'footer',
+                    label:  cells[0].textContent.trim(),
+                    points: cells[1].textContent.trim(),
+                });
+                footerAdded = true;
+                break;
+            }
+        }
+    }
+
+    // Remove any duplicate footer rows (keep only the last one)
+    const uniqueRows = [];
+    let lastFooterIndex = -1;
+    for (let i = 0; i < rows.length; i++) {
+        if (rows[i].type === 'footer') {
+            lastFooterIndex = i;
+        }
+    }
+
+    for (let i = 0; i < rows.length; i++) {
+        if (rows[i].type === 'footer') {
+            if (i === lastFooterIndex) {
+                uniqueRows.push(rows[i]);
+            }
+        } else {
+            uniqueRows.push(rows[i]);
+        }
+    }
+
+    return uniqueRows;
+}
+
 let jsPDFLoaded = false;
-let autoTableLoaded = false;
 
 function loadJsPDF() {
     return new Promise((resolve, reject) => {
         if (window.jspdf && window.jspdf.jsPDF && window.jspdf.autoTable) {
             jsPDFLoaded = true;
-            autoTableLoaded = true;
             resolve();
             return;
         }
@@ -465,10 +601,9 @@ function loadJsPDF() {
             script2.onload = () => {
                 if (window.jspdf && window.jspdf.jsPDF) {
                     jsPDFLoaded = true;
-                    autoTableLoaded = true;
                     resolve();
                 } else {
-                    reject(new Error('Failed to load jsPDF'));
+                    reject(new Error('jsPDF not available after load'));
                 }
             };
             script2.onerror = () => reject(new Error('Failed to load autoTable'));
@@ -479,183 +614,235 @@ function loadJsPDF() {
     });
 }
 
+/* ─────────────────────────────────────────────────────────────────────────
+ * PDF EXPORT
+ *
+ * Layout:
+ *   • Title + generated date at top
+ *   • ONE single autoTable containing everything
+ *   • Group header band → dark grey with gold points
+ *   • Group description row → lighter grey, italic (appears right after group header)
+ *   • Competency lines → white / pale-blue stripe
+ *   • Total footer row → light-blue tint, bold at the VERY END
+ * ──────────────────────────────────────────────────────────────────────── */
 async function exportToDirectPDF() {
     const form = document.querySelector('.o_competency_template_form');
     if (!form) { alert('Open the template form first.'); return; }
-    
+
     const templateName = _getTemplateName();
-    
-    const tableHtmlWidget = form.querySelector('[name="competency_table_html"] .o_field_html, [name="competency_table_html"]');
-    const rows = [];
-    
-    if (tableHtmlWidget && tableHtmlWidget.innerHTML) {
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(tableHtmlWidget.innerHTML, 'text/html');
-        const table = doc.querySelector('table');
-        if (table) {
-            const tbody = table.querySelector('tbody');
-            if (tbody) {
-                for (const tr of tbody.querySelectorAll('tr')) {
-                    const cells = tr.querySelectorAll('td');
-                    if (cells.length >= 2) {
-                        const colspan = parseInt(cells[0].getAttribute('colspan') || '1');
-                        if (colspan >= 3 && cells.length === 2) {
-                            rows.push({
-                                type: 'group',
-                                name: cells[0].textContent.trim(),
-                                points: cells[1].textContent.trim()
-                            });
-                        } else if (colspan === 4) {
-                            rows.push({
-                                type: 'group_desc',
-                                description: cells[0].textContent.replace(/Targets:/i, '').trim()
-                            });
-                        } else if (cells.length >= 4) {
-                            rows.push({
-                                type: 'line',
-                                code: cells[0].textContent.trim(),
-                                competency: cells[1].textContent.trim(),
-                                targets: cells[2].textContent.trim(),
-                                points: cells[3].textContent.trim()
-                            });
-                        }
-                    }
-                }
-            }
-            const tfoot = table.querySelector('tfoot');
-            if (tfoot) {
-                for (const tr of tfoot.querySelectorAll('tr')) {
-                    const cells = tr.querySelectorAll('td');
-                    if (cells.length >= 2) {
-                        rows.push({ type: 'footer', label: cells[0].textContent.trim(), points: cells[1].textContent.trim() });
-                    }
-                }
-            }
-        }
-    }
-    
-    if (rows.length === 0) {
-        alert('No data to export.');
-        return;
-    }
-    
+    const rows         = parseExportRows();
+
+    if (!rows.length) { alert('No data to export.'); return; }
+
     try {
         await loadJsPDF();
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
-        
-        doc.setFontSize(16);
-        doc.setTextColor(26, 60, 94);
-        doc.text(templateName, 14, 20);
-        
-        doc.setFontSize(9);
+
+        // Colour palette
+        const C = {
+            grpBg:     [74,  85, 104],
+            grpFg:     [255, 255, 255],
+            grpGold:   [232, 160,  32],
+            descBg:    [100, 116, 139],
+            descFg:    [240, 244, 248],
+            hdrBg:     [74,  85, 104],
+            hdrFg:     [255, 255, 255],
+            gold:      [232, 160,  32],
+            evenBg:    [255, 255, 255],
+            oddBg:     [248, 250, 255],
+            footBg:    [219, 234, 254],
+            footFg:    [15,  23,  42],
+            border:    [203, 213, 225],
+        };
+
+        // Title block
+        doc.setFontSize(15);
+        doc.setTextColor(...C.grpBg);
+        doc.setFont(undefined, 'bold');
+        doc.text(templateName, 14, 18);
+
+        doc.setFontSize(8);
         doc.setTextColor(100, 116, 139);
-        doc.text(`Generated: ${new Date().toLocaleString()}`, 14, 28);
-        
-        const headers = [['Sl. No', 'Competency / Group', 'Targets', 'Points']];
+        doc.setFont(undefined, 'normal');
+        doc.text(`Generated: ${new Date().toLocaleString()}`, 14, 25);
+
+        // Build body rows
         const bodyRows = [];
-        
+        const groupTopRowIndices = new Set();
+        let lineIndex = 0;
+
         for (const row of rows) {
             if (row.type === 'group') {
+                // Group header row
+                groupTopRowIndices.add(bodyRows.length);
                 bodyRows.push([
-                    { content: '', styles: { fontStyle: 'bold', fillColor: [26, 60, 94], textColor: [255, 255, 255] } },
-                    { content: row.name, styles: { fontStyle: 'bold', fillColor: [26, 60, 94], textColor: [255, 255, 255] } },
-                    { content: '', styles: { fillColor: [26, 60, 94], textColor: [255, 255, 255] } },
-                    { content: row.points, styles: { fontStyle: 'bold', fillColor: [26, 60, 94], textColor: [255, 255, 255], halign: 'right' } }
+                    { content: '',
+                      styles: { fillColor: C.grpBg, textColor: C.grpFg, fontStyle: 'bold',
+                                cellPadding: { top: 5, bottom: 5, left: 4, right: 2 } } },
+                    { content: row.name,
+                      styles: { fillColor: C.grpBg, textColor: C.grpFg, fontStyle: 'bold',
+                                cellPadding: { top: 5, bottom: 5, left: 4, right: 2 } } },
+                    { content: '',
+                      styles: { fillColor: C.grpBg, textColor: C.grpFg,
+                                cellPadding: { top: 5, bottom: 5, left: 4, right: 2 } } },
+                    { content: row.points,
+                      styles: { fillColor: C.grpBg, textColor: C.grpGold, fontStyle: 'bold',
+                                halign: 'right',
+                                cellPadding: { top: 5, bottom: 5, left: 2, right: 6 } } },
                 ]);
-            } else if (row.type === 'group_desc') {
+
+                // Description row (right after group header)
+                const descText = (row.description && row.description.trim()) ? row.description.trim() : '—';
                 bodyRows.push([
-                    { content: '', styles: { fillColor: [26, 60, 94], textColor: [220, 220, 220], fontStyle: 'italic' } },
-                    { content: '', styles: { fillColor: [26, 60, 94], textColor: [220, 220, 220], fontStyle: 'italic' } },
-                    { content: row.description, styles: { fillColor: [26, 60, 94], textColor: [220, 220, 220], fontStyle: 'italic' } },
-                    { content: '', styles: { fillColor: [26, 60, 94], textColor: [220, 220, 220] } }
+                    { content: '',
+                      styles: { fillColor: C.descBg, textColor: C.descFg, fontSize: 7,
+                                cellPadding: { top: 3, bottom: 4, left: 4, right: 2 } } },
+                    { content: 'Description:',
+                      styles: { fillColor: C.descBg, textColor: C.descFg, fontStyle: 'bolditalic',
+                                fontSize: 7,
+                                cellPadding: { top: 3, bottom: 4, left: 4, right: 2 } } },
+                    { content: descText,
+                      styles: { fillColor: C.descBg, textColor: C.descFg, fontStyle: 'italic',
+                                fontSize: 8,
+                                cellPadding: { top: 3, bottom: 4, left: 4, right: 4 } } },
+                    { content: '',
+                      styles: { fillColor: C.descBg, textColor: C.descFg,
+                                cellPadding: { top: 3, bottom: 4, left: 2, right: 6 } } },
                 ]);
+
+                lineIndex = 0;
+
             } else if (row.type === 'line') {
+                const bg = lineIndex % 2 === 0 ? C.evenBg : C.oddBg;
+                lineIndex++;
                 bodyRows.push([
-                    row.code || '',
-                    row.competency || '',
-                    row.targets || '',
-                    { content: row.points || '0.00', styles: { halign: 'right' } }
+                    { content: row.code || '',
+                      styles: { fillColor: bg, textColor: [29, 78, 216],
+                                halign: 'center', fontSize: 8,
+                                cellPadding: { top: 4, bottom: 4, left: 4, right: 4 } } },
+                    { content: row.competency || '',
+                      styles: { fillColor: bg, textColor: [30, 41, 59],
+                                cellPadding: { top: 4, bottom: 4, left: 4, right: 4 } } },
+                    { content: row.targets || '',
+                      styles: { fillColor: bg, textColor: [51, 65, 85], fontSize: 8,
+                                cellPadding: { top: 4, bottom: 4, left: 4, right: 4 } } },
+                    { content: row.points || '0.00',
+                      styles: { fillColor: bg, textColor: [30, 41, 59],
+                                halign: 'right', fontStyle: 'bold',
+                                cellPadding: { top: 4, bottom: 4, left: 2, right: 6 } } },
                 ]);
+
             } else if (row.type === 'footer') {
+                // Footer row - appears at the end
                 bodyRows.push([
-                    { content: '', colSpan: 2, styles: { fillColor: [219, 234, 254], fontStyle: 'bold' } },
-                    { content: row.label, styles: { fillColor: [219, 234, 254], fontStyle: 'bold' } },
-                    { content: row.points, styles: { fillColor: [219, 234, 254], fontStyle: 'bold', halign: 'right' } }
+                    { content: '',
+                      styles: { fillColor: C.footBg, textColor: C.footFg, fontStyle: 'bold',
+                                cellPadding: { top: 5, bottom: 5, left: 4, right: 2 } } },
+                    { content: '',
+                      styles: { fillColor: C.footBg, textColor: C.footFg, fontStyle: 'bold',
+                                cellPadding: { top: 5, bottom: 5, left: 4, right: 2 } } },
+                    { content: row.label || 'Total Points',
+                      styles: { fillColor: C.footBg, textColor: C.footFg, fontStyle: 'bold',
+                                cellPadding: { top: 5, bottom: 5, left: 4, right: 4 } } },
+                    { content: row.points || '',
+                      styles: { fillColor: C.footBg, textColor: C.footFg, fontStyle: 'bold',
+                                halign: 'right',
+                                cellPadding: { top: 5, bottom: 5, left: 2, right: 6 } } },
                 ]);
             }
         }
-        
+
+        // Render autoTable
         doc.autoTable({
-            head: headers,
+            head: [[
+                { content: 'Sl. No',      styles: { halign: 'center' } },
+                { content: 'Competency'   },
+                { content: 'Targets'      },
+                { content: 'Points',      styles: { halign: 'right'  } },
+            ]],
             body: bodyRows,
-            startY: 40,
-            theme: 'striped',
-            headStyles: { fillColor: [26, 60, 94], textColor: [255, 255, 255], fontStyle: 'bold', halign: 'center' },
-            columnStyles: { 0: { cellWidth: 25, halign: 'center' }, 1: { cellWidth: 'auto' }, 2: { cellWidth: 'auto' }, 3: { cellWidth: 30, halign: 'right' } },
-            margin: { left: 14, right: 14, top: 40 },
-            pageBreak: 'auto'
+            startY: 32,
+            theme: 'plain',
+            headStyles: {
+                fillColor:  C.hdrBg,
+                textColor:  C.hdrFg,
+                fontStyle:  'bold',
+                fontSize:   8,
+                lineWidth:  0,
+                cellPadding: { top: 6, bottom: 6, left: 4, right: 4 },
+            },
+            didDrawCell(data) {
+                if (data.section !== 'body') return;
+                if (!groupTopRowIndices.has(data.row.index)) return;
+                const cellX = data.cell.x;
+                const cellY = data.cell.y;
+                const cellW = data.cell.width;
+                doc.setDrawColor(...C.gold);
+                doc.setLineWidth(0.6);
+                doc.line(cellX, cellY, cellX + cellW, cellY);
+                doc.setDrawColor(...C.border);
+                doc.setLineWidth(0.1);
+            },
+            columnStyles: {
+                0: { cellWidth: 22, halign: 'center', fontSize: 8 },
+                1: { cellWidth: 'auto' },
+                2: { cellWidth: 'auto' },
+                3: { cellWidth: 28, halign: 'right' },
+            },
+            tableLineColor: C.border,
+            tableLineWidth: 0.3,
+            margin: { left: 14, right: 14, top: 32 },
+            pageBreak: 'auto',
+            rowPageBreak: 'avoid',
         });
-        
+
         const safeName = templateName.replace(/[^a-z0-9_\-]/gi, '_').substring(0, 50);
         doc.save(`${safeName}_competency_framework.pdf`);
+
     } catch (err) {
         console.error('PDF Export Error:', err);
-        alert('PDF export failed. Please check console for details.');
+        alert('PDF export failed: ' + err.message);
     }
 }
 
+/* ─────────────────────────────────────────────────────────────────────────
+ * CSV / EXCEL EXPORT
+ * ──────────────────────────────────────────────────────────────────────── */
 function exportToCleanCSV() {
     const form = document.querySelector('.o_competency_template_form');
     if (!form) { alert('Open the template form first.'); return; }
-    
+
     const templateName = _getTemplateName();
-    const csvRows = [];
-    
-    csvRows.push(`"${_escapeCSV(templateName)}"`);
-    csvRows.push(`"Generated: ${new Date().toLocaleString()}"`);
+    const rows         = parseExportRows();
+    const csvRows      = [];
+
+    csvRows.push(_escapeCSV(templateName));
+    csvRows.push(_escapeCSV(`Generated: ${new Date().toLocaleString()}`));
     csvRows.push('');
     csvRows.push('"Sl. No","Competency / Group","Targets","Points"');
-    
-    const tableHtmlWidget = form.querySelector('[name="competency_table_html"] .o_field_html, [name="competency_table_html"]');
-    if (tableHtmlWidget && tableHtmlWidget.innerHTML) {
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(tableHtmlWidget.innerHTML, 'text/html');
-        const table = doc.querySelector('table');
-        if (table) {
-            const tbody = table.querySelector('tbody');
-            if (tbody) {
-                for (const tr of tbody.querySelectorAll('tr')) {
-                    const cells = tr.querySelectorAll('td');
-                    if (cells.length >= 2) {
-                        const colspan = parseInt(cells[0].getAttribute('colspan') || '1');
-                        if (colspan >= 3 && cells.length === 2) {
-                            csvRows.push(`"","${_escapeCSV(cells[0].textContent.trim())}","","${_escapeCSV(cells[1].textContent.trim())}"`);
-                        } else if (colspan === 4) {
-                            csvRows.push(`"","","${_escapeCSV(cells[0].textContent.replace(/Targets:/i, '').trim())}",""`);
-                        } else if (cells.length >= 4) {
-                            csvRows.push(`"${_escapeCSV(cells[0].textContent.trim())}","${_escapeCSV(cells[1].textContent.trim())}","${_escapeCSV(cells[2].textContent.trim())}","${_escapeCSV(cells[3].textContent.trim())}"`);
-                        }
-                    }
-                }
+
+    for (const row of rows) {
+        if (row.type === 'group') {
+            csvRows.push(`"",${_escapeCSV(row.name)},"",${_escapeCSV(row.points)}`);
+            const desc = row.description || '';
+            if (desc) {
+                csvRows.push(`"","Description:",${_escapeCSV(desc)},""`);
             }
-            const tfoot = table.querySelector('tfoot');
-            if (tfoot) {
-                for (const tr of tfoot.querySelectorAll('tr')) {
-                    const cells = tr.querySelectorAll('td');
-                    if (cells.length >= 2) {
-                        csvRows.push(`"","","${_escapeCSV(cells[0].textContent.trim())}","${_escapeCSV(cells[1].textContent.trim())}"`);
-                    }
-                }
-            }
+        } else if (row.type === 'line') {
+            csvRows.push(
+                `${_escapeCSV(row.code)},${_escapeCSV(row.competency)},${_escapeCSV(row.targets)},${_escapeCSV(row.points)}`
+            );
+        } else if (row.type === 'footer') {
+            csvRows.push(`"","",${_escapeCSV(row.label)},${_escapeCSV(row.points)}`);
         }
     }
-    
+
     const csvContent = csvRows.join('\r\n');
     const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href     = url;
     a.download = `${templateName.replace(/[^a-z0-9_\-]/gi, '_').substring(0, 50)}_competency.csv`;
     document.body.appendChild(a);
     a.click();

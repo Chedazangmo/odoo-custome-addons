@@ -1,0 +1,61 @@
+/* PMS 360 Feedback - Custom Styles */
+
+/* Question form styling */
+.pms_360_feedback .o_field_one2many .o_form_view .o_group h4 {
+    color: #2c3e50;
+    font-weight: 600;
+    border-bottom: 1px solid #e9ecef;
+    padding-bottom: 8px;
+    margin-bottom: 12px;
+}
+
+/* Section header highlight in list */
+.pms_360_feedback .o_list_view td[name="section_header"] {
+    font-weight: bold;
+    color: #495057;
+    background-color: #f8f9fa;
+}
+
+/* Radio / checkbox answer options spacing */
+.pms_360_feedback .o_field_radio .o_radio_item,
+.pms_360_feedback .o_field_many2many_checkboxes .o_checkbox {
+    margin: 6px 0;
+    display: block;
+}
+
+/* Status badge colors */
+.badge.o_status_pending { background-color: #ffc107; color: #000; }
+.badge.o_status_submitted { background-color: #28a745; }
+.badge.o_status_in_progress { background-color: #17a2b8; }
+
+/* Progress bar in session form */
+.o_form_view .progress {
+    border-radius: 4px;
+    background-color: #e9ecef;
+}
+.o_form_view .progress-bar {
+    transition: width 0.6s ease;
+    min-width: 2em;
+    text-align: center;
+    font-size: 12px;
+    line-height: 20px;
+}
+
+/* Alert banner for submission status */
+.o_form_view .alert-info {
+    border-left: 4px solid #0dcaf0;
+}
+.o_form_view .alert-success {
+    border-left: 4px solid #198754;
+}
+
+/* Template form question list */
+.o_form_view .o_field_one2many[name="question_ids"] .o_list_view tr:hover {
+    background-color: #f0f7ff;
+}
+
+/* Make answer option list compact */
+.o_form_view .o_field_one2many[name="answer_option_ids"] .o_list_view {
+    max-height: 250px;
+    overflow-y: auto;
+}

@@ -1,0 +1,44 @@
+/* 360 Feedback Module Styles */
+
+.o_360_questions .o_field_one2many .o_list_view {
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.o_360_questions .o_form_view .o_group {
+    margin-bottom: 1rem;
+}
+
+/* Question type badge colors */
+.o_field_widget[name="question_type"] .badge {
+    font-size: 0.75rem;
+}
+
+/* Answer form styling */
+.o_360_questions .o_form_sheet {
+    padding: 24px;
+}
+
+/* Highlight required questions */
+.o_field_widget[name="is_required"] .o_checkbox input:checked + span {
+    color: #e74c3c;
+}
+
+/* Status bar colors */
+.o_statusbar_status .o_arrow_button[data-value="published"] {
+    color: #28a745;
+}
+
+/* Session cards */
+.o_kanban_view .o_kanban_record .oe_kanban_details {
+    padding: 12px;
+}
+
+/* Feedback received - hide reviewer if anonymous */
+.o_feedback_anonymous_badge {
+    background: #6c757d;
+    color: white;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.8rem;
+}

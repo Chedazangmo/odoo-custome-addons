@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <!--
+            Sample 360 Feedback Template: General Peer Review
+            Demonstrating radio buttons, checkboxes, text, and rating question types
+        -->
+        <record id="feedback_template_peer_review" model="pms.feedback.template">
+            <field name="name">General Peer Review Template</field>
+            <field name="feedback_type">peer</field>
+            <field name="applicable_category">all</field>
+            <field name="state">active</field>
+            <field name="description">&lt;p&gt;Use this template to evaluate a peer's work quality, collaboration, and communication.&lt;/p&gt;</field>
+        </record>
+
+        <!-- Section 1: Work Quality (Radio) -->
+        <record id="q1_work_quality" model="pms.feedback.question">
+            <field name="template_id" ref="feedback_template_peer_review"/>
+            <field name="sequence">10</field>
+            <field name="section_header">Work Quality</field>
+            <field name="question_text">How would you rate the overall quality of this employee's work output?</field>
+            <field name="question_type">radio</field>
+            <field name="is_required">True</field>
+        </record>
+        <record id="q1_opt1" model="pms.feedback.answer.option">
+            <field name="question_id" ref="q1_work_quality"/>
+            <field name="sequence">1</field>
+            <field name="label">Outstanding - Consistently exceeds expectations</field>
+            <field name="score_value">5</field>
+        </record>
+        <record id="q1_opt2" model="pms.feedback.answer.option">
+            <field name="question_id" ref="q1_work_quality"/>
+            <field name="sequence">2</field>
+            <field name="label">Commendable - Frequently exceeds expectations</field>
+            <field name="score_value">4</field>
+        </record>
+        <record id="q1_opt3" model="pms.feedback.answer.option">
+            <field name="question_id" ref="q1_work_quality"/>
+            <field name="sequence">3</field>
+            <field name="label">Good - Meets expectations</field>
+            <field name="score_value">3</field>
+        </record>
+        <record id="q1_opt4" model="pms.feedback.answer.option">
+            <field name="question_id" ref="q1_work_quality"/>
+            <field name="sequence">4</field>
+            <field name="label">Developing - Sometimes meets expectations</field>
+            <field name="score_value">2</field>
+        </record>
+        <record id="q1_opt5" model="pms.feedback.answer.option">
+            <field name="question_id" ref="q1_work_quality"/>
+            <field name="sequence">5</field>
+            <field name="label">Unacceptable - Rarely meets expectations</field>
+            <field name="score_value">1</field>
+        </record>
+
+        <!-- Section 2: Teamwork (Checkbox) -->
+        <record id="q2_teamwork" model="pms.feedback.question">
+            <field name="template_id" ref="feedback_template_peer_review"/>
+            <field name="sequence">20</field>
+            <field name="section_header">Collaboration &amp; Teamwork</field>
+            <field name="question_text">Which of the following best describes this employee's collaboration style? (Select all that apply)</field>
+            <field name="question_type">checkbox</field>
+            <field name="is_required">True</field>
+        </record>
+        <record id="q2_opt1" model="pms.feedback.answer.option">
+            <field name="question_id" ref="q2_teamwork"/>
+            <field name="sequence">1</field>
+            <field name="label">Proactively shares knowledge and resources</field>
+            <field name="score_value">1</field>
+        </record>
+        <record id="q2_opt2" model="pms.feedback.answer.option">
+            <field name="question_id" ref="q2_teamwork"/>
+            <field name="sequence">2</field>
+            <field name="label">Communicates clearly and respectfully</field>
+            <field name="score_value">1</field>
+        </record>
+        <record id="q2_opt3" model="pms.feedback.answer.option">
+            <field name="question_id" ref="q2_teamwork"/>
+            <field name="sequence">3</field>
+            <field name="label">Supports team members during high workloads</field>
+            <field name="score_value">1</field>
+        </record>
+        <record id="q2_opt4" model="pms.feedback.answer.option">
+            <field name="question_id" ref="q2_teamwork"/>
+            <field name="sequence">4</field>
+            <field name="label">Contributes ideas during team discussions</field>
+            <field name="score_value">1</field>
+        </record>
+
+        <!-- Section 3: Rating -->
+        <record id="q3_communication" model="pms.feedback.question">
+            <field name="template_id" ref="feedback_template_peer_review"/>
+            <field name="sequence">30</field>
+            <field name="section_header">Communication</field>
+            <field name="question_text">Rate this employee's communication effectiveness (1 = Poor, 5 = Excellent)</field>
+            <field name="question_type">rating</field>
+            <field name="is_required">True</field>
+        </record>
+
+        <!-- Section 4: Open Text -->
+        <record id="q4_improvement" model="pms.feedback.question">
+            <field name="template_id" ref="feedback_template_peer_review"/>
+            <field name="sequence">40</field>
+            <field name="section_header">Development</field>
+            <field name="question_text">What is one area where this employee could improve or grow?</field>
+            <field name="question_type">text</field>
+            <field name="is_required">False</field>
+            <field name="hint_text">Please be constructive and specific in your feedback...</field>
+        </record>
+
+    </data>
+</odoo>

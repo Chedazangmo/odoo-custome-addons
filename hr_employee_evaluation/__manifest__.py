@@ -21,7 +21,7 @@
         'views/appraisal_template_views.xml',
         'views/pms_cycle_views.xml',
         'views/appraisal_competency_views.xml',
-        'wizard/pms_enrollment_wizard_views.xml',
+        'wizard/pms_add_employee_wizard_views.xml',
         'report/report_plan_summary.xml',
         'report/report_appraisal_summary.xml',
         'views/supervisor_cycle_views.xml',
@@ -30,6 +30,7 @@
     ],
     'assets': {
         'web.assets_backend': [
+            'hr_employee_evaluation/static/lib/html2pdf.bundle.min.js',
             'hr_employee_evaluation/static/src/kra_tabs/kra_tabs.*',
             'hr_employee_evaluation/static/src/competency/competency.*',
             'hr_employee_evaluation/static/src/chatter/chatter_toggle.js',

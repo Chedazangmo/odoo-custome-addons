@@ -64,7 +64,7 @@
         <field name="name">pms.cycle.manager.list</field>
         <field name="model">pms.cycle</field>
         <field name="arch" type="xml">
-            <list string="Cycles" open_form_view="false">
+            <list string="Cycles">
                 <field name="is_manager_in_cycle" column_invisible="True"/>
                 <field name="name" string="Ref"/>
                 <field name="cycle_type" string="Type"/>
@@ -95,14 +95,41 @@
         </field>
     </record>
 
+   <record id="view_manager_cycle_search" model="ir.ui.view">
+    <field name="name">pms.cycle.manager.search</field>
+    <field name="model">pms.cycle</field>
+    <field name="arch" type="xml">
+        <search>
+            <field name="name" string="Cycle"/>
+            <field name="cycle_type" string="Type"/>
+            <filter name="active_cycles"
+                    string="Active"
+                    domain="[('state', 'in', ['planning', 'monitoring', 'appraisal'])]"/>
+            <filter name="completed_cycles"
+                    string="Completed"
+                    domain="[('state', '=', 'completed')]"/>
+            <filter name="group_by_state"
+                    string="Status"
+                    context="{'group_by': 'state'}"
+                    groups="base.group_user"/>
+            <filter name="group_by_type"
+                    string="Type"
+                    context="{'group_by': 'cycle_type'}"
+                    groups="base.group_user"/>
+        </search>
+    </field>
+</record>
+
     <record id="action_manager_planning_cycles" model="ir.actions.act_window">
         <field name="name">Employee Plans</field>
         <field name="res_model">pms.cycle</field>
-        <field name="view_mode">kanban,list</field> <field name="view_ids" eval="[(5, 0, 0),
+        <field name="view_mode">kanban,list</field>
+        <field name="search_view_id" ref="view_manager_cycle_search"/>
+        <field name="view_ids" eval="[(5, 0, 0),
             (0, 0, {'view_mode': 'kanban', 'view_id': ref('view_manager_cycle_kanban')}),
             (0, 0, {'view_mode': 'list', 'view_id': ref('view_manager_cycle_list')})]"/>
         <field name="domain">[('is_manager_in_cycle', '=', True)]</field>
-        <field name="context">{'create': False, 'delete': False, 'hide_view_appraisal': True}</field>
+        <field name="context">{'create': False, 'delete': False, 'hide_view_appraisal': True, 'search_default_active_cycles': 1}</field>
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">No cycles found</p>
             <p>Cycles where you manage at least one employee will appear here.</p>
@@ -112,14 +139,16 @@
     <record id="action_manager_appraisal_cycles" model="ir.actions.act_window">
         <field name="name">Employee Appraisals</field>
         <field name="res_model">pms.cycle</field>
-        <field name="view_mode">kanban,list</field> <field name="view_ids" eval="[(5, 0, 0),
+        <field name="view_mode">kanban,list</field>
+         <field name="search_view_id" ref="view_manager_cycle_search"/>
+        <field name="view_ids" eval="[(5, 0, 0),
             (0, 0, {'view_mode': 'kanban', 'view_id': ref('view_manager_cycle_kanban')}),
             (0, 0, {'view_mode': 'list', 'view_id': ref('view_manager_cycle_list')})]"/>
         <field name="domain">[
             ('is_manager_in_cycle', '=', True),
             ('state', 'in', ['appraisal', 'completed'])
         ]</field>
-        <field name="context">{'create': False, 'delete': False, 'hide_view_plan': True}</field>
+        <field name="context">{'create': False, 'delete': False, 'hide_view_plan': True, 'search_default_active_cycles': 1}</field>
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">No appraisal cycles found</p>
             <p>Cycles in the Appraisal phase where you manage at least one employee will appear here.</p>

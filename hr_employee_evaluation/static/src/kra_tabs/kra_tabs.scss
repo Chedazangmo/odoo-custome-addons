@@ -1,7 +1,7 @@
 .pms_rounded_kanban {
     .o_kanban_record {
-        border-radius: .75rem !important; 
-        overflow: hidden; 
+        border-radius: .75rem !important;
+        overflow: hidden;
     }
 }
 
@@ -25,25 +25,25 @@
             content: '';
             position: absolute;
             top: 0;
-            bottom: 1px; 
+            bottom: 1px;
             width: 80px;
             pointer-events: none;
             transition: opacity 0.25s ease;
             z-index: 1;
         }
 
-        // Left fade 
+        // Left fade
         &::before {
             left: 0;
             background: linear-gradient(to left, transparent, rgba(255, 255, 255, 0.95) 70%);
             opacity: 0;
         }
 
-        // Right fade 
+        // Right fade
         &::after {
             right: 0;
             background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.95) 70%);
-            opacity: 0; // JS toggles 
+            opacity: 0; // JS toggles
         }
 
         &.can-scroll-left::before  { opacity: 1; }
@@ -76,8 +76,8 @@
             white-space: nowrap;
 
             &.o_drag_over {
-                border-left: 3px solid #714B67; 
-                padding-left: calc(1rem - 3px); 
+                border-left: 3px solid #714B67;
+                padding-left: calc(1rem - 3px);
                 background-color: #f8f9fa;
             }
 
@@ -85,17 +85,17 @@
                 cursor: grab;
                 opacity: 0.5;
                 transition: opacity 0.2s;
-                
+
                 &:hover { opacity: 1; }
                 &:active { cursor: grabbing; opacity: 1; }
             }
 
             .cursor-pointer { cursor: pointer; }
-            
+
             .hover-primary {
                 opacity: 0.5;
                 transition: all 0.2s;
-                &:hover { 
+                &:hover {
                     opacity: 1;
                     color: #714B67 !important; /* Change this hex to match your primary theme color */
                 }
@@ -138,7 +138,7 @@
             width: 100%;
         }
 
-        
+
 
         .table {
             table-layout: fixed;
@@ -196,14 +196,14 @@
 
 /* --- Modern Corporate Table Theme --- */
 
-.o_kra_kpi_section .table, 
-.appraisal-flex-table, 
+.o_kra_kpi_section .table,
+.appraisal-flex-table,
 .appraisal-expand-table {
     border: none !important; // Remove the heavy black border
     border-collapse: separate !important;
     border-spacing: 0;
     // Adds a soft "lift" from the page
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03); 
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
     border-radius: 10px;
     overflow: hidden;
     margin-top: 10px;
@@ -256,12 +256,12 @@
 
 .appraisal-flex-table {
     width: 100%;
-    table-layout: fixed; 
+    table-layout: fixed;
     border-collapse: collapse;
     background-color: #fff;
 }
 
-.appraisal-flex-table th, 
+.appraisal-flex-table th,
 .appraisal-flex-table td {
     padding: 8px;
     vertical-align: top;
@@ -284,16 +284,16 @@
     z-index: 10;
 }
 
-.col-kpi { width: 16%; } 
-.col-sco { width: 6%; } 
-.col-cri { width: 24%; } 
-.col-tar { width: 24%; } 
-.col-ssc, .col-msc { width: 8%; } 
-.col-srm, .col-mrm { width: 13%; } 
+.col-kpi { width: 16%; }
+.col-sco { width: 6%; }
+.col-cri { width: 24%; }
+.col-tar { width: 24%; }
+.col-ssc, .col-msc { width: 8%; }
+.col-srm, .col-mrm { width: 13%; }
 
-.s-1, .s-2, .s-3, .s-4 { 
-    position: static !important; 
-    background-color: transparent !important; 
+.s-1, .s-2, .s-3, .s-4 {
+    position: static !important;
+    background-color: transparent !important;
 }
 
 .appraisal-flex-table input.form-control,
@@ -320,10 +320,10 @@
 }
 
 /* --- Alternating COLUMN colors (Zebra Columns) --- */
-.o_kra_kpi_section .table, 
-.appraisal-flex-table, 
+.o_kra_kpi_section .table,
+.appraisal-flex-table,
 .appraisal-expand-table {
-    
+
     tbody tr {
         // Reset row backgrounds to ensure they don't override columns
         background-color: transparent !important;
@@ -335,13 +335,13 @@
 
         // EVEN Columns (2nd, 4th, 6th...) -> Soft Blue Shade
         td:nth-child(even) {
-            background-color: #fcfdff !important; 
+            background-color: #fcfdff !important;
         }
     }
 }
 
 /* Ensure headers stay the solid brand blue you already have */
-.appraisal-flex-table thead th, 
+.appraisal-flex-table thead th,
 .o_kra_kpi_section .table thead th {
     background-color: #9989C9 !important;
     color: #EEF4FA !important;
@@ -350,12 +350,12 @@
 
 
 @media (max-width: 1199px) {
-    
+
     .appraisal-wrapper {
         overflow-x: auto;
         position: relative;
         container-type: inline-size;
-        scroll-snap-type: x mandatory; 
+        scroll-snap-type: x mandatory;
     }
 
     .appraisal-flex-table {
@@ -364,10 +364,10 @@
         width: max-content;
         min-width: 100%;
         border: none !important;
-        padding-right: 1px;  
+        padding-right: 1px;
     }
 
-    .appraisal-flex-table thead, 
+    .appraisal-flex-table thead,
     .appraisal-flex-table tbody {
         display: flex;
         flex-direction: column;
@@ -378,31 +378,31 @@
     .appraisal-flex-table tr {
         display: flex;
         flex-wrap: nowrap;
-        width: max-content; 
+        width: max-content;
         min-width: 100%;
         border: none !important;
     }
 
-    .appraisal-flex-table th, 
+    .appraisal-flex-table th,
     .appraisal-flex-table td {
-        flex-shrink: 0; 
+        flex-shrink: 0;
         border: none !important;
         box-sizing: border-box;
     }
 
-    .col-kpi { flex: 0 0 16cqw; width: 16cqw; } 
-    .col-sco { flex: 0 0 10cqw; width: 10cqw; } 
-    .col-cri { flex: 0 0 23cqw; width: 23cqw; } 
-    .col-tar { flex: 0 0 23cqw; width: 23cqw; } 
-    .col-ssc { flex: 0 0 13cqw; width: 13cqw; } 
-    .col-srm { flex: 0 0 15cqw; width: 15cqw; } 
-    .col-msc { flex: 0 0 13cqw; width: 13cqw; } 
-    .col-mrm { flex: 0 0 15cqw; width: 15cqw; } 
+    .col-kpi { flex: 0 0 16cqw; width: 16cqw; }
+    .col-sco { flex: 0 0 10cqw; width: 10cqw; }
+    .col-cri { flex: 0 0 23cqw; width: 23cqw; }
+    .col-tar { flex: 0 0 23cqw; width: 23cqw; }
+    .col-ssc { flex: 0 0 13cqw; width: 13cqw; }
+    .col-srm { flex: 0 0 15cqw; width: 15cqw; }
+    .col-msc { flex: 0 0 13cqw; width: 13cqw; }
+    .col-mrm { flex: 0 0 15cqw; width: 15cqw; }
 
     .s-1 { position: sticky !important; left: 0;      z-index: 14 !important; background-color: #fff !important; }
     .s-2 { position: sticky !important; left: 16cqw;  z-index: 13 !important; background-color: #fff !important; }
-    .s-3 { position: sticky !important; left: 26cqw;  z-index: 12 !important; background-color: #fff !important; } 
-    .s-4 { position: sticky !important; left: 49cqw;  z-index: 11 !important; background-color: #fff !important; } 
+    .s-3 { position: sticky !important; left: 26cqw;  z-index: 12 !important; background-color: #fff !important; }
+    .s-4 { position: sticky !important; left: 49cqw;  z-index: 11 !important; background-color: #fff !important; }
 
     .appraisal-flex-table thead th {
         z-index: 20 !important;
@@ -418,10 +418,10 @@
     .appraisal-wrapper::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 4px; }
     .appraisal-wrapper::-webkit-scrollbar-thumb:hover { background: #a8a8a8; }
 
-    .appraisal-flex-table thead th.col-ssc, 
+    .appraisal-flex-table thead th.col-ssc,
     .appraisal-flex-table thead th.col-msc {
         scroll-snap-align: start;
-        scroll-margin-left: 72cqw; 
+        scroll-margin-left: 72cqw;
     }
 }
 
@@ -433,7 +433,7 @@
 .appraisal-expand-wrapper {
     width: 100%;
     height: auto;
-    max-height: 60vh; 
+    max-height: 60vh;
     overflow-y: auto;
     overflow-x: hidden;
 }
@@ -454,9 +454,9 @@
 
 .pop-col-name { width: 13%; }
 .pop-col-base-score { width: 6%; }
-.pop-col-text { width: 17%; } 
-.pop-col-user-score { width: 8%; } 
-.pop-col-user-remark { width: 15%; } 
+.pop-col-text { width: 17%; }
+.pop-col-user-score { width: 8%; }
+.pop-col-user-remark { width: 15%; }
 
 .appraisal-expand-table thead th {
     position: sticky;
@@ -493,7 +493,7 @@
     resize: none;
     font-size: 0.85rem;
     width: 100%;
-    overflow: hidden !important; 
+    overflow: hidden !important;
 }
 
 .appraisal-expand-table input.form-control:focus,
@@ -544,4 +544,261 @@
 
 .o_kra_tabs_container .o_kra_tabs_header .o_kra_tabs_nav .o_kra_tab .fa-pencil {
     font-size: 0.7rem;
+}
+
+// ─── KPI List Table AGVDbNVutgwiep6615bjTJnQkScwWuUEMuU95NredRG5───────────────
+// Applied via class="o_kpi_list_table" on the <list> element
+
+.o_kpi_list_table {
+
+    // ── Header row AGVDbNVutgwiep6615bjTJnQkScwWuUEMuU95NredRG5───────────────
+    thead > tr > th {
+        padding: 10px 12px !important;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: #6c757d;
+        background-color: #f8f9fa;
+        border-bottom: 2px solid #dee2e6;
+        vertical-align: middle;
+        white-space: nowrap;
+    }
+
+    // ── Data rows AGVDbNVutgwiep6615bjTJnQkScwWuUEMuU95NredRG5─────────────────
+    tbody > tr > td {
+        padding: 10px 12px !important;
+        vertical-align: middle;
+        font-size: 13px;
+        color: #212529;
+        border-bottom: 1px solid #f0f0f0;
+    }
+
+    // Align SCORE column (header + cell) to center
+    th:nth-child(3),
+    td:nth-child(3) {
+        text-align: center !important;
+    }
+
+    // ── Delete button column AGVDbNVutgwiep6615bjTJnQkScwWuUEMuU95NredRG5──────
+    // Header cell above the delete button — keep narrow & centered
+    th:last-child,
+    td:last-child {
+        width: 36px !important;
+        min-width: 36px !important;
+        max-width: 36px !important;
+        padding: 4px 6px !important;
+        text-align: center !important;
+        vertical-align: middle !important;
+    }
+
+    // The delete button itself — compact × icon
+    .o_kpi_delete_btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 24px;
+        height: 24px;
+        padding: 0 !important;
+        margin: 0 auto !important;
+        border-radius: 4px;
+        color: #dc3545;
+        opacity: 0.5;
+        transition: opacity 0.15s, background-color 0.15s;
+
+        &:hover {
+            opacity: 1;
+            background-color: #fff1f2;
+        }
+
+        .fa-times {
+            font-size: 12px;
+        }
+    }
+
+    // Show delete button only on row hover (cleaner look)
+    tbody > tr .o_kpi_delete_btn {
+        opacity: 0;
+    }
+    tbody > tr:hover .o_kpi_delete_btn {
+        opacity: 0.7;
+    }
+    tbody > tr:hover .o_kpi_delete_btn:hover {
+        opacity: 1;
+    }
+
+    // Subtle row hover highlight
+    tbody > tr:hover {
+        background-color: #fafbff;
+    }
+
+    // ── Add KPI footer row AGVDbNVutgwiep6615bjTJnQkScwWuUEMuU95NredRG5────────
+    tfoot > tr > td {
+        padding: 8px 12px !important;
+        font-size: 12px;
+    }
+}
+
+
+// ─── KRA Tabs Widget — KPI Table Column Alignment Fix ────────────────────────
+// The custom OWL template renders a plain <table> (no Odoo checkbox prepended),
+// so column order is exactly:
+//   col 1: KPI NAME  |  col 2: DESCRIPTION  |  col 3: SCORE  |  col 4: CRITERIA  |  col 5: DELETE
+
+.kra-tabs-section {
+
+    // ── Shared th/td resets AGVDbNVutgwiep6615bjTJnQkScwWuUEMuU95NredRG5───────
+    table.table thead th,
+    table.table tbody td {
+        vertical-align: middle !important;
+        padding: 10px 14px !important;
+        box-sizing: border-box !important;
+    }
+
+    // ── Header ───────────────────────────────────────────────────────────────
+    table.table thead th {
+        font-size: 11px !important;
+        font-weight: 700 !important;
+        letter-spacing: 0.05em !important;
+        text-transform: uppercase !important;
+        color: #6c757d !important;
+        background: #f8f9fa !important;
+        border-bottom: 2px solid #dee2e6 !important;
+        white-space: nowrap !important;
+    }
+
+    // ── Col 1 — KPI NAME (left) ───────────────────────────────────────────────
+    table.table thead th:nth-child(1),
+    table.table tbody td:nth-child(1) {
+        width: 22% !important;
+        min-width: 120px !important;
+        text-align: left !important;
+    }
+
+    // ── Col 2 — DESCRIPTION (left) ───────────────────────────────────────────
+    table.table thead th:nth-child(2),
+    table.table tbody td:nth-child(2) {
+        width: 30% !important;
+        min-width: 160px !important;
+        text-align: left !important;
+    }
+
+    // ── Col 3 — SCORE (center header AND value) ───────────────────────────────
+    table.table thead th:nth-child(3),
+    table.table tbody td:nth-child(3) {
+        width: 90px !important;
+        min-width: 80px !important;
+        max-width: 110px !important;
+        text-align: center !important;
+
+        // Force the inner widget/input to also center
+        .o_field_widget,
+        .o_field_integer,
+        input {
+            text-align: center !important;
+            display: block !important;
+            width: 100% !important;
+        }
+    }
+
+    // ── Col 4 — CRITERIA (left) ──────────────────────────────────────────────
+    table.table thead th:nth-child(4),
+    table.table tbody td:nth-child(4) {
+        width: 30% !important;
+        min-width: 140px !important;
+        text-align: left !important;
+    }
+
+    // ── Col 5 — DELETE (right, narrow, no wasted space) ──────────────────────
+    table.table thead th:nth-child(5),
+    table.table tbody td:nth-child(5),
+    table.table thead th:last-child,
+    table.table tbody td:last-child {
+        width: 44px !important;
+        min-width: 44px !important;
+        max-width: 44px !important;
+        padding: 4px 6px !important;
+        text-align: center !important;
+        vertical-align: middle !important;
+    }
+
+    // ── Delete button — small × icon ─────────────────────────────────────────
+    table.table tbody td:nth-child(5) button,
+    table.table tbody td:last-child button {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        width: 24px !important;
+        height: 24px !important;
+        padding: 0 !important;
+        margin: 0 auto !important;
+        border-radius: 4px !important;
+        border: 1px solid transparent !important;
+        background: transparent !important;
+        color: #adb5bd !important;
+        font-size: 13px !important;
+        line-height: 1 !important;
+        cursor: pointer !important;
+        transition: color 0.15s, background 0.15s, border-color 0.15s !important;
+        opacity: 0 !important;
+    }
+
+    // Reveal on row hover
+    table.table tbody tr:hover td:nth-child(5) button,
+    table.table tbody tr:hover td:last-child button {
+        opacity: 1 !important;
+        color: #dc3545 !important;
+    }
+
+    // Hover state on the button itself
+    table.table tbody td:nth-child(5) button:hover,
+    table.table tbody td:last-child button:hover {
+        background: #fff1f2 !important;
+        border-color: #f5c6cb !important;
+        color: #dc3545 !important;
+    }
+
+    // ── Row styles ────────────────────────────────────────────────────────────
+    table.table tbody tr {
+        border-bottom: 1px solid #f3f4f6 !important;
+    }
+
+    table.table tbody tr:last-child {
+        border-bottom: none !important;
+    }
+
+    table.table tbody tr:hover {
+        background: #fafbff !important;
+    }
+
+    // ── form-control inside cells — clean borderless look ────────────────────
+    table.table tbody td textarea.form-control,
+    table.table tbody td input.form-control {
+        border: 1px solid transparent !important;
+        background: transparent !important;
+        box-shadow: none !important;
+        resize: none !important;
+        font-size: 13px !important;
+        padding: 4px 6px !important;
+        transition: border-color 0.15s, background 0.15s !important;
+    }
+
+    table.table tbody td textarea.form-control:focus,
+    table.table tbody td input.form-control:focus {
+        border-color: #7367f0 !important;
+        background: #fff !important;
+        box-shadow: 0 0 0 2px rgba(115, 103, 240, 0.08) !important;
+        outline: none !important;
+    }
+
+    table.table tbody tr:hover td textarea.form-control,
+    table.table tbody tr:hover td input.form-control {
+        border-color: #e9ecef !important;
+        background: #fff !important;
+    }
+
+    // Score input specifically — center text
+    table.table tbody td:nth-child(3) input.form-control {
+        text-align: center !important;
+    }
 }

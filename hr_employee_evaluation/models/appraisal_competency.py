@@ -127,45 +127,46 @@ class CompetencyFrameworkTemplate(models.Model):
     )
     def _compute_competency_table_html(self):
         S = {
-            'table':       'width:100%;border-collapse:collapse;font-size:0.88em;font-family:inherit;',
-            'th':          ('background-color:#1a3c5e;color:#ffffff;font-size:0.75em;font-weight:700;'
-                            'text-transform:uppercase;letter-spacing:0.06em;padding:10px 10px;'
-                            'border-bottom:3px solid #e8a020;white-space:nowrap;text-align:left;'),
-            'th_code':     'width:70px;text-align:center;',
-            'th_pts':      'width:90px;text-align:right;',
-            'th_targets':  'width:44%;',
-            'grp_base':    ('font-weight:700;padding:10px 14px;border-top:3px solid #e8a020;'
-                            'border-bottom:1px solid rgba(255,255,255,0.15);'),
-            'grp_exact':   'background-color:#1a3c5e;color:#ffffff;',
-            'grp_under':   'background-color:#134e6f;color:#fef3c7;',
-            'grp_over':    'background-color:#7f1d1d;color:#fee2e2;',
-            'grp_code':    ('font-family:monospace;font-size:0.82em;font-weight:700;'
-                            'background-color:rgba(255,255,255,0.18);border-radius:3px;'
-                            'padding:2px 8px;margin-right:10px;letter-spacing:0.04em;'),
-            'grp_pts_lbl': ('font-size:0.78em;font-weight:600;text-transform:uppercase;'
-                            'letter-spacing:0.05em;opacity:0.75;margin-right:4px;'),
-            'grp_pts_val': 'font-size:1em;font-weight:700;',
-            'grp_right':   'text-align:right;white-space:nowrap;',
-            'grp_desc_base': ('padding:6px 14px 8px 14px;font-size:0.82em;font-style:italic;'
-                              'border-bottom:2px solid rgba(232,160,32,0.4);'),
-            'grp_desc_exact': 'background-color:#1a3c5e;color:rgba(255,255,255,0.75);',
-            'grp_desc_under': 'background-color:#134e6f;color:rgba(254,243,199,0.80);',
-            'grp_desc_over':  'background-color:#7f1d1d;color:rgba(254,226,226,0.80);',
-            'even':        ('background-color:#ffffff;padding:8px 10px;'
-                            'border-bottom:1px solid #e2e8f0;vertical-align:top;color:#1e293b;'),
-            'odd':         ('background-color:#f8faff;padding:8px 10px;'
-                            'border-bottom:1px solid #e2e8f0;vertical-align:top;color:#1e293b;'),
-            'code_pill':   ('font-family:monospace;font-size:0.82em;font-weight:700;'
-                            'color:#1d4ed8;background-color:#eff6ff;border:1px solid #93c5fd;'
-                            'border-radius:4px;padding:2px 7px;display:inline-block;'),
-            'td_code':     'text-align:center;width:70px;',
-            'td_targets':  ('color:#334155;font-size:0.875em;word-break:break-word;'
-                            'line-height:1.65;padding-top:6px;padding-bottom:6px;'),
-            'td_pts':      'text-align:right;font-weight:600;white-space:nowrap;',
-            'foot':        ('background-color:#dbeafe;border-top:2px solid #1a3c5e;'
-                            'padding:8px 10px;font-weight:700;color:#0f172a;font-size:0.88em;'),
-            'foot_pts':    'text-align:right;font-weight:700;',
-        }
+                    'table':       ('width:100%;border-collapse:collapse;font-size:0.88em;'
+                                    'font-family:inherit;border:1px solid #cbd5e1;'),
+                    'th':          ('background-color:#64748b;color:#f8fafc;font-size:0.75em;font-weight:700;'
+                                    'text-transform:uppercase;letter-spacing:0.06em;padding:10px 10px;'
+                                    'border-bottom:2px solid #475569;white-space:nowrap;text-align:left;'),
+                    'th_code':     'width:70px;text-align:center;',
+                    'th_pts':      'width:90px;text-align:right;',
+                    'th_targets':  'width:44%;',
+                    'grp_base':    ('font-weight:700;padding:10px 14px;'
+                                    'border-bottom:1px solid rgba(0,0,0,0.08);'),
+                    'grp_exact':   'background-color:#94a3b8;color:#1e293b;',
+                    'grp_under':   'background-color:#94a3b8;color:#1e293b;',
+                    'grp_over':    'background-color:#fecaca;color:#7f1d1d;',
+                    'grp_code':    ('font-family:monospace;font-size:0.82em;font-weight:700;'
+                                    'background-color:rgba(255,255,255,0.25);border-radius:3px;'
+                                    'padding:2px 8px;margin-right:10px;letter-spacing:0.04em;'),
+                    'grp_pts_lbl': ('font-size:0.78em;font-weight:600;text-transform:uppercase;'
+                                    'letter-spacing:0.05em;opacity:0.70;margin-right:4px;'),
+                    'grp_pts_val': 'font-size:1em;font-weight:700;',
+                    'grp_right':   'text-align:right;white-space:nowrap;',
+                    'grp_desc_base': ('padding:8px 14px 10px 14px;font-size:0.93em;font-style:italic;'
+                                    'border-bottom:1px solid rgba(0,0,0,0.06);'),
+                    'grp_desc_exact': 'background-color:#cbd5e1;color:#334155;',
+                    'grp_desc_under': 'background-color:#cbd5e1;color:#334155;',
+                    'grp_desc_over':  'background-color:#fee2e2;color:#991b1b;',
+                    'even':        ('background-color:#ffffff;padding:8px 10px;'
+                                    'border-bottom:1px solid #e2e8f0;vertical-align:top;color:#1e293b;'),
+                    'odd':         ('background-color:#f8fafc;padding:8px 10px;'
+                                    'border-bottom:1px solid #e2e8f0;vertical-align:top;color:#1e293b;'),
+                    'code_pill':   ('font-family:monospace;font-size:0.82em;font-weight:700;'
+                                    'color:#1d4ed8;background-color:#eff6ff;border:1px solid #93c5fd;'
+                                    'border-radius:4px;padding:2px 7px;display:inline-block;'),
+                    'td_code':     'text-align:center;width:70px;',
+                    'td_targets':  ('color:#334155;font-size:0.875em;word-break:break-word;'
+                                    'line-height:1.65;padding-top:6px;padding-bottom:6px;'),
+                    'td_pts':      'text-align:right;font-weight:600;white-space:nowrap;',
+                    'foot':        ('background-color:#e2e8f0;border-top:2px solid #94a3b8;'
+                                    'padding:8px 10px;font-weight:700;color:#0f172a;font-size:0.88em;'),
+                    'foot_pts':    'text-align:right;font-weight:700;',
+                }
 
         for tmpl in self:
             if not tmpl.group_ids:
@@ -217,7 +218,7 @@ class CompetencyFrameworkTemplate(models.Model):
                         '<td colspan="4" style="{ds}">'
                         '<span style="font-weight:600;margin-right:6px;font-size:0.80em;'
                         'text-transform:uppercase;letter-spacing:0.05em;opacity:0.70;">'
-                        'Targets:</span>{desc}'
+                        'Description:</span>{desc}'
                         '</td>'
                         '</tr>'.format(ds=grp_desc_style, desc=grp_desc_escaped)
                     )
@@ -270,6 +271,9 @@ class CompetencyFrameworkTemplate(models.Model):
         for tmpl in self:
             if tmpl.is_skeleton:
                 continue
+            all_lines = [ln for grp in tmpl.group_ids for ln in grp.line_ids]
+            if not tmpl.group_ids or not all_lines:
+                continue
             ceiling = _get_ceiling(self.env, tmpl.id)
             total = sum(tmpl.group_ids.mapped('points'))
             if float_compare(total, ceiling, precision_digits=2) == 0:
@@ -293,7 +297,9 @@ class CompetencyFrameworkTemplate(models.Model):
         origin_id = self._origin.id if self._origin else None
         ceiling = _get_ceiling(self.env, origin_id) if origin_id else DEFAULT_CEILING
         total   = sum(self.group_ids.mapped('points'))
-        cmp     = float_compare(total, ceiling, precision_digits=2)
+        if float_compare(total, 0.0, precision_digits=2) == 0:
+            return
+        cmp = float_compare(total, ceiling, precision_digits=2)
         if cmp > 0:
             return {'warning': {
                 'title':   _('Over Ceiling'),
@@ -317,6 +323,9 @@ class CompetencyFrameworkTemplate(models.Model):
         for tmpl in self:
             if tmpl.is_skeleton:
                 continue
+            all_lines = [ln for grp in tmpl.group_ids for ln in grp.line_ids]
+            if not tmpl.group_ids or not all_lines:
+                continue
             ceiling = _get_ceiling(self.env, tmpl.id)
             total   = sum(tmpl.group_ids.mapped('points'))
             if float_compare(total, ceiling, precision_digits=2) == 0:
@@ -338,8 +347,10 @@ class CompetencyFrameworkTemplate(models.Model):
     @api.model
     def create(self, vals):
         record = super().create(vals)
-        if not record.is_skeleton:
-            record._check_exact_allocation()
+        if not record.is_skeleton and record.group_ids:
+            all_lines = [ln for grp in record.group_ids for ln in grp.line_ids]
+            if all_lines:
+                record._check_exact_allocation()
         return record
 
     def write(self, vals):
@@ -659,7 +670,7 @@ class CompetencyFrameworkLine(models.Model):
             if float_compare(total_points, ceiling, precision_digits=2) > 0:
                 excess = total_points - ceiling
                 raise ValidationError(_(
-                    'Ceiling Violation\n\n'
+                    'Max Points Violation\n\n'
                     'Total competency points (%.2f) exceed the template ceiling of %.2f.\n'
                     'Excess: %.2f points.\n\n'
                     'Please reduce points before saving.'
@@ -766,7 +777,7 @@ class CompetencyFrameworkLine(models.Model):
                         'Points Violation\n\n'
                         'Cannot set points to %.2f.\n\n'
                         'Template Maximum:               %.2f\n'
-                        'Already allocated (other lines): %.2f\n'
+                        'Already allocated: %.2f\n'
                         'Maximum allowed for this line:   %.2f\n\n'
                         'Please enter a lower value.'
                     ) % (new_points, ceiling, other_total, max_allowed))

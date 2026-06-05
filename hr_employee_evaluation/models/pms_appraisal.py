@@ -173,7 +173,8 @@ class PMSAppraisal(models.Model):
         string='Self-Planning Deadline',
         compute='_compute_self_planning_deadline',
         store=True,
-        help='Deadline for the employee to complete self-planning (5 days before the actual deadline).'
+        help='Deadline for the employee to complete self-planning: '
+             'Planning Start Date + floor(Planning Duration / 2).'
     )
 
     # Appraisal phase access flags
@@ -259,17 +260,23 @@ class PMSAppraisal(models.Model):
         related='cycle_id.appraisal_start_date',
         string='Appraisal Start Date', store=False, readonly=True
     )
-    # Full cycle end date — kept for display / HR reference
     appraisal_end_date_display = fields.Date(
-        related='cycle_id.end_date',
-        string='Cycle End Date', store=False, readonly=True
+        related='cycle_id.appraisal_end_date',
+        string='Appraisal End Date', store=False, readonly=True
     )
-    # Employee-facing deadline: 10 days before the cycle ends
     appraisal_end_date = fields.Date(
-        string='Appraisal Employee Deadline',
+        string='Appraisal End Date',
         compute='_compute_appraisal_end_date',
         store=True,
-        help='Last day an employee may submit self-ratings (cycle end − 10 days).'
+        help='Last day for appraisal submissions — taken directly from the cycle Appraisal End Date.'
+    )
+
+    self_appraisal_deadline = fields.Date(
+        string='Self-Appraisal Deadline',
+        compute='_compute_self_appraisal_deadline',
+        store=True,
+        help='Deadline for the employee to submit self-ratings: '
+             'Appraisal Start Date + floor(Appraisal Duration / 2).'
     )
 
     self_has_zero_scores = fields.Boolean(
@@ -558,14 +565,16 @@ class PMSAppraisal(models.Model):
         'cycle_id.state',
         'planning_end_date',
         'self_planning_deadline',
-        'appraisal_end_date',
+        'self_appraisal_deadline',
         'draft_reset_date',
         'resubmission_deadline',
+        'appraisal_end_date',
     )
     def _compute_access_flags(self):
         current_user = self.env.user
         today = fields.Date.today()
         now = fields.Datetime.now()
+        is_hr = current_user.has_group('hr_employee_evaluation.group_pms_hr_manager')
 
         for record in self:
             emp_user     = record.employee_id.user_id
@@ -573,14 +582,13 @@ class PMSAppraisal(models.Model):
             sec_sup_user = record.secondary_supervisor_id.user_id
             rev_user     = record.reviewer_id.user_id
 
-            is_own      = bool(emp_user     and emp_user.id     == current_user.id)
-            is_sup      = bool(sup_user     and sup_user.id     == current_user.id)
-            is_sec_sup  = bool(sec_sup_user and sec_sup_user.id == current_user.id)
-            is_rev      = bool(rev_user     and rev_user.id     == current_user.id)
+            is_own = bool(is_hr or (emp_user and emp_user.id == current_user.id))
+            is_sup = bool(is_hr or (sup_user and sup_user.id == current_user.id))
+            is_sec_sup = bool(is_hr or (sec_sup_user and sec_sup_user.id == current_user.id))
+            is_rev = bool(is_hr or (rev_user and rev_user.id == current_user.id))
 
             cycle_in_appraisal = record.cycle_id.state == 'appraisal'
 
-            # Ensure individual has started and cycle allows planning
             has_started = bool(record.planning_start_date and record.planning_start_date <= today)
             cycle_allows_planning = record.cycle_id.state in ('planning', 'monitoring')
 
@@ -590,7 +598,13 @@ class PMSAppraisal(models.Model):
             record.is_reviewer_of_appraisal                = is_rev
 
             # ── Planning edit window ──────────────────────────────────────
-            if not is_own or not cycle_allows_planning or not has_started:
+            if is_hr and cycle_allows_planning and record.state not in ('approved', 'appraisal_draft',
+                                                                        'appraisal_pending_supervisor',
+                                                                        'appraisal_pending_secondary_supervisor',
+                                                                        'appraisal_pending_reviewer',
+                                                                        'appraisal_approved'):
+                record.can_employee_edit = True
+            elif not is_own or not cycle_allows_planning or not has_started:
                 record.can_employee_edit = False
             elif record.state == 'approved':
                 record.can_employee_edit = False
@@ -621,7 +635,7 @@ class PMSAppraisal(models.Model):
                 is_own
                 and record.state == 'appraisal_draft'
                 and cycle_in_appraisal
-                and (not record.appraisal_end_date or today <= record.appraisal_end_date)
+                and (not record.self_appraisal_deadline or today <= record.self_appraisal_deadline)
             )
             record.can_supervisor_rate = bool(
                 is_sup and record.state == 'appraisal_pending_supervisor' and cycle_in_appraisal
@@ -659,22 +673,35 @@ class PMSAppraisal(models.Model):
             else:
                 record.resubmission_deadline = False
 
-    @api.depends('planning_end_date')
+    @api.depends('planning_start_date', 'cycle_id.planning_duration')
     def _compute_self_planning_deadline(self):
+        """Employee planning deadline = planning_start_date + floor(planning_duration / 2)."""
         for record in self:
-            if record.planning_end_date:
-                record.self_planning_deadline = record.planning_end_date - timedelta(days=5)
+            start = record.planning_start_date
+            duration = record.cycle_id.planning_duration if record.cycle_id else 0
+            if start and duration:
+                half = duration // 2
+                record.self_planning_deadline = start + timedelta(days=half)
             else:
                 record.self_planning_deadline = False
 
-    @api.depends('cycle_id.end_date')
+    @api.depends('cycle_id.appraisal_end_date')
     def _compute_appraisal_end_date(self):
-        """Employee self-rating closes 10 days before the cycle end date."""
+        """Appraisal end date is taken directly from the cycle's appraisal_end_date."""
         for record in self:
-            if record.cycle_id.end_date:
-                record.appraisal_end_date = record.cycle_id.end_date - timedelta(days=10)
+            record.appraisal_end_date = record.cycle_id.appraisal_end_date or False
+
+    @api.depends('cycle_id.appraisal_start_date', 'cycle_id.appraisal_duration')
+    def _compute_self_appraisal_deadline(self):
+        """Employee self-rating deadline = appraisal_start + floor(appraisal_duration / 2)."""
+        for record in self:
+            start = record.cycle_id.appraisal_start_date if record.cycle_id else False
+            duration = record.cycle_id.appraisal_duration if record.cycle_id else 0
+            if start and duration:
+                half = duration // 2
+                record.self_appraisal_deadline = start + timedelta(days=half)
             else:
-                record.appraisal_end_date = False
+                record.self_appraisal_deadline = False
 
     @api.depends('kra_ids.kpi_ids.is_selected', 'kra_ids.kpi_ids.weightage')
     def _compute_planning_total_score(self):
@@ -683,51 +710,101 @@ class PMSAppraisal(models.Model):
             record.planning_total_score = sum(selected_kpis.mapped('weightage'))
 
     def _compute_competency_framework_html(self):
-        """Compute HTML representation of competency framework for display in planning phase"""
+        """
+        Render the linked competency framework as a styled HTML table.
+
+        Colour theme: #D7CEB2 warm-tan gradient — starts at a darkened variant
+        (#ACA48E) for column headers, steps progressively lighter through group
+        bands, description rows, data rows, and footer (#F9F7F3 near-white).
+        Group description label: 'Description:'.
+        Group description font: 0.93 em. Competency targets font: 0.97 em.
+        """
+        # ── Card wrapper ───────────────────────────────────────────────────
+        CARD_STYLE = (
+            'background-color:#ffffff;'
+            'border:1px solid #D7CEB2;'
+            'border-radius:10px;'
+            'padding:16px 18px;'
+            'box-shadow:0 1px 4px rgba(0,0,0,0.06);'
+            'margin-top:8px;'
+        )
+
+        # ── Style dictionary — #D7CEB2 warm-tan gradient ──────────────────
         S = {
-            'table':       'width:100%;border-collapse:collapse;font-size:0.88em;font-family:inherit;margin-top:10px;',
-            'th':          ('background-color:#1a3c5e;color:#ffffff;font-size:0.75em;font-weight:700;'
-                            'text-transform:uppercase;letter-spacing:0.06em;padding:10px 10px;'
-                            'border-bottom:3px solid #e8a020;white-space:nowrap;text-align:left;'),
-            'th_code':     'width:70px;text-align:center;',
-            'th_pts':      'width:90px;text-align:right;',
-            'th_targets':  'width:44%;',
-            'grp_base':    ('font-weight:700;padding:10px 14px;border-top:3px solid #e8a020;'
-                            'border-bottom:1px solid rgba(255,255,255,0.15);'),
-            'grp_exact':   'background-color:#1a3c5e;color:#ffffff;',
-            'grp_under':   'background-color:#134e6f;color:#fef3c7;',
-            'grp_over':    'background-color:#7f1d1d;color:#fee2e2;',
-            'grp_code':    ('font-family:monospace;font-size:0.82em;font-weight:700;'
-                            'background-color:rgba(255,255,255,0.18);border-radius:3px;'
-                            'padding:2px 8px;margin-right:10px;letter-spacing:0.04em;'),
-            'grp_pts_lbl': ('font-size:0.78em;font-weight:600;text-transform:uppercase;'
-                            'letter-spacing:0.05em;opacity:0.75;margin-right:4px;'),
+            'table': (
+                'width:100%;border-collapse:collapse;font-size:0.88em;'
+                'font-family:inherit;margin-top:10px;border:1px solid #D7CEB2;'
+            ),
+            'th': (
+                'background-color:#ACA48E;color:#ffffff;font-size:0.75em;font-weight:700;'
+                'text-transform:uppercase;letter-spacing:0.06em;padding:10px 10px;'
+                'border-bottom:3px solid #e8a020;white-space:nowrap;text-align:left;'
+            ),
+            'th_code':    'width:70px;text-align:center;',
+            'th_pts':     'width:90px;text-align:right;',
+            'th_targets': 'width:44%;',
+            'grp_base': (
+                'font-weight:700;padding:10px 14px;'
+                'border-top:3px solid #e8a020;'
+                'border-bottom:1px solid rgba(0,0,0,0.08);'
+            ),
+            'grp_exact': 'background-color:#DDD5BD;color:#3d3629;',
+            'grp_under': 'background-color:#E3DCC9;color:#3d3629;',
+            'grp_over':  'background-color:#7f1d1d;color:#fee2e2;',
+            'grp_code': (
+                'font-family:monospace;font-size:0.82em;font-weight:700;'
+                'background-color:rgba(0,0,0,0.10);border-radius:3px;'
+                'padding:2px 8px;margin-right:10px;letter-spacing:0.04em;'
+            ),
+            'grp_pts_lbl': (
+                'font-size:0.78em;font-weight:600;text-transform:uppercase;'
+                'letter-spacing:0.05em;opacity:0.70;margin-right:4px;'
+            ),
             'grp_pts_val': 'font-size:1em;font-weight:700;',
             'grp_right':   'text-align:right;white-space:nowrap;',
-            'even':        ('background-color:#ffffff;padding:8px 10px;'
-                            'border-bottom:1px solid #e2e8f0;vertical-align:top;color:#1e293b;'),
-            'odd':         ('background-color:#f8faff;padding:8px 10px;'
-                            'border-bottom:1px solid #e2e8f0;vertical-align:top;color:#1e293b;'),
-            'code_pill':   ('font-family:monospace;font-size:0.82em;font-weight:700;'
-                            'color:#1d4ed8;background-color:#eff6ff;border:1px solid #93c5fd;'
-                            'border-radius:4px;padding:2px 7px;display:inline-block;'),
-            'td_code':     'text-align:center;width:70px;',
-            'td_targets':  ('color:#334155;font-size:0.875em;word-break:break-word;'
-                            'line-height:1.65;padding-top:6px;padding-bottom:6px;'),
-            'td_pts':      'text-align:right;font-weight:600;white-space:nowrap;',
-            'foot':        ('background-color:#dbeafe;border-top:2px solid #1a3c5e;'
-                            'padding:8px 10px;font-weight:700;color:#0f172a;font-size:0.88em;'),
-            'foot_pts':    'text-align:right;font-weight:700;',
+            'grp_desc_base': (
+                'padding:8px 14px 10px 14px;font-size:0.93em;font-style:italic;'
+                'border-bottom:2px solid rgba(232,160,32,0.35);'
+            ),
+            'grp_desc_exact': 'background-color:#E7E2D2;color:#4a3f2f;',
+            'grp_desc_under': 'background-color:#ECE8DB;color:#4a3f2f;',
+            'grp_desc_over':  'background-color:#7f1d1d;color:rgba(254,226,226,0.85);',
+            'even': (
+                'background-color:#F9F7F3;padding:8px 10px;'
+                'border-bottom:1px solid #F1EDE4;vertical-align:top;color:#2c2416;'
+            ),
+            'odd': (
+                'background-color:#F5F2EB;padding:8px 10px;'
+                'border-bottom:1px solid #F1EDE4;vertical-align:top;color:#2c2416;'
+            ),
+            'code_pill': (
+                'font-family:monospace;font-size:0.82em;font-weight:700;'
+                'color:#5c4f36;background-color:#ECE8DB;border:1px solid #D7CEB2;'
+                'border-radius:4px;padding:2px 7px;display:inline-block;'
+            ),
+            'td_code': 'text-align:center;width:70px;',
+            'td_targets': (
+                'color:#3d3629;font-size:0.97em;word-break:break-word;'
+                'line-height:1.7;padding-top:8px;padding-bottom:8px;'
+            ),
+            'td_pts': 'text-align:right;font-weight:600;white-space:nowrap;',
+            'foot': (
+                'background-color:#F6F4EE;border-top:2px solid #ACA48E;'
+                'padding:8px 10px;font-weight:700;color:#2c2416;font-size:0.88em;'
+            ),
+            'foot_pts': 'text-align:right;font-weight:700;',
         }
 
         for appraisal in self:
             comp_tmpl = appraisal._get_competency_template()
-            
+
             if not comp_tmpl or not comp_tmpl.group_ids:
                 appraisal.competency_framework_html = (
-                    '<p style="color:#94a3b8;font-size:0.9em;padding:16px;">'
+                    '<div style="{card}">'
+                    '<p style="color:#ACA48E;font-size:0.9em;margin:0;">'
                     'No competency framework defined for this template.</p>'
-                )
+                    '</div>'
+                ).format(card=CARD_STYLE)
                 continue
 
             rows = [
@@ -742,10 +819,10 @@ class PMSAppraisal(models.Model):
             total_pts = 0.0
 
             for group in comp_tmpl.group_ids.sorted(key=lambda g: (g.sequence, g.id)):
-                status = group.points_status or 'under'
+                status    = group.points_status or 'under'
                 grp_style = S['grp_base'] + S['grp_{}'.format(status)]
-                grp_name = (group.name or '').replace('<', '&lt;').replace('>', '&gt;')
-                grp_code = (group.hr_code or '').replace('<', '&lt;').replace('>', '&gt;')
+                grp_name  = (group.name or '').replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
+                grp_code  = (group.hr_code or '').replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
 
                 rows.append(
                     '<tr>'
@@ -763,11 +840,47 @@ class PMSAppraisal(models.Model):
                     )
                 )
 
-                for i, line in enumerate(group.line_ids.sorted(key=lambda l: (l.sequence, l.id))):
-                    td = S['even'] if i % 2 == 0 else S['odd']
-                    targets = (line.description or '').replace('<', '&lt;').replace('>', '&gt;')
-                    lname = (line.name or '').replace('<', '&lt;').replace('>', '&gt;')
-                    code = (line.full_code or '').replace('<', '&lt;').replace('>', '&gt;')
+                grp_desc = (group.description or '').strip()
+                if grp_desc:
+                    grp_desc_escaped = (
+                        grp_desc
+                        .replace('&', '&amp;')
+                        .replace('<', '&lt;')
+                        .replace('>', '&gt;')
+                    )
+                    grp_desc_style = S['grp_desc_base'] + S['grp_desc_{}'.format(status)]
+                    rows.append(
+                        '<tr>'
+                        '<td colspan="4" style="{ds}">'
+                        '<span style="font-weight:700;margin-right:6px;font-size:0.80em;'
+                        'text-transform:uppercase;letter-spacing:0.05em;opacity:0.80;">'
+                        'Description:</span>{desc}'
+                        '</td>'
+                        '</tr>'.format(ds=grp_desc_style, desc=grp_desc_escaped)
+                    )
+
+                for i, line in enumerate(
+                    group.line_ids.sorted(key=lambda l: (l.sequence, l.id))
+                ):
+                    td      = S['even'] if i % 2 == 0 else S['odd']
+                    targets = (
+                        (line.description or '')
+                        .replace('&', '&amp;')
+                        .replace('<', '&lt;')
+                        .replace('>', '&gt;')
+                    )
+                    lname = (
+                        (line.name or '')
+                        .replace('&', '&amp;')
+                        .replace('<', '&lt;')
+                        .replace('>', '&gt;')
+                    )
+                    code = (
+                        (line.full_code or '')
+                        .replace('&', '&amp;')
+                        .replace('<', '&lt;')
+                        .replace('>', '&gt;')
+                    )
 
                     rows.append(
                         '<tr>'
@@ -784,14 +897,19 @@ class PMSAppraisal(models.Model):
                     total_pts += line.points
 
             rows.append(
+                '</tbody><tfoot>'
                 '<tr>'
                 '<td colspan="3" style="{f}">Total Framework Points</td>'
                 '<td style="{f}{fp}">{total:.2f}</td>'
-                '</tr></tbody>~<tr>'.format(
+                '</tr>'
+                '</tfoot></table>'.format(
                     f=S['foot'], fp=S['foot_pts'], total=total_pts,
                 )
             )
-            appraisal.competency_framework_html = ''.join(rows)
+
+            appraisal.competency_framework_html = (
+                '<div style="{card}">{table}</div>'
+            ).format(card=CARD_STYLE, table=''.join(rows))
 
     # ─────────────────────────────────────────────────────────────
     # Constraints
@@ -861,7 +979,9 @@ class PMSAppraisal(models.Model):
         filtered_vals = dict(vals)
 
         for record in self:
-            if record.can_employee_edit:
+            if is_hr:
+                pass
+            elif record.can_employee_edit:
                 if 'kra_ids' in filtered_vals:
                     filtered_vals['kra_ids'] = record._filter_kra_commands(
                         filtered_vals['kra_ids'],
@@ -980,13 +1100,13 @@ class PMSAppraisal(models.Model):
             message += "<p class='mt-3'>Are you sure you want to proceed and submit these 0 scores?</p>"
         else:
             message = "<p class='fs-5'>Are you sure you want to submit your appraisal scores?</p>"
-            
+
         wizard = self.env['pms.appraisal.submit.wizard'].create({
             'appraisal_id': self.id,
             'role': role,
             'message': message
         })
-        
+
         return {
             'name': 'Confirm Submission',
             'type': 'ir.actions.act_window',
@@ -1092,7 +1212,7 @@ class PMSAppraisal(models.Model):
     def get_competency_data(self):
         """Returns competency framework data formatted for the frontend widget."""
         self.ensure_one()
-       
+
         self.sudo()._sync_competency_scores()
 
         comp_tmpl = self._get_competency_template()
@@ -1180,15 +1300,7 @@ class PMSAppraisal(models.Model):
         }
 
     def save_competency_score(self, score_id, field_name, value):
-        """
-        Persist one competency score field from the JS widget.
-
-        :param score_id:   int  - ID of the appraisal.competency.score row
-        :param field_name: str  - field to update (e.g. 'self_score')
-        :param value:      any  - new value (float for scores, str for remarks)
-        :returns: True
-        :raises UserError: if the caller is not authorised or value is invalid
-        """
+        """Persist one competency score field from the JS widget."""
         self.ensure_one()
 
         EMPLOYEE_FIELDS   = {'self_score', 'self_remarks'}
@@ -1241,12 +1353,10 @@ class PMSAppraisal(models.Model):
                 f'You are not allowed to edit "{field_name}" at this stage.'
             )
 
-        # Verify the score record belongs to this appraisal
         score = self.env['appraisal.competency.score'].sudo().browse(score_id)
         if not score.exists() or score.appraisal_id.id != self.id:
             raise UserError('Invalid competency score record.')
 
-        # Numeric range validation
         numeric_fields = {
             'self_score', 'supervisor_score',
             'secondary_supervisor_score', 'reviewer_score',
@@ -1444,11 +1554,8 @@ class PMSAppraisal(models.Model):
         for kpi in selected_kpis:
             missing = []
             tgt = str(kpi.target).strip() if kpi.target else ''
-            rem = str(kpi.planning_remarks).strip() if kpi.planning_remarks else ''
-            
             if not tgt or tgt in ('<p><br></p>', 'False', 'None'):
                 missing.append('Target')
- 
             if missing:
                 kra_name = kpi.kra_id.name or 'Unknown KRA'
                 missing_str = ' & '.join(missing)
@@ -1612,7 +1719,7 @@ class PMSAppraisal(models.Model):
             kpi.write({
                 'snapshot_employee_target': kpi.target or '',
                 'snapshot_employee_criteria': kpi.criteria or ''
-                })
+            })
 
     def _snapshot_supervisor_targets(self):
         self.ensure_one()
@@ -1620,7 +1727,7 @@ class PMSAppraisal(models.Model):
             kpi.write({
                 'snapshot_supervisor_target': kpi.target or '',
                 'snapshot_supervisor_criteria': kpi.criteria or ''
-                })
+            })
 
     def _snapshot_secondary_supervisor_targets(self):
         self.ensure_one()
@@ -1706,10 +1813,10 @@ class PMSAppraisal(models.Model):
         """Silently generates an Excel file and saves it as an Odoo attachment"""
         if not xlsxwriter:
             return
-            
+
         output = io.BytesIO()
         workbook = xlsxwriter.Workbook(output, {'in_memory': True})
-        
+
         header_format = workbook.add_format({'bold': True, 'bg_color': '#f8f9fa', 'border': 1, 'align': 'center', 'valign': 'vcenter'})
         cell_format = workbook.add_format({'border': 1, 'text_wrap': True, 'valign': 'top'})
         cell_center = workbook.add_format({'border': 1, 'text_wrap': True, 'valign': 'top', 'align': 'center'})
@@ -1717,7 +1824,7 @@ class PMSAppraisal(models.Model):
 
         if report_type == 'plan':
             sheet = workbook.add_worksheet('Plan Summary')
-            
+
             headers = ['KRA Name', 'KPI Name', 'Description', 'Criteria', 'Target', 'Score']
             for col, head in enumerate(headers):
                 sheet.write(0, col, head, header_format)
@@ -1736,12 +1843,12 @@ class PMSAppraisal(models.Model):
                     sheet.write(row, 4, kpi.target or '', cell_format)
                     sheet.write(row, 5, kpi.weightage or 0.0, cell_center)
                     row += 1
-                    
+
             filename = f'Plan_Summary_{self.employee_id.name.replace(" ", "_")}.xlsx'
-            
+
         else:  # Appraisal
             sheet = workbook.add_worksheet('Appraisal Summary')
-            
+
             headers = ['KRA Name', 'KPI Name', 'Criteria', 'Target', 'Max', 'Emp Score', 'Sup Score']
             if self.secondary_supervisor_id:
                 headers.append('2nd Sup Score')
@@ -1753,7 +1860,7 @@ class PMSAppraisal(models.Model):
 
             sheet.set_column(0, 1, 20)
             sheet.set_column(2, 3, 35)
-            sheet.set_column(4, len(headers)-1, 12)
+            sheet.set_column(4, len(headers) - 1, 12)
 
             row = 1
             for kra in self.kra_ids:
@@ -1773,7 +1880,7 @@ class PMSAppraisal(models.Model):
                     if self.reviewer_id:
                         sheet.write(row, col, kpi.reviewer_score or 0.0, cell_center)
                     row += 1
-                    
+
             filename = f'Appraisal_Summary_{self.employee_id.name.replace(" ", "_")}.xlsx'
 
         workbook.close()
@@ -1781,7 +1888,6 @@ class PMSAppraisal(models.Model):
         file_data = base64.b64encode(output.read())
         output.close()
 
-        # Delete old excel attachments
         old_attachments = self.env['ir.attachment'].search([
             ('res_model', '=', 'pms.appraisal'),
             ('res_id', '=', self.id),
@@ -1789,7 +1895,6 @@ class PMSAppraisal(models.Model):
         ])
         old_attachments.unlink()
 
-        # Create new native Odoo attachment
         self.env['ir.attachment'].create({
             'name': filename,
             'type': 'binary',
@@ -1814,7 +1919,6 @@ class PMSAppraisal(models.Model):
 
         selected_kpis = self.kra_ids.mapped('kpi_ids').filtered(lambda k: k.is_selected)
 
-        # Validate KPI scores
         for kpi in selected_kpis:
             if kpi.self_score < 0:
                 raise UserError(f'Self score for "{kpi.name}" cannot be negative.')
@@ -1824,7 +1928,6 @@ class PMSAppraisal(models.Model):
                     f'cannot exceed the allocated score ({kpi.weightage}).'
                 )
 
-        # Validate Competency scores
         for competency in self.competency_score_ids:
             if competency.self_score < 0:
                 raise UserError(f'Self score for competency "{competency.line_name}" cannot be negative.')
@@ -1868,7 +1971,6 @@ class PMSAppraisal(models.Model):
                     f'cannot exceed the allocated score ({kpi.weightage}).'
                 )
 
-        # Validate competency scores
         for competency in self.competency_score_ids:
             if competency.supervisor_score < 0:
                 raise UserError(f'Supervisor score for competency "{competency.line_name}" cannot be negative.')
@@ -1911,7 +2013,6 @@ class PMSAppraisal(models.Model):
                     f'cannot exceed the allocated score ({kpi.weightage}).'
                 )
 
-        # Validate competency scores
         for competency in self.competency_score_ids:
             if competency.secondary_supervisor_score < 0:
                 raise UserError(f'Secondary supervisor score for competency "{competency.line_name}" cannot be negative.')
@@ -1954,7 +2055,6 @@ class PMSAppraisal(models.Model):
                     f'cannot exceed the allocated score ({kpi.weightage}).'
                 )
 
-        # Validate competency scores
         for competency in self.competency_score_ids:
             if competency.reviewer_score < 0:
                 raise UserError(f'Reviewer score for competency "{competency.line_name}" cannot be negative.')
@@ -2036,3 +2136,32 @@ class PMSAppraisal(models.Model):
             message_type='notification',
         )
         return True
+
+
+class ResUsers(models.Model):
+    _inherit = 'res.users'
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        users = super().create(vals_list)
+        users._enforce_exclusive_reviewer_role()
+        return users
+
+    def write(self, vals):
+        res = super().write(vals)
+        if 'groups_id' in vals:
+            self._enforce_exclusive_reviewer_role()
+        return res
+
+    def _enforce_exclusive_reviewer_role(self):
+        reviewer_group = self.env.ref('hr_employee_evaluation.group_pms_reviewer', raise_if_not_found=False)
+        employee_group = self.env.ref('hr_employee_evaluation.group_pms_employee', raise_if_not_found=False)
+
+        if not reviewer_group or not employee_group:
+            return
+
+        for user in self:
+            if reviewer_group in user.groups_id and employee_group in user.groups_id:
+                user.sudo().write({
+                    'groups_id': [(3, employee_group.id)]
+                })

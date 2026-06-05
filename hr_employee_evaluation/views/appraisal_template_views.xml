@@ -48,8 +48,10 @@
                                         style="display: block; font-size: 12px; margin-bottom: 3px;">Evaluation
                                         Group</label>
                                     <div class="field-box">
+                                        <!-- New button appears in the Search More dialog -->
                                         <field name="evaluation_group_id"
-                                            options="{'no_create': True}" class="field-input"
+                                            options="{'no_create': False, 'no_create_edit': False}"
+                                            class="field-input"
                                             style="width: 100%;" />
                                     </div>
                                 </div>
@@ -169,7 +171,7 @@
                     <field name="competency_points_status" invisible="1" />
                     <field name="id" invisible="1" />
 
-                    <!-- Improved KRA Tabs Section with Better KPI Table Styling -->
+                    <!-- KRA Tabs Section -->
                     <div class="kra-tabs-section" style="margin-top: 20px;">
                         <field name="kra_ids" widget="kra_tabs_widget">
                             <list>

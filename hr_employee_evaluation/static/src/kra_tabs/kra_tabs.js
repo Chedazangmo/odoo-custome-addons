@@ -334,7 +334,7 @@ export class KraTabs extends Component {
     get isCompetencyTabActive() { return this.state.isCompetencyActive; }
 
     // ─── Number input focus handler (FIX for 0 removal) ─────────────────────
-    
+
     onNumberInputFocus(event) {
         // If the current value is 0 or "0", clear it on focus
         if (event.target.value === '0' || event.target.value === 0) {
@@ -448,11 +448,11 @@ export class KraTabs extends Component {
                 value = 0; // Set to 0 instead of false
             } else {
                 value = parseFloat(value);
-                if (isNaN(value)) { 
+                if (isNaN(value)) {
                     value = 0; // Set to 0 instead of false
                 }
             }
-            
+
             // Always ensure value is a number (not false)
             const maxPoints = scoreRow.data.line_points || 0;
             if (value < 0) {

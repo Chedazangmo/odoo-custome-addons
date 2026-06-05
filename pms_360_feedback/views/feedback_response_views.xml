@@ -1,0 +1,306 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_feedback_response_form" model="ir.ui.view">
+        <field name="name">pms.feedback.response.form</field>
+        <field name="model">pms.feedback.response</field>
+        <field name="arch" type="xml">
+            <form string="Give Feedback">
+                <header>
+                    <button name="action_submit" string="Submit Feedback" type="object"
+                            class="btn-primary"
+                            invisible="state == 'submitted'"/>
+                    <button name="action_edit" string="Edit Response" type="object"
+                            invisible="state == 'draft'"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,submitted"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1>360° Feedback Form</h1>
+                    </div>
+                    <group>
+                        <group string="Session Information">
+                            <field name="session_id" readonly="1"/>
+                            <field name="template_id" readonly="1" invisible="not template_id"/>
+                        </group>
+                        <group string="Participants">
+                            <field name="reviewer_employee_id"
+                                   string="Reviewer"
+                                   readonly="1"
+                                   options="{'no_create': True}"/>
+                            <field name="reviewee_employee_id"
+                                   readonly="state == 'submitted'"
+                                   domain="[('id', 'in', allowed_reviewee_ids), ('id', '!=', reviewer_employee_id)]"
+                                   options="{'no_create': True}"/>
+                            <field name="is_anonymous" readonly="state == 'submitted'"/>
+                        </group>
+                    </group>
+
+                    <div class="alert alert-warning" role="alert"
+                         invisible="state == 'submitted'">
+                        <i class="fa fa-exclamation-triangle"/>
+                        Please answer all required questions before submitting.
+                        Once submitted, you can still edit until the session closes.
+                    </div>
+
+                    <div class="alert alert-success" role="alert"
+                         invisible="state != 'submitted'">
+                        <i class="fa fa-check-circle"/>
+                        Your feedback has been submitted on
+                        <field name="submitted_date" readonly="1" nolabel="1"/>.
+                    </div>
+
+                    <field name="answer_ids"
+                           readonly="state == 'submitted'"
+                           mode="list">
+                        <list create="false" delete="false">
+                            <field name="question_text" string="Question" readonly="1"/>
+                            <field name="question_type" column_invisible="1"/>
+                            <field name="question_id" column_invisible="1"/>
+                            <field name="answer_display" string="Your Answer" readonly="1"/>
+                        </list>
+                        <form string="Answer" multiple="false">
+                            <sheet>
+                                <group>
+                                    <field name="question_text" readonly="1" nolabel="1"
+                                           class="fw-bold fs-5"/>
+                                    <field name="question_type" invisible="1"/>
+                                    <field name="question_id" invisible="1"/>
+                                </group>
+                                <group string="Your Answer">
+                                    <field name="radio_answer_id"
+                                           string="Select One"
+                                           widget="radio"
+                                           invisible="question_type != 'radio'"
+                                           domain="[('question_id', '=', question_id)]"
+                                           options="{'no_create': True, 'no_open': True}"
+                                           nolabel="1"/>
+                                    <field name="checkbox_answer_ids"
+                                           string="Select All That Apply"
+                                           widget="many2many_checkboxes"
+                                           invisible="question_type != 'checkbox'"
+                                           domain="[('question_id', '=', question_id)]"
+                                           options="{'no_create': True, 'no_open': True}"
+                                           nolabel="1"/>
+                                    <field name="text_answer"
+                                           string="Your Answer"
+                                           invisible="question_type != 'text'"
+                                           placeholder="Type your answer here..."
+                                           nolabel="1"/>
+                                </group>
+                            </sheet>
+                        </form>
+                    </field>
+
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_feedback_response_given_list" model="ir.ui.view">
+        <field name="name">pms.feedback.response.given.list</field>
+        <field name="model">pms.feedback.response</field>
+        <field name="arch" type="xml">
+            <list string="Feedback I Gave" create="false" delete="true">
+                <field name="session_id" string="Session"/>
+                <field name="reviewee_employee_id" string="About Employee"/>
+                <field name="submitted_date" string="Submitted On"/>
+                <field name="state" widget="badge"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_feedback_response_admin_list" model="ir.ui.view">
+        <field name="name">pms.feedback.response.admin.list</field>
+        <field name="model">pms.feedback.response</field>
+        <field name="arch" type="xml">
+            <list string="All Feedback Responses" create="false" delete="false">
+                <field name="session_id"/>
+                <field name="reviewee_employee_id" string="Reviewed Employee"/>
+                <field name="reviewer_display" string="Reviewer"/>
+                <field name="is_anonymous" string="Anonymous"/>
+                <field name="submitted_date" string="Submitted On"/>
+                <field name="state" widget="badge"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_feedback_response_admin_form" model="ir.ui.view">
+        <field name="name">pms.feedback.response.admin.form</field>
+        <field name="model">pms.feedback.response</field>
+        <field name="priority">30</field>
+        <field name="arch" type="xml">
+            <form string="Feedback Response" create="false" edit="false" delete="false">
+                <sheet>
+                    <div class="oe_title">
+                        <h1>Feedback Response</h1>
+                    </div>
+                    <group>
+                        <group string="Session Information">
+                            <field name="session_id" readonly="1"/>
+                            <field name="template_id" readonly="1" invisible="not template_id"/>
+                            <field name="submitted_date" readonly="1"/>
+                            <field name="state" widget="badge" readonly="1"/>
+                        </group>
+                        <group string="Participants">
+                            <field name="reviewee_employee_id" readonly="1"/>
+                            <field name="is_anonymous" readonly="1" invisible="1"/>
+                            <field name="reviewer_display" string="Reviewer" readonly="1"
+                                   invisible="is_anonymous"/>
+                            <div invisible="not is_anonymous"
+                                 class="alert alert-secondary p-2">
+                                <i class="fa fa-user-secret"/> Anonymous Reviewer
+                            </div>
+                            <field name="is_anonymous" string="Anonymous" readonly="1"/>
+                        </group>
+                    </group>
+                    <field name="answer_ids" readonly="1" mode="list">
+                        <list create="false" delete="false">
+                            <field name="question_text" string="Question"/>
+                            <field name="answer_display" string="Answer"/>
+                        </list>
+                        <form string="Answer Detail" multiple="false">
+                            <sheet>
+                                <group>
+                                    <field name="question_text" readonly="1" nolabel="1"
+                                           class="fw-bold fs-5"/>
+                                    <field name="question_type" invisible="1"/>
+                                    <field name="question_id" invisible="1"/>
+                                </group>
+                                <group string="Answer Given">
+                                    <field name="radio_answer_id"
+                                           widget="radio"
+                                           invisible="question_type != 'radio'"
+                                           readonly="1" nolabel="1"/>
+                                    <field name="checkbox_answer_ids"
+                                           widget="many2many_checkboxes"
+                                           invisible="question_type != 'checkbox'"
+                                           readonly="1" nolabel="1"/>
+                                    <field name="text_answer"
+                                           invisible="question_type != 'text'"
+                                           readonly="1" nolabel="1"/>
+                                </group>
+                            </sheet>
+                        </form>
+                    </field>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_feedback_response_give" model="ir.actions.act_window">
+        <field name="name">Give Feedback</field>
+        <field name="res_model">pms.feedback.response</field>
+        <field name="view_mode">list,form</field>
+        <field name="view_ids" eval="[(5, 0, 0),
+            (0, 0, {'view_mode': 'list', 'view_id': ref('view_feedback_response_given_list')}),
+            (0, 0, {'view_mode': 'form', 'view_id': ref('view_feedback_response_form')}),
+        ]"/>
+        <field name="domain">[('reviewer_employee_id.user_id', '=', uid)]</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">No feedback submitted yet</p>
+            <p>Go to Active Sessions to start giving feedback to your colleagues.</p>
+        </field>
+    </record>
+
+    <record id="view_feedback_received_form" model="ir.ui.view">
+        <field name="name">pms.feedback.received.form</field>
+        <field name="model">pms.feedback.response</field>
+        <field name="priority">20</field>
+        <field name="arch" type="xml">
+            <form string="Feedback Received" create="false" edit="false" delete="false">
+                <sheet>
+                    <div class="oe_title">
+                        <h1>Feedback Received</h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="session_id" readonly="1"/>
+                            <field name="submitted_date" readonly="1"/>
+                        </group>
+                        <group>
+                            <field name="is_anonymous" readonly="1" invisible="1"/>
+                            <field name="reviewer_employee_id" string="Reviewer"
+                                   readonly="1" invisible="is_anonymous"/>
+                            <div invisible="not is_anonymous"
+                                 class="alert alert-secondary p-2">
+                                <i class="fa fa-user-secret"/> Anonymous Reviewer
+                            </div>
+                        </group>
+                    </group>
+                    <field name="answer_ids" readonly="1" mode="list">
+                        <list create="false" delete="false">
+                            <field name="question_text" string="Question"/>
+                            <field name="answer_display" string="Answer"/>
+                        </list>
+                        <form string="Answer Detail" multiple="false">
+                            <sheet>
+                                <group>
+                                    <field name="question_text" readonly="1" nolabel="1"
+                                           class="fw-bold fs-5"/>
+                                    <field name="question_type" invisible="1"/>
+                                    <field name="question_id" invisible="1"/>
+                                </group>
+                                <group string="Answer Given">
+                                    <field name="radio_answer_id"
+                                           widget="radio"
+                                           invisible="question_type != 'radio'"
+                                           readonly="1" nolabel="1"/>
+                                    <field name="checkbox_answer_ids"
+                                           widget="many2many_checkboxes"
+                                           invisible="question_type != 'checkbox'"
+                                           readonly="1" nolabel="1"/>
+                                    <field name="text_answer"
+                                           invisible="question_type != 'text'"
+                                           readonly="1" nolabel="1"/>
+                                </group>
+                            </sheet>
+                        </form>
+                    </field>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_feedback_received_list" model="ir.ui.view">
+        <field name="name">pms.feedback.received.list</field>
+        <field name="model">pms.feedback.response</field>
+        <field name="priority">20</field>
+        <field name="arch" type="xml">
+            <list string="Feedback I Received" create="false" delete="false">
+                <field name="session_id" string="Session"/>
+                <field name="is_anonymous" invisible="1"/>
+                <field name="reviewer_employee_id" string="Reviewer"
+                       invisible="is_anonymous" optional="show"/>
+                <field name="submitted_date" string="Date"/>
+                <field name="state" widget="badge"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_feedback_received" model="ir.actions.act_window">
+        <field name="name">Feedback I Received</field>
+        <field name="res_model">pms.feedback.response</field>
+        <field name="view_mode">list,form</field>
+        <field name="view_ids" eval="[(5, 0, 0),
+            (0, 0, {'view_mode': 'list', 'view_id': ref('view_feedback_received_list')}),
+            (0, 0, {'view_mode': 'form', 'view_id': ref('view_feedback_received_form')}),
+        ]"/>
+        <field name="domain">[('state', '=', 'submitted'), ('reviewee_employee_id.user_id', '=', uid)]</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">No feedback received yet</p>
+            <p>Once colleagues submit feedback about you, it will appear here.</p>
+        </field>
+    </record>
+
+    <record id="action_feedback_response_admin" model="ir.actions.act_window">
+        <field name="name">All Feedback Responses</field>
+        <field name="res_model">pms.feedback.response</field>
+        <field name="view_mode">list,form</field>
+        <field name="view_ids" eval="[(5, 0, 0),
+            (0, 0, {'view_mode': 'list', 'view_id': ref('view_feedback_response_admin_list')}),
+            (0, 0, {'view_mode': 'form', 'view_id': ref('view_feedback_response_admin_form')}),
+        ]"/>
+    </record>
+
+</odoo>

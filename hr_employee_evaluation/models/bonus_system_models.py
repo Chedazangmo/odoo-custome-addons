@@ -6,6 +6,7 @@ from dateutil.relativedelta import relativedelta
 
 _logger = logging.getLogger(__name__)
 
+
 class PMSRatingDefinition(models.Model):
     _name = 'pms.rating.definition'
     _description = 'Rating Definition'
@@ -61,6 +62,7 @@ class PMSRatingDefinition(models.Model):
             for r in self
         ]
 
+
 class PMSBonusEngineRatingEligibility(models.Model):
     _name = 'pms.bonus.engine.rating.eligibility'
     _description = 'Bonus Engine Rating Eligibility'
@@ -69,7 +71,7 @@ class PMSBonusEngineRatingEligibility(models.Model):
 
     engine_id = fields.Many2one('pms.bonus.engine', string='Bonus Engine', required=True, ondelete='cascade')
     rating_id = fields.Many2one('pms.rating.definition', string='Rating Tier', required=True)
-    
+
     rating_sequence = fields.Integer(string='Sequence', related='rating_id.sequence', store=True)
     rating_name = fields.Char(string='Rating Tier', related='rating_id.name', store=True, readonly=True)
     rating_min_score = fields.Float(string='Min Score', related='rating_id.min_score', store=True, readonly=True)
@@ -77,7 +79,7 @@ class PMSBonusEngineRatingEligibility(models.Model):
     rating_description = fields.Text(string='Description', related='rating_id.description', readonly=True)
     rating_color = fields.Integer(string='Color', related='rating_id.color')
     rating_active = fields.Boolean(string='Active', related='rating_id.active')
-    
+
     eligibility_percentage = fields.Float(
         string='Eligibility (%)',
         required=True,
@@ -85,7 +87,7 @@ class PMSBonusEngineRatingEligibility(models.Model):
         digits=(5, 2),
         help='The % of base salary used as the bonus multiplier for this tier (0–100).'
     )
-    
+
     company_id = fields.Many2one(
         'res.company', string='Company',
         related='engine_id.company_id', store=True,
@@ -98,6 +100,7 @@ class PMSBonusEngineRatingEligibility(models.Model):
          'CHECK(eligibility_percentage >= 0 AND eligibility_percentage <= 100)',
          'Eligibility % must be between 0 and 100!'),
     ]
+
 
 class PMSBonusEngine(models.Model):
     _name = 'pms.bonus.engine'
@@ -137,18 +140,6 @@ class PMSBonusEngine(models.Model):
     )
     validation_error = fields.Text(
         string='Validation Error', compute='_compute_validation', store=False,
-    )
-
-    use_tenure_weight = fields.Boolean(string='Use Tenure Weighting')
-    tenure_max_months = fields.Integer(string='Max Tenure Months', default=120)
-    tenure_weight = fields.Float(string='Weight Multiplier', default=0.01)
-
-    use_cap = fields.Boolean(string='Apply Maximum Cap')
-    max_cap_percent = fields.Float(string='Maximum Cap (% of salary)', default=50.0)
-
-    use_floor = fields.Boolean(string='Apply Minimum Floor')
-    min_floor_amount = fields.Monetary(
-        string='Minimum Floor Amount', currency_field='currency_id',
     )
 
     currency_id = fields.Many2one(
@@ -248,12 +239,12 @@ class PMSBonusEngine(models.Model):
     def action_sync_rating_tiers(self):
         self.ensure_one()
         active_ratings = self.env['pms.rating.definition'].search([('active', '=', True)])
-        
+
         if not active_ratings:
             raise UserError(_('No active rating tiers found. Please create rating tiers first.'))
-        
+
         self._sync_rating_eligibility_lines()
-        
+
         return {
             'type': 'ir.actions.client',
             'tag': 'display_notification',
@@ -271,21 +262,21 @@ class PMSBonusEngine(models.Model):
 
     def _sync_rating_eligibility_lines(self):
         self.ensure_one()
-        
+
         if not self.id:
             _logger.warning("Cannot sync rating eligibility lines for unsaved record")
             return
-        
+
         active_ratings = self.env['pms.rating.definition'].search([('active', '=', True)])
-        
+
         if not active_ratings:
             _logger.warning(f"No active rating tiers found for engine {self.name}")
             return
-        
+
         existing_lines = {line.rating_id.id: line for line in self.rating_eligibility_ids}
         current_rating_ids = set(active_ratings.ids)
         existing_rating_ids = set(existing_lines.keys())
-        
+
         for rating_id in current_rating_ids - existing_rating_ids:
             try:
                 self.env['pms.bonus.engine.rating.eligibility'].create({
@@ -296,7 +287,7 @@ class PMSBonusEngine(models.Model):
                 _logger.info(f"Created eligibility line for rating ID {rating_id}")
             except Exception as e:
                 _logger.error(f"Error creating eligibility line for rating ID {rating_id}: {e}")
-        
+
         for rating_id in existing_rating_ids - current_rating_ids:
             if rating_id in existing_lines:
                 _logger.info(f"Removing eligibility line for inactive rating ID {rating_id}")
@@ -305,25 +296,25 @@ class PMSBonusEngine(models.Model):
     @api.model_create_multi
     def create(self, vals_list):
         records = super().create(vals_list)
-        
+
         for record in records:
             try:
                 record._sync_rating_eligibility_lines()
             except Exception as e:
                 _logger.error(f"Error syncing rating eligibility lines for engine {record.name}: {e}")
-        
+
         return records
 
     def write(self, vals):
         result = super().write(vals)
-        
+
         if 'rating_eligibility_ids' not in vals:
             for record in self:
                 try:
                     record._sync_rating_eligibility_lines()
                 except Exception as e:
                     _logger.error(f"Error syncing rating eligibility lines for engine {record.name}: {e}")
-        
+
         return result
 
     def calculate_bonus(self, score, eligibility, base_salary=0.0, years_service=0.0, months_served=0.0):
@@ -344,26 +335,16 @@ class PMSBonusEngine(models.Model):
                 **self._SAFE_BUILTINS,
             }
             result = eval(self.formula, {"__builtins__": {}}, ctx)
-
-            if self.use_tenure_weight and months_served > 0:
-                tenure_factor = min(months_served, self.tenure_max_months) * self.tenure_weight
-                result = result * (1 + tenure_factor)
-
-            if self.use_cap and base_salary > 0:
-                max_allowed = base_salary * (self.max_cap_percent / 100.0)
-                result = min(result, max_allowed)
-
-            if self.use_floor and result > 0:
-                result = max(result, self.min_floor_amount)
-
             return float(result)
         except Exception as exc:
             _logger.error("BonusEngine.calculate_bonus error: %s", exc)
             return fallback
 
+
 class HrEmployee(models.Model):
     _inherit = 'hr.employee'
     pass
+
 
 class PMSBonusCalculation(models.Model):
     _name = 'pms.bonus.calculation'
@@ -386,7 +367,7 @@ class PMSBonusCalculation(models.Model):
     cycle_id = fields.Many2one(
         'pms.cycle', string='Performance Cycle', required=True,
     )
-    
+
     auto_calculate = fields.Boolean(string='Auto-Calculate', default=True)
     auto_calculated_on = fields.Datetime(string='Auto-Calculated On', readonly=True)
 
@@ -402,7 +383,7 @@ class PMSBonusCalculation(models.Model):
         'res.company', string='Company',
         default=lambda self: self.env.company,
     )
-    
+
     total_bonus_amount = fields.Monetary(
         string='Total Bonus Amount',
         compute='_compute_totals',
@@ -412,24 +393,29 @@ class PMSBonusCalculation(models.Model):
         string='Eligible Employees',
         compute='_compute_totals'
     )
-    
+
     @api.depends('line_ids.bonus_amount')
     def _compute_totals(self):
         for record in self:
             record.total_bonus_amount = sum(record.line_ids.mapped('bonus_amount'))
             record.eligible_employee_count = len(record.line_ids)
-    
+
     def _get_eligible_employees(self):
         self.ensure_one()
-        
+
+        # Check if cycle is probation type - if yes, return empty
+        if self.cycle_id.cycle_type == 'probation':
+            _logger.info(f"Cycle {self.cycle_id.name} is probation type - no employees eligible")
+            return self.env['hr.employee']
+
         appraisals = self.env['pms.appraisal'].search([
             ('cycle_id', '=', self.cycle_id.id),
             ('state', '=', 'appraisal_approved')
         ])
         employees = appraisals.mapped('employee_id')
-        
+
         return employees
-    
+
     def _get_employee_appraisal(self, employee):
         return self.env['pms.appraisal'].search([
             ('employee_id', '=', employee.id),
@@ -463,9 +449,9 @@ class PMSBonusCalculation(models.Model):
 
     def _get_years_service(self, employee):
         ref = (
-            getattr(employee, 'date_of_join', None)
-            or getattr(employee, 'joining_date', None)
-            or (employee.create_date.date() if employee.create_date else None)
+                getattr(employee, 'date_of_join', None)
+                or getattr(employee, 'joining_date', None)
+                or (employee.create_date.date() if employee.create_date else None)
         )
         if ref:
             return max(0.0, float((fields.Date.today() - ref).days) / 365.25)
@@ -474,11 +460,11 @@ class PMSBonusCalculation(models.Model):
     def _calculate_months_served(self, cycle):
         _logger.info("=" * 60)
         _logger.info("CALCULATING MONTHS SERVED (TOTAL CYCLE DURATION)")
-        
+
         if not cycle:
             _logger.warning("No cycle provided")
             return 0.0
-        
+
         cycle_type = cycle.cycle_type
         if cycle_type == 'annual':
             months_served = 12
@@ -488,38 +474,43 @@ class PMSBonusCalculation(models.Model):
             months_served = 3
         else:
             months_served = 12
-        
+
         _logger.info(f"Cycle: {cycle.name}")
         _logger.info(f"Cycle Type: {cycle_type}")
         _logger.info(f"Months Served (Total Cycle Duration): {months_served} months")
         _logger.info("=" * 60)
-        
+
         return float(months_served)
 
     def _run_calculation(self):
         self.ensure_one()
         engine = self.bonus_engine_id
-        
+
         if not engine:
             raise UserError(_("Please select a bonus engine."))
-        
+
         self.line_ids.unlink()
-        
+
         employees = self._get_eligible_employees()
-        
+
         if not employees:
             return 0, 0, ['No eligible employees found based on selection criteria.']
-        
+
         calculated, skipped, skipped_list = 0, 0, []
-        
+
         cycle = self.cycle_id
-        
+
         if not cycle:
             _logger.warning("No cycle selected for bonus calculation!")
             return 0, 0, ['No cycle selected for bonus calculation.']
-        
+
+        # Check if cycle is probation type - if yes, skip all calculations
+        if cycle.cycle_type == 'probation':
+            _logger.info(f"Cycle {cycle.name} is probation type - no bonuses calculated")
+            return 0, len(employees), [f"Cycle '{cycle.name}' is a probation cycle - no bonuses eligible"]
+
         months_served = self._calculate_months_served(cycle)
-        
+
         _logger.info("=" * 60)
         _logger.info("BONUS CALCULATION DEBUG INFO")
         _logger.info(f"Calculation ID: {self.id}")
@@ -532,23 +523,23 @@ class PMSBonusCalculation(models.Model):
         _logger.info(f"Months Served (Total Cycle Duration): {months_served}")
         _logger.info(f"Number of employees to process: {len(employees)}")
         _logger.info("=" * 60)
-        
+
         for employee in employees:
             appraisal = self._get_employee_appraisal(employee)
             if not appraisal:
                 skipped += 1
                 skipped_list.append(f"{employee.name} (no completed appraisal found)")
                 continue
-            
+
             score = appraisal.final_appraisal_score or 0.0
-            
-            if score <= 0:
+
+            if appraisal.final_appraisal_score is False or appraisal.final_appraisal_score is None or score < 0:
                 skipped += 1
-                skipped_list.append(f"{employee.name} (score is 0 or unset)")
+                skipped_list.append(f"{employee.name} (score is unset or negative)")
                 continue
-            
+
             rating = self.env['pms.rating.definition'].get_rating(score)
-            
+
             if rating:
                 eligibility = engine.get_eligibility_for_rating(rating.id) / 100.0
                 rating_id = rating.id
@@ -560,15 +551,10 @@ class PMSBonusCalculation(models.Model):
                 skipped += 1
                 skipped_list.append(f"{employee.name} (no rating tier found for score {score})")
                 continue
-            
-            if eligibility <= 0:
-                skipped += 1
-                skipped_list.append(f"{employee.name} ({eligibility_pct}% eligibility)")
-                continue
-            
+
             base_salary = self._get_employee_wage(employee)
             years_service = self._get_years_service(employee)
-            
+
             _logger.info(f"Processing Employee: {employee.name}")
             _logger.info(f"  - Score: {score}")
             _logger.info(f"  - Rating: {rating.name if rating else 'None'}")
@@ -577,7 +563,7 @@ class PMSBonusCalculation(models.Model):
             _logger.info(f"  - Base Salary: {base_salary}")
             _logger.info(f"  - Years Service: {years_service}")
             _logger.info(f"  - Months Served (Cycle Duration): {months_served}")
-            
+
             bonus_amount = engine.calculate_bonus(
                 score=score,
                 eligibility=eligibility,
@@ -585,10 +571,10 @@ class PMSBonusCalculation(models.Model):
                 years_service=years_service,
                 months_served=months_served,
             )
-            
+
             _logger.info(f"  - Bonus Amount: {bonus_amount}")
             _logger.info("-" * 40)
-            
+
             self.env['pms.bonus.calculation.line'].create({
                 'calculation_id': self.id,
                 'employee_id': employee.id,
@@ -603,19 +589,26 @@ class PMSBonusCalculation(models.Model):
                 'bonus_amount': bonus_amount,
             })
             calculated += 1
-        
+
         _logger.info(f"Calculation completed: {calculated} calculated, {skipped} skipped")
         return calculated, skipped, skipped_list
 
     def action_calculate(self):
         self.ensure_one()
-        
+
         if not self.bonus_engine_id:
             raise UserError(_("Please select a bonus formula engine."))
-        
+
         if not self.cycle_id:
             raise UserError(_("Please select a performance cycle."))
-        
+
+        # Check if cycle is probation type
+        if self.cycle_id.cycle_type == 'probation':
+            raise UserError(_(
+                "Cannot calculate bonuses for probation cycles.\n"
+                "Employees in probation periods are not eligible for bonus calculations."
+            ))
+
         calculated, skipped, skipped_list = self._run_calculation()
 
         if calculated == 0:
@@ -629,7 +622,71 @@ class PMSBonusCalculation(models.Model):
             )
 
         self.state = 'calculated'
-        
+
+        return {
+            'type': 'ir.actions.act_window',
+            'res_model': self._name,
+            'res_id': self.id,
+            'view_mode': 'form',
+            'view_type': 'form',
+            'target': 'current',
+            'context': dict(self.env.context, reload_on_create=True, reload_on_write=True),
+        }
+
+    def action_recalculate(self):
+        """Re-run the bonus formula on existing lines, preserving manual edits."""
+        self.ensure_one()
+
+        if not self.bonus_engine_id:
+            raise UserError(_("Please select a bonus formula engine."))
+
+        if not self.cycle_id:
+            raise UserError(_("Please select a performance cycle."))
+
+        # Check if cycle is probation type
+        if self.cycle_id.cycle_type == 'probation':
+            raise UserError(_(
+                "Cannot calculate bonuses for probation cycles.\n"
+                "Employees in probation periods are not eligible for bonus calculations."
+            ))
+
+        # If no lines exist yet, fall back to a full fresh calculation
+        if not self.line_ids:
+            return self.action_calculate()
+
+        engine = self.bonus_engine_id
+        recalculated = 0
+
+        for line in self.line_ids:
+            try:
+                bonus_amount = engine.calculate_bonus(
+                    score=line.score,
+                    eligibility=line.eligibility_percentage / 100.0,
+                    base_salary=line.base_salary,
+                    years_service=line.years_service,
+                    months_served=line.months_served,
+                )
+                line.bonus_amount = bonus_amount
+                recalculated += 1
+
+                _logger.info(
+                    "Recalculated bonus for '%s': score=%s, eligibility=%s%%, "
+                    "base_salary=%s, months_served=%s => bonus=%s",
+                    line.employee_id.name,
+                    line.score,
+                    line.eligibility_percentage,
+                    line.base_salary,
+                    line.months_served,
+                    bonus_amount,
+                )
+            except Exception as e:
+                _logger.error(
+                    "Recalculate failed for employee '%s': %s",
+                    line.employee_id.name, e,
+                )
+
+        self.state = 'calculated'
+
         return {
             'type': 'ir.actions.act_window',
             'res_model': self._name,
@@ -644,7 +701,7 @@ class PMSBonusCalculation(models.Model):
         self.ensure_one()
         if self.state != 'calculated':
             raise UserError(_('Please run the calculation first before exporting.'))
-        
+
         return {
             'type': 'ir.actions.act_window',
             'name': _('Export to Payroll'),
@@ -653,6 +710,40 @@ class PMSBonusCalculation(models.Model):
             'target': 'new',
             'context': {'default_calculation_id': self.id},
         }
+
+    @api.model
+    def _cron_auto_calculate_pending(self):
+        """Cron job: auto-calculate all draft calculations with auto_calculate enabled."""
+        pending = self.search([
+            ('state', '=', 'draft'),
+            ('auto_calculate', '=', True),
+        ])
+        for record in pending:
+            try:
+                # Skip probation cycles
+                if record.cycle_id and record.cycle_id.cycle_type == 'probation':
+                    _logger.info(
+                        "Auto-calculation skipped for '%s': cycle is probation type.", record.name
+                    )
+                    continue
+
+                calculated, skipped, _ = record._run_calculation()
+                if calculated > 0:
+                    record.state = 'calculated'
+                    record.auto_calculated_on = fields.Datetime.now()
+                    _logger.info(
+                        "Auto-calculated bonus '%s': %s employees, %s skipped.",
+                        record.name, calculated, skipped,
+                    )
+                else:
+                    _logger.warning(
+                        "Auto-calculation skipped for '%s': no eligible employees.", record.name
+                    )
+            except Exception as exc:
+                _logger.error(
+                    "Auto-calculation failed for '%s': %s", record.name, exc
+                )
+
 
 class PMSBonusCalculationLine(models.Model):
     _name = 'pms.bonus.calculation.line'
@@ -693,25 +784,25 @@ class PMSBonusCalculationLine(models.Model):
         store=True,
         digits=(5, 2),
     )
-    
+
     calculation_date = fields.Date(
         string='Calculation Date',
         related='calculation_id.date',
         store=True,
     )
-    
+
     calculation_state = fields.Selection(
         string='Calculation State',
         related='calculation_id.state',
         store=True,
     )
-    
+
     calculation_name = fields.Char(
         string='Calculation Name',
         related='calculation_id.name',
         store=True,
     )
-    
+
     bonus_engine_name = fields.Char(
         string='Bonus Engine',
         related='calculation_id.bonus_engine_id.name',
@@ -724,7 +815,7 @@ class PMSBonusCalculationLine(models.Model):
             r.bonus_percentage_of_salary = (
                 (r.bonus_amount / r.base_salary * 100) if r.base_salary > 0 else 0.0
             )
-    
+
     def action_view_bonus_details(self):
         self.ensure_one()
         return {
@@ -735,6 +826,7 @@ class PMSBonusCalculationLine(models.Model):
             'res_id': self.id,
             'target': 'current',
         }
+
 
 class PMSBonusPayrollExportWizard(models.TransientModel):
     _name = 'pms.bonus.payroll.export.wizard'
@@ -747,7 +839,7 @@ class PMSBonusPayrollExportWizard(models.TransientModel):
         ('csv', 'CSV'),
         ('text', 'Text'),
     ], string='Export Format', default='csv')
-    include_analytics = fields.Boolean(string='Include % of Salary', default=True)
+    include_analytics = fields.Boolean(string='Include % of Salary', default=False)
 
     def action_export(self):
         self.ensure_one()
@@ -760,10 +852,8 @@ class PMSBonusPayrollExportWizard(models.TransientModel):
         headers = [
             'Employee', 'Department', 'Job',
             'Appraisal Score', 'Rating Tier', 'Eligibility %',
-            'Tenure (yrs)', 'Months Served', 'Base Salary', 'Bonus Amount', 'Currency',
+            'Months Served', 'Base Salary', 'Bonus Amount', 'Currency',
         ]
-        if self.include_analytics:
-            headers.append('Bonus % of Salary')
         writer.writerow(headers)
         for line in self.calculation_id.line_ids:
             row = [
@@ -773,15 +863,13 @@ class PMSBonusPayrollExportWizard(models.TransientModel):
                 line.score,
                 line.rating_id.name if line.rating_id else '',
                 line.eligibility_percentage,
-                round(line.years_service, 1),
                 round(line.months_served, 1),
                 line.base_salary,
                 line.bonus_amount,
                 self.calculation_id.currency_id.name,
             ]
-            if self.include_analytics:
-                row.append(round(line.bonus_percentage_of_salary, 2))
             writer.writerow(row)
+
         attachment = self.env['ir.attachment'].create({
             'name': f'bonus_{self.calculation_id.name}_{fields.Date.today()}.csv',
             'type': 'binary',
@@ -815,11 +903,9 @@ class PMSBonusPayrollExportWizard(models.TransientModel):
                 f"  Score      : {line.score:.1f}",
                 f"  Rating     : {line.rating_id.name if line.rating_id else 'N/A'}",
                 f"  Eligibility: {line.eligibility_percentage:.0f}%",
-                f"  Tenure     : {line.years_service:.1f} yrs",
                 f"  Months     : {line.months_served:.1f} months",
                 f"  Base salary: {sym} {line.base_salary:,.2f}",
                 f"  Bonus      : {sym} {line.bonus_amount:,.2f}",
-                f"  % of salary: {line.bonus_percentage_of_salary:.1f}%",
             ]
         lines += ['', '=' * 70]
         attachment = self.env['ir.attachment'].create({
