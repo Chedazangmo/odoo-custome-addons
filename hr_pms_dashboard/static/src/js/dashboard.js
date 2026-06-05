@@ -158,14 +158,28 @@ class PMSDashboard extends Component {
     this.state.selected_cycle = this._safeCycle(cycle);
 
     await this.loadCycleData(cycle.id);
-    this.state.selected_cycle = this._safeCycle(this.state.selected_cycle);
+
+
+    this.state.selected_cycle = this._safeCycle({
+        ...this.state.selected_cycle,
+        total_team_members: cycle.total_team_members,
+        team_plans: cycle.team_plans,
+        team_appraisals: cycle.team_appraisals,
+        pending_plan_list: cycle.pending_plan_list,
+        pending_appraisal_supervisor_list: cycle.pending_appraisal_supervisor_list,
+        pending_appraisal_secondary_list: cycle.pending_appraisal_secondary_list,
+        pending_appraisal_reviewer_list: cycle.pending_appraisal_reviewer_list,
+        pending_approval_appraisals: cycle.pending_approval_appraisals,
+        approved_plan_count: cycle.approved_plan_count,
+        total_pending_plans: cycle.total_pending_plans,
+        total_pending_appraisals: cycle.total_pending_appraisals,
+    });
 
     if (this.state.cycle_active_tab === 'planning') {
-         this._destroyPlanningCharts();
+        this._destroyPlanningCharts();
         await this._waitForDOM(300);
         await this._renderPlanningChartsByRole();
     }
-
 }
 _destroyPlanningCharts = () => {
     const Chart = window.Chart;
@@ -1146,7 +1160,7 @@ onClickTotalActiveEmployees = () => {
         return;
     }
 
-    // ✅ Save cycle detail state before navigating away
+    // Save cycle detail state before navigating away
     sessionStorage.setItem('pms_return_cycle_id', String(this.state.selected_cycle_id));
     sessionStorage.setItem('pms_return_tab', this.state.cycle_active_tab || 'planning');
 
@@ -1183,19 +1197,23 @@ onClickTotalActiveEmployees = () => {
         console.error("Wrong parameter passed to onOpenAppraisalRecord");
         return;
     }
-    const appraisalId = appraisal.id || appraisal.appraisal_id;
+    const appraisalId = appraisal.id || appraisal.appraisal_id || appraisal.plan_id;
     if (!appraisalId) {
         this.env.services.notification.add("Cannot open appraisal: Invalid data", { type: "danger" });
         return;
     }
 
-    // ✅ Save cycle detail state before navigating away
     sessionStorage.setItem('pms_return_cycle_id', String(this.state.selected_cycle_id));
     sessionStorage.setItem('pms_return_tab', this.state.cycle_active_tab || 'planning');
 
-    const isSupervisorOrReviewer = this.state.role === 'supervisor' ||
-        this.state.role === 'secondary_supervisor' || this.state.role === 'reviewer';
-    const formViewRef = isSupervisorOrReviewer
+    const isPendingApproval =
+        appraisal.state_key === 'appraisal_pending_supervisor' ||
+        appraisal.state_key === 'appraisal_pending_secondary_supervisor' ||
+        appraisal.state_key === 'appraisal_pending_reviewer';
+
+    const isHR = this.state.role === 'hr_manager';
+
+    const formViewRef = (isPendingApproval || isHR)
         ? 'hr_employee_evaluation.view_employee_appraisals_supervisor_form'
         : 'hr_employee_evaluation.view_pms_appraisal_form';
 
@@ -1205,8 +1223,12 @@ onClickTotalActiveEmployees = () => {
         res_id: appraisalId,
         views: [[false, 'form']],
         target: 'current',
-        context: { form_view_ref: formViewRef },
-    }, { stackPosition: 'replaceLast' });
+        context: {
+            create: false,
+            delete: false,
+            form_view_ref: formViewRef,
+        },
+    }, { stackPosition: 'pushState' });
 }
 
     onClickEmployeeAppraisal = (appraisal) => {
@@ -1215,7 +1237,9 @@ onClickTotalActiveEmployees = () => {
             this.env.services.notification.add("Cannot open appraisal: Missing ID", { type: "danger" });
             return;
         }
-        this.onOpenAppraisalRecord({ id: appraisalId });
+        this.onOpenAppraisalRecord({ id: appraisalId,
+        appraisal_id: appraisalId,
+        state_key: appraisal.state_key  });
     }
 
     onDoAction = (action) => {
@@ -1562,8 +1586,7 @@ exportCompletedCycleToPDF() {
 
     const self = this;
 
-    // Work directly on the ORIGINAL element, no cloning
-    // Temporarily override styles to remove overflow clipping
+    // Save wrapper original styles
     const originalStyles = {
         overflow: tableWrapper.style.overflow,
         overflowX: tableWrapper.style.overflowX,
@@ -1572,78 +1595,146 @@ exportCompletedCycleToPDF() {
         width: tableWrapper.style.width,
     };
 
-    const innerTable = tableWrapper.querySelector('table');
-    const originalTableStyles = innerTable ? {
-        minWidth: innerTable.style.minWidth,
-        width: innerTable.style.width,
-        fontSize: innerTable.style.fontSize,
-    } : {};
+    // Save all table original styles
+    const allTables = tableWrapper.querySelectorAll('table');
+    const originalTableStylesMap = [];
+    allTables.forEach(table => {
+        const cells = table.querySelectorAll('th, td');
+        const originalCells = [];
+        cells.forEach(cell => {
+            originalCells.push({
+                el: cell,
+                width: cell.style.width,
+                maxWidth: cell.style.maxWidth,
+                whiteSpace: cell.style.whiteSpace,
+                wordWrap: cell.style.wordWrap,
+                overflowWrap: cell.style.overflowWrap,
+                textAlign: cell.style.textAlign,
+            });
+        });
+        originalTableStylesMap.push({
+            el: table,
+            width: table.style.width,
+            tableLayout: table.style.tableLayout,
+            fontSize: table.style.fontSize,
+            cells: originalCells,
+        });
+    });
 
-    // Apply expanded styles directly to the real element
+    // Save all row original styles
+    const allRows = tableWrapper.querySelectorAll('tr');
+    const originalRowStyles = [];
+    allRows.forEach(row => {
+        originalRowStyles.push({
+            el: row,
+            pageBreakInside: row.style.pageBreakInside,
+            breakInside: row.style.breakInside,
+        });
+    });
+
+    // Expand wrapper
     tableWrapper.style.overflow = 'visible';
     tableWrapper.style.overflowX = 'visible';
     tableWrapper.style.maxHeight = 'none';
     tableWrapper.style.height = 'auto';
-    tableWrapper.style.width = 'auto';
+    tableWrapper.style.width = '100%';
 
-    if (innerTable) {
-        innerTable.style.minWidth = 'unset';
-        innerTable.style.width = 'auto';
-        innerTable.style.fontSize = '10px';
-    }
+    // Fix all tables
+   allTables.forEach(table => {
+    table.style.width = '80%';
+    table.style.tableLayout = 'fixed';
+    table.style.fontSize = '9px';
+
+    // First column — name, allow wrapping
+    const firstCells = table.querySelectorAll('th:first-child, td:first-child');
+    firstCells.forEach(cell => {
+        cell.style.width = '28%';
+        cell.style.maxWidth = '28%';
+        cell.style.wordWrap = 'break-word';
+        cell.style.whiteSpace = 'normal';
+        cell.style.overflowWrap = 'break-word';
+    });
+
+    // Score columns — divide remaining 52% equally
+    const otherCells = table.querySelectorAll('th:not(:first-child), td:not(:first-child)');
+    const colCount = table.querySelectorAll('thead th').length - 1;
+    const colWidth = Math.floor(52 / colCount) + '%';
+    otherCells.forEach(cell => {
+        cell.style.width = colWidth;
+        cell.style.textAlign = 'center';
+        cell.style.whiteSpace = 'nowrap';
+    });
+});
+
+    // Prevent row splitting across pages
+    allRows.forEach(row => {
+        row.style.pageBreakInside = 'avoid';
+        row.style.breakInside = 'avoid';
+    });
+
+    // Restore function
+    const restoreStyles = () => {
+        tableWrapper.style.overflow = originalStyles.overflow;
+        tableWrapper.style.overflowX = originalStyles.overflowX;
+        tableWrapper.style.maxHeight = originalStyles.maxHeight;
+        tableWrapper.style.height = originalStyles.height;
+        tableWrapper.style.width = originalStyles.width;
+
+        originalTableStylesMap.forEach(s => {
+            s.el.style.width = s.width;
+            s.el.style.tableLayout = s.tableLayout;
+            s.el.style.fontSize = s.fontSize;
+            s.cells.forEach(c => {
+                c.el.style.width = c.width;
+                c.el.style.maxWidth = c.maxWidth;
+                c.el.style.whiteSpace = c.whiteSpace;
+                c.el.style.wordWrap = c.wordWrap;
+                c.el.style.overflowWrap = c.overflowWrap;
+                c.el.style.textAlign = c.textAlign;
+            });
+        });
+
+        originalRowStyles.forEach(s => {
+            s.el.style.pageBreakInside = s.pageBreakInside;
+            s.el.style.breakInside = s.breakInside;
+        });
+    };
 
     setTimeout(function() {
         const fullWidth = tableWrapper.scrollWidth;
         const fullHeight = tableWrapper.scrollHeight;
 
         const opt = {
-            margin: [0.2, 0.2, 0.2, 0.2],
-            filename: (cycle && cycle.name ? cycle.name : 'completed_cycle') + '_appraisal_report.pdf',
+            margin: [0.4, 0.4, 0.4, 0.4],
+            filename: (cycle.cycle_name || 'completed_cycle') + '_appraisal_report.pdf',
             image: { type: 'jpeg', quality: 0.98 },
             html2canvas: {
                 scale: 2,
                 useCORS: true,
-                logging: true,   // turn on so you can see errors in console
                 scrollX: 0,
                 scrollY: 0,
                 width: fullWidth,
                 height: fullHeight,
-                windowWidth: fullWidth,
+                windowWidth: 1400,
             },
-            jsPDF: { unit: 'in', format: 'a3', orientation: 'landscape' },
+            jsPDF: {
+                unit: 'in',
+                format: 'a3',
+                orientation: 'landscape'
+            },
+            pagebreak: {
+                mode: ['avoid-all', 'css', 'legacy'],
+                avoid: ['tr', 'td', 'h5'],
+            },
         };
 
         html2pdf().set(opt).from(tableWrapper).save()
             .then(function() {
-                // Restore original styles after export
-                tableWrapper.style.overflow = originalStyles.overflow;
-                tableWrapper.style.overflowX = originalStyles.overflowX;
-                tableWrapper.style.maxHeight = originalStyles.maxHeight;
-                tableWrapper.style.height = originalStyles.height;
-                tableWrapper.style.width = originalStyles.width;
-
-                if (innerTable) {
-                    innerTable.style.minWidth = originalTableStyles.minWidth;
-                    innerTable.style.width = originalTableStyles.width;
-                    innerTable.style.fontSize = originalTableStyles.fontSize;
-                }
-
+                restoreStyles();
                 self.env.services.notification.add("PDF exported successfully!", { type: "success" });
             })
             .catch(function() {
-                // Restore on error too
-                tableWrapper.style.overflow = originalStyles.overflow;
-                tableWrapper.style.overflowX = originalStyles.overflowX;
-                tableWrapper.style.maxHeight = originalStyles.maxHeight;
-                tableWrapper.style.height = originalStyles.height;
-                tableWrapper.style.width = originalStyles.width;
-
-                if (innerTable) {
-                    innerTable.style.minWidth = originalTableStyles.minWidth;
-                    innerTable.style.width = originalTableStyles.width;
-                    innerTable.style.fontSize = originalTableStyles.fontSize;
-                }
-
+                restoreStyles();
                 self.env.services.notification.add("Error generating PDF", { type: "danger" });
             });
 

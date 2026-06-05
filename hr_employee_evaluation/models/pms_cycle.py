@@ -951,13 +951,6 @@ class PMSCycle(models.Model):
 
         if self.state != 'monitoring':
             raise UserError('Only cycles in the Monitoring phase can be moved to Appraisal.')
-
-        # Freeze planning_state for ALL appraisals before transitioning
-        for appraisal in self.appraisal_ids:
-            appraisal.with_context(skip_edit_check=True).write({
-                'planning_state': appraisal.state,
-            })
-
         approved_appraisals = self.appraisal_ids.filtered(
             lambda a: a.state == 'approved'
         )

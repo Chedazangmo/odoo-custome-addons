@@ -259,40 +259,63 @@ class PMSDashboardController(http.Controller):
         return result
 
     def _build_monitoring_phase_data(self, result, appraisal, cycle, employee):
-        """Build data for monitoring phase - show approved plan, no editing"""
+        """Build data for monitoring phase"""
         from datetime import date
 
-        # Get the approved plan data (same as planning but read-only)
+        # ============================================================
+        # CHECK: Is the plan actually approved?
+        # ============================================================
+        plan_is_approved = appraisal.state == 'approved'
+
+        has_secondary = bool(appraisal.secondary_supervisor_id)
+        has_reviewer = bool(appraisal.reviewer_id)
+        total_steps = 2
+        if has_secondary:
+            total_steps += 1
+        if has_reviewer:
+            total_steps += 1
+
+        state_step_map = {
+            'draft': 0,
+            'pending_supervisor': 1,
+            'pending_secondary_supervisor': 2 if has_secondary else 1,
+            'pending_reviewer': 3 if has_secondary else 2,
+            'approved': total_steps,
+        }
+        step = state_step_map.get(appraisal.state, 0)
+        plan_progress = round((step / total_steps) * 100, 1) if total_steps else 0
+
+        state_label = dict(appraisal._fields['state'].selection).get(appraisal.state, appraisal.state)
+
         kpis = []
         total_weightage = 0
 
         for kra in appraisal.kra_ids:
             for kpi in kra.kpi_ids:
-                if kpi.is_selected:  # Only show selected KPIs
-                    kpi_data = {
-                        'id': kpi.id,
-                        'kra_name': kra.name,
-                        'kra_weightage': kra.total_weightage,
-                        'kpi_name': kpi.name,
-                        'description': kpi.description or '',
-                        'target': kpi.target or None,
-                        'criteria': kpi.criteria or '',
-                        'weightage':kpi.weightage if kpi.is_selected else 0,
-                        'is_selected': bool(kpi.is_selected),
-                        'status': 'set' if (kpi.is_selected and kpi.target) else 'pending',
-
-                    }
-                    kpis.append(kpi_data)
-                    total_weightage += kpi.weightage or 0
+                # If approved, only show selected KPIs; if not approved, show all
+                if plan_is_approved and not kpi.is_selected:
+                    continue
+                kpi_data = {
+                    'id': kpi.id,
+                    'kra_name': kra.name,
+                    'kra_weightage': kra.total_weightage,
+                    'kpi_name': kpi.name,
+                    'description': kpi.description or '',
+                    'target': kpi.target or None,
+                    'criteria': kpi.criteria or '',
+                    'weightage': kpi.weightage if kpi.is_selected else 0,
+                    'is_selected': bool(kpi.is_selected),
+                    'status': 'set' if (kpi.is_selected and kpi.target) else 'pending',
+                }
+                kpis.append(kpi_data)
+                total_weightage += kpi.weightage or 0
 
         selected_kpi_count = len([k for k in kpis if k['is_selected']])
         total_kpi_count = len(kpis)
 
-        state_label = dict(appraisal._fields['state'].selection).get(appraisal.state, appraisal.state)
-
         result['current_cycle'] = {
             'cycle_name': cycle.name,
-            'phase': 'monitoring',  # Important: set phase to 'monitoring'
+            'phase': 'monitoring',
             'start_date': str(cycle.start_date) if cycle.start_date else '-',
             'deadline': '-',
             'end_date': str(cycle.end_date) if cycle.end_date else '-',
@@ -300,7 +323,7 @@ class PMSDashboardController(http.Controller):
             'days_left': (cycle.planning_deadline - date.today()).days if cycle.planning_deadline else None,
             'final_score': None,
             'rating': None,
-            'plan_progress': 100,  # Plan is approved, so 100%
+            'plan_progress': plan_progress,  # ← Now reflects actual progress
             'appraisal_progress': 0,
             'selected_kpi_count': selected_kpi_count,
             'total_kpi_count': total_kpi_count,
@@ -308,40 +331,61 @@ class PMSDashboardController(http.Controller):
             'appraisal_start_date': str(cycle.appraisal_start_date) if cycle.appraisal_start_date else '-',
             'appraisal_end_date': str(cycle.appraisal_end_date) if cycle.appraisal_end_date else None,
             'appraisal_duration_days': (
-                        cycle.end_date - cycle.appraisal_start_date).days if cycle.end_date and cycle.appraisal_start_date else None,
+                    cycle.end_date - cycle.appraisal_start_date
+            ).days if cycle.end_date and cycle.appraisal_start_date else None,
             'planning_duration': cycle.planning_duration,
         }
 
-        # Store as approved_plan (read-only) and also as current_plan for backward compatibility
-        result['approved_plan'] = {
+        plan_data = {
             'id': appraisal.id,
             'name': employee.name,
             'selected_kpi_count': selected_kpi_count,
             'total_kpi_count': total_kpi_count,
             'total_weightage': total_weightage,
-            'progress': 100,
-            'state': 'Approved',
-            'state_key': 'approved',
+            'progress': plan_progress,
+            'state': state_label,
+            'state_key': appraisal.state,  # ← Real state, not hardcoded 'approved'
             'cycle': cycle.name,
+            'cycle_type': cycle.cycle_type or '—',
             'department': employee.department_id.name or '-',
             'kpis': kpis,
-            'has_secondary': bool(appraisal.secondary_supervisor_id),
-            'has_reviewer': bool(appraisal.reviewer_id),
-            'is_editable': False,  # Not editable in monitoring phase
-            'cycle_type': cycle.cycle_type or '—',
+            'has_secondary': has_secondary,
+            'has_reviewer': has_reviewer,
+            'is_editable': appraisal.state == 'draft',
             'start_date': str(cycle.start_date) if cycle.start_date else '—',
             'end_date': str(cycle.appraisal_end_date) if cycle.appraisal_end_date else '—',
             'appraisal_end_date': str(cycle.appraisal_end_date) if cycle.appraisal_end_date else '—',
-
             'evaluation_group': employee.evaluation_group_id.name if employee.evaluation_group_id else '-',
             'supervisor_name': appraisal.supervisor_id.name if appraisal.supervisor_id else '-',
             'secondary_name': appraisal.secondary_supervisor_id.name if appraisal.secondary_supervisor_id else None,
             'reviewer_name': appraisal.reviewer_id.name if appraisal.reviewer_id else None,
-
+            # ← Planning deadline fields (needed for the orange/purple cards in template)
+            'self_planning_deadline': str(
+                appraisal.self_planning_deadline) if appraisal.self_planning_deadline else None,
+            'planning_end_date': str(appraisal.planning_end_date) if appraisal.planning_end_date else None,
+            'self_planning_days_left': (
+                    appraisal.self_planning_deadline - date.today()
+            ).days if appraisal.self_planning_deadline else None,
+            'planning_days_left': (
+                    appraisal.planning_end_date - date.today()
+            ).days if appraisal.planning_end_date else None,
+            'approval_duration': (
+                    appraisal.planning_end_date - appraisal.self_planning_deadline
+            ).days if appraisal.planning_end_date and appraisal.self_planning_deadline else None,
+            'self_planning_duration': (
+                    appraisal.self_planning_deadline - cycle.start_date
+            ).days if appraisal.self_planning_deadline and cycle.start_date else None,
         }
 
-        # Also set current_plan to show the approved plan
-        result['current_plan'] = result['approved_plan']
+        # ============================================================
+        # Set approved_plan only if actually approved
+        # ============================================================
+        if plan_is_approved:
+            result['approved_plan'] = plan_data
+        else:
+            result['approved_plan'] = None
+
+        result['current_plan'] = plan_data
         result['current_appraisal'] = None
 
         return result
@@ -2513,6 +2557,18 @@ class PMSDashboardController(http.Controller):
                     ('secondary_supervisor_id', '=', employee.id)
                 ])
 
+                seen = set()
+                unique_appraisals = []
+                for a in team_appraisals:
+                    if a.employee_id.id not in seen:
+                        seen.add(a.employee_id.id)
+                        unique_appraisals.append(a)
+                team_appraisals = request.env['pms.appraisal'].sudo().browse(
+                    [a.id for a in unique_appraisals]
+                )
+
+                total_team = len(team_appraisals)
+
                 if not team_appraisals:
                     continue
 
@@ -2618,6 +2674,7 @@ class PMSDashboardController(http.Controller):
                 for appraisal in team_appraisals:
                     is_primary = appraisal.supervisor_id.id == employee.id
                     is_secondary = appraisal.secondary_supervisor_id.id == employee.id
+                    is_reviewer = appraisal.reviewer_id.id == employee.id
 
                     # -- Populate per-role pending buckets --
                     if is_primary and appraisal.state == 'appraisal_pending_supervisor':
@@ -2641,7 +2698,7 @@ class PMSDashboardController(http.Controller):
                         })
 
 
-                    if is_primary and appraisal.state == 'appraisal_pending_reviewer':
+                    if is_reviewer and appraisal.state == 'appraisal_pending_reviewer':
                         pending_appraisal_reviewer_list.append({
                             'employee_id': appraisal.employee_id.id,
                             'name': appraisal.employee_id.name,
@@ -3121,6 +3178,7 @@ class PMSDashboardController(http.Controller):
                     ) if appraisal_state == 'appraisal_approved' and appraisal.final_appraisal_score is not None else ''
 
                     all_appraisals_data.append({
+                        'appraisal_id': appraisal.id,
                         'employee_id': appraisal.employee_id.id,
                         'name': appraisal.employee_id.name,
                         'department': appraisal.employee_id.department_id.name or '-',
@@ -3174,20 +3232,28 @@ class PMSDashboardController(http.Controller):
                 ).days if cycle.end_date and cycle.appraisal_start_date else None,
                 'pending_plan_list': [{
                     'id': p.id,
+                    'plan_id': p.id,
                     'employee_id': p.employee_id.id,
                     'name': p.employee_id.name,
                     'department': p.employee_id.department_id.name or '-',
                     'selected_kpi': p.selected_kpi_count or 0,
                     'total_kpi': p.total_kpi_count or 0,
                     'submitted_date': str(p.submitted_date) if p.submitted_date else None,
+                    'supervisor_name': p.supervisor_id.name if p.supervisor_id else '',
+                    'secondary_name': p.secondary_supervisor_id.name if p.secondary_supervisor_id else '',
+                    'reviewer_name': p.reviewer_id.name if p.reviewer_id else '',
+                    'state_key': p.state,
+
                 } for p in pending_plans],
                 'pending_appraisal_list': [{
                     'id': a.id,
+                    'appraisal_id': a.id,
                     'employee_id': a.employee_id.id,
                     'name': a.employee_id.name,
                     'department': a.employee_id.department_id.name or '-',
                     'self_score': a.total_self_score if a.total_self_score is not None else None,
                     'supervisor_score': a.total_supervisor_score if a.total_supervisor_score is not None else None,
+                    'state_key': a.state,
                 } for a in pending_appraisals],
                 'all_plans': all_plans,
                 'all_appraisals': all_appraisals_data,
